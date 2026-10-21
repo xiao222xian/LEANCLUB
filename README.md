@@ -6,8 +6,6 @@
   <a href="https://leanmuscleclub.com/"><strong>访问网站 ↗</strong></a>
   &nbsp;&nbsp; · &nbsp;&nbsp;
   <a href="https://leanmuscleclub.com/schools"><strong>找到你的学校 ↗</strong></a>
-  &nbsp;&nbsp; · &nbsp;&nbsp;
-  <a href="https://leanmuscleclub.com/join"><strong>填写俱乐部资料 ↗</strong></a>
 </p>
 
 <br />
@@ -29,13 +27,12 @@
 | **找到本校俱乐部** | 在首页输入学校中文名、英文名或简称，进入对应俱乐部。 |
 | **看看全球有哪些学校** | 浏览学校榜单，按国家／地区筛选，查看各校填写的群人数。 |
 | **了解如何加入** | 打开俱乐部详情，查看已填写的负责人联系方式与抖音二维码。 |
-| **让同校的人找到你们** | 填写学校、负责人联系方式、群人数及可选的抖音二维码，提交后展示。 |
 
 > **榜单按各校俱乐部填写的群人数排序，群人数由各校负责人提供，不代表独立会员人数或学校在校人数。**
 
 ## 简单开始，持续完善。
 
-前端使用 HTML、CSS 和 JavaScript，后端使用 Python 标准库与 SQLite。支持手机与电脑浏览，包含学校搜索、地区筛选、俱乐部详情与资料提交。
+前端使用 HTML、CSS 和 JavaScript，后端使用 Python 标准库与 SQLite。支持手机与电脑浏览，包含学校搜索、地区筛选与俱乐部详情。
 
 公开仓库提供网站代码、展示素材、学校基础目录及测试。**线上用户填报资料和服务器凭据不在仓库中。** 本地运行使用独立数据库。
 
