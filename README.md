@@ -1,5 +1,5 @@
 <a href="https://leanmuscleclub.com/">
-  <img src="docs/assets/leanclub-banner.svg" width="100%" alt="Lean Club · 薄肌全球高校联盟 — 多运动。多思考。做有复利的事。" />
+  <img src="docs/assets/home-desktop.png" width="100%" alt="Lean Club 真实首页：学校搜索、加入入口与高校标识滚动栏" />
 </a>
 
 <p align="center">
@@ -8,17 +8,11 @@
   <a href="https://leanmuscleclub.com/schools"><strong>找到你的学校 ↗</strong></a>
 </p>
 
-<br />
-
 ## 学校不同，一起向上。
 
 **Lean Club** 是连接不同高校薄肌同好的俱乐部网站。
 
 搜索自己的学校，找到俱乐部，了解负责人联系方式。也让每个正在组织训练的人，有一个能被同校同好找到的入口。
-
-<a href="https://leanmuscleclub.com/">
-  <img src="docs/assets/home-desktop.png" width="100%" alt="Lean Club 真实首页：学校搜索、加入入口与高校标识滚动栏" />
-</a>
 
 ## 从这里，找到同好。
 
