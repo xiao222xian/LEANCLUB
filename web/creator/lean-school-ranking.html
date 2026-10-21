@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#20392e"><title>学校排名 · Lean Club</title><link rel="stylesheet" href="lean-school-ranking.css?v=directory-8"><script src="lean-ranking-data.js" defer></script><script src="lean-school-ranking.js?v=metadata-20261021" defer></script><meta name="robots" content="noindex,nofollow"><link rel="stylesheet" href="/site-navigation.css?v=1"><script defer src="/site-navigation.js?v=7"></script><link rel="preload" as="image" type="image/webp" imagesrcset="/images/hero-640-v2.webp 640w, /images/hero-1024-v2.webp 1024w, /images/hero-1672-v2.webp 1672w" imagesizes="100vw" fetchpriority="high"></head>
+<body>
+<a class="skip" href="#ranking">跳到榜单</a>
+<header class="topbar"><a class="wordmark" href="/#home">Lean Club<span class="sr-only">首页</span></a><nav aria-label="主要导航"><a href="/#voices">关于薄肌</a><a class="active" href="/schools" aria-current="page">学校排名</a></nav><button class="mint-button" data-find>加入俱乐部 <span aria-hidden="true">↗</span></button></header>
+<main>
+<section class="ranking-hero" aria-labelledby="ranking-hero-title"><picture><source type="image/webp" srcset="/images/hero-640-v2.webp 640w, /images/hero-1024-v2.webp 1024w, /images/hero-1672-v2.webp 1672w" sizes="100vw"><img width="1672" height="941" loading="eager" class="ranking-photo" fetchpriority="high" decoding="async" src="/lean-club-sunset-hero-v3.jpg" alt="夕阳下的 Lean Club 户外场景"></picture><div class="ranking-shade"></div><div class="hero-inner page"><h1 id="ranking-hero-title">薄肌全球高校联盟</h1><p class="description">学校不同，一起向上。</p><div class="controls"><div class="search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><label class="sr-only" for="school-search">搜索学校</label><input id="school-search" type="search" placeholder="搜索学校名称 / 英文简称" autocomplete="off"><button id="clear-search" aria-label="清空搜索" hidden>×</button><kbd aria-hidden="true">/</kbd></div><label class="region-filter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg><span class="sr-only">国家或地区</span><select id="region"><option value="">全部国家 / 地区</option></select><span aria-hidden="true">⌄</span></label></div>
+</div><svg class="hero-curve" viewBox="0 0 1440 70" preserveAspectRatio="none" aria-hidden="true"><path d="M0 0 Q720 140 1440 0 V70 H0Z" fill="white"/></svg></section>
+<section class="ranking-content page" id="ranking" aria-labelledby="ranking-title"><div class="section-heading"><div><h2 id="ranking-title">校园榜单</h2></div></div>
+<p id="result-count" class="sr-only" aria-live="polite"></p>
+<div class="table-shell directory-list"><div id="school-rows" role="list" aria-label="学校排名"></div><div id="empty-state" class="empty-state" hidden><span aria-hidden="true">⌕</span><h3>还没找到这所学校</h3><p>试试学校全称、英文简称，或切换国家与地区。</p><button class="light-button" id="reset-filters">查看全部学校 ↗</button></div></div>
+<div class="data-footnote"><details><summary>查看数据说明 <span>＋</span></summary><p>榜单按各校俱乐部填写的群人数排序，群人数由各校负责人提供，不代表独立会员人数或学校在校人数。</p></details></div>
+</section>
+
+</main>
+<dialog class="school-panel" aria-labelledby="panel-title"><button class="close-panel" aria-label="关闭学校详情">×</button><div id="school-content"></div></dialog>
+</body></html>

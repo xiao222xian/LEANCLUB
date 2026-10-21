@@ -1,0 +1,308 @@
+{
+  "club-2b425c2fe8e3b8521beb": {
+    "name": "东华大学",
+    "en": "Donghua University",
+    "region": "中国大陆",
+    "alias": "DHU 东华"
+  },
+  "club-a5ffbe3b67e4d37be305": {
+    "name": "中北大学",
+    "en": "North University of China",
+    "region": "中国大陆",
+    "alias": "NUC 中北"
+  },
+  "club-1bf47ef621e90668a780": {
+    "name": "中国地质大学（北京）",
+    "en": "China University of Geosciences, Beijing",
+    "region": "中国大陆",
+    "alias": "CUGB 地大北京"
+  },
+  "club-3ec4b7b8e8962193632e": {
+    "name": "中央财经大学",
+    "en": "Central University of Finance and Economics",
+    "region": "中国大陆",
+    "alias": "CUFE 央财"
+  },
+  "club-a831431afa973a69a7ab": {
+    "name": "中山大学",
+    "en": "Sun Yat-sen University",
+    "region": "中国大陆",
+    "alias": "SYSU 中大"
+  },
+  "club-c6ebb6e061b8b76e6f91": {
+    "name": "佛山大学",
+    "en": "Foshan University",
+    "region": "中国大陆",
+    "alias": "FOSU 佛大"
+  },
+  "club-51e42653e3a74d75bd64": {
+    "name": "北京化工大学",
+    "en": "Beijing University of Chemical Technology",
+    "region": "中国大陆",
+    "alias": "BUCT 北化"
+  },
+  "club-cff1169cd96265295968": {
+    "name": "北京工业大学",
+    "en": "Beijing University of Technology",
+    "region": "中国大陆",
+    "alias": "BJUT 北工大"
+  },
+  "club-8c6774ead1405aab7247": {
+    "name": "华东师范大学",
+    "en": "East China Normal University",
+    "region": "中国大陆",
+    "alias": "ECNU 华东师大"
+  },
+  "club-0ecaf6dfeca37d080c89": {
+    "name": "华北水利水电大学",
+    "en": "North China University of Water Resources and Electric Power",
+    "region": "中国大陆",
+    "alias": "NCWU 华水"
+  },
+  "club-d6cdee003de2421a1bcf": {
+    "name": "华北理工大学",
+    "en": "North China University of Science and Technology",
+    "region": "中国大陆",
+    "alias": "NCST 华北理工"
+  },
+  "club-2e740c06f58a50e58855": {
+    "name": "华南理工大学",
+    "en": "South China University of Technology",
+    "region": "中国大陆",
+    "alias": "SCUT 华工"
+  },
+  "club-994a5ccf9141795d12dc": {
+    "name": "南京审计大学",
+    "en": "Nanjing Audit University",
+    "region": "中国大陆",
+    "alias": "NAU 南审"
+  },
+  "club-1fc13faf1022138e197d": {
+    "name": "南京工业大学",
+    "en": "Nanjing Tech University",
+    "region": "中国大陆",
+    "alias": "NJTech 南工大"
+  },
+  "club-b0e04356591744a914ea": {
+    "name": "南京工程学院",
+    "en": "Nanjing Institute of Technology",
+    "region": "中国大陆",
+    "alias": "NJIT 南工程"
+  },
+  "club-aeb7cb5caf8eac78a361": {
+    "name": "南京林业大学",
+    "en": "Nanjing Forestry University",
+    "region": "中国大陆",
+    "alias": "NJFU 南林"
+  },
+  "club-1360565eabf311448613": {
+    "name": "南京邮电大学",
+    "en": "Nanjing University of Posts and Telecommunications",
+    "region": "中国大陆",
+    "alias": "NJUPT 南邮"
+  },
+  "club-5178e1f92ce5a297854d": {
+    "name": "卡内基梅隆大学",
+    "en": "Carnegie Mellon University",
+    "region": "美国",
+    "alias": "CMU 卡梅"
+  },
+  "club-8ba309664c20aa0789fe": {
+    "name": "吉林大学",
+    "en": "Jilin University",
+    "region": "中国大陆",
+    "alias": "JLU 吉大"
+  },
+  "club-d9a31781bd1e65dd66c1": {
+    "name": "同济大学",
+    "en": "Tongji University",
+    "region": "中国大陆",
+    "alias": "同济"
+  },
+  "club-d49a66e303f3c9b9b715": {
+    "name": "四川大学",
+    "en": "Sichuan University",
+    "region": "中国大陆",
+    "alias": "SCU 川大"
+  },
+  "club-176670baa520b92f658b": {
+    "name": "复旦大学",
+    "en": "Fudan University",
+    "region": "中国大陆",
+    "alias": "FDU 复旦"
+  },
+  "club-c08b755db2dca0d75d59": {
+    "name": "天大&南开",
+    "en": "Tianjin University & Nankai University",
+    "region": "中国大陆",
+    "alias": "TJU NKU 天津大学 南开大学"
+  },
+  "club-acb63a0b190873c63672": {
+    "name": "天津美术学院",
+    "en": "Tianjin Academy of Fine Arts",
+    "region": "中国大陆",
+    "alias": "TAFA 天美"
+  },
+  "club-b45f593574a62ac69ffb": {
+    "name": "宁波大学",
+    "en": "Ningbo University",
+    "region": "中国大陆",
+    "alias": "NBU 宁大"
+  },
+  "club-0d748c9d40d00f94a92e": {
+    "name": "安徽大学",
+    "en": "Anhui University",
+    "region": "中国大陆",
+    "alias": "AHU 安大"
+  },
+  "club-1df01e94e5f9928f712a": {
+    "name": "常州工学院",
+    "en": "Changzhou Institute of Technology",
+    "region": "中国大陆",
+    "alias": "CIT 常工"
+  },
+  "club-f08b2a72874f82cc2bfa": {
+    "name": "广东白云学院",
+    "en": "Guangdong Baiyun University",
+    "region": "中国大陆",
+    "alias": "白云学院"
+  },
+  "club-4810380873d5d6fbc5c2": {
+    "name": "慕尼黑工业大学（TUM）",
+    "en": "Technical University of Munich",
+    "region": "德国",
+    "alias": "TUM 慕工大"
+  },
+  "club-e17db3add609d392cafc": {
+    "name": "杭州电子科技大学",
+    "en": "Hangzhou Dianzi University",
+    "region": "中国大陆",
+    "alias": "HDU 杭电"
+  },
+  "club-196dfb9ec78a26637370": {
+    "name": "河南师范大学",
+    "en": "Henan Normal University",
+    "region": "中国大陆",
+    "alias": "河师大"
+  },
+  "club-65664474e19d287ca2b4": {
+    "name": "浙江大学",
+    "en": "Zhejiang University",
+    "region": "中国大陆",
+    "alias": "ZJU 浙大"
+  },
+  "club-b14c65a57446e266e621": {
+    "name": "浙江工商大学",
+    "en": "Zhejiang Gongshang University",
+    "region": "中国大陆",
+    "alias": "ZJSU 浙商大"
+  },
+  "club-7d5f3a580dba19210ae4": {
+    "name": "浙江科技大学",
+    "en": "Zhejiang University of Science and Technology",
+    "region": "中国大陆",
+    "alias": "ZUST 浙科大"
+  },
+  "club-4f93466c175d3bdc44c0": {
+    "name": "海南比勒费尔德应用科学大学",
+    "en": "Hainan Bielefeld University of Applied Sciences",
+    "region": "中国大陆",
+    "alias": "BiUH 海南比科大"
+  },
+  "club-7e1210f44e8776732005": {
+    "name": "深圳大学",
+    "en": "Shenzhen University",
+    "region": "中国大陆",
+    "alias": "SZU 深大"
+  },
+  "club-237073fa7b8f57c90f4e": {
+    "name": "湖南大学",
+    "en": "Hunan University",
+    "region": "中国大陆",
+    "alias": "HNU 湖大"
+  },
+  "club-0d6c9d7bf3dcd71fad67": {
+    "name": "爱丁堡大学",
+    "en": "The University of Edinburgh",
+    "region": "英国",
+    "alias": "爱大 Edinburgh"
+  },
+  "club-16ef53515dbf052c0496": {
+    "name": "电子科技大学",
+    "en": "University of Electronic Science and Technology of China",
+    "region": "中国大陆",
+    "alias": "UESTC 成电"
+  },
+  "club-c6d8e7318f7761bc7115": {
+    "name": "莫纳什大学",
+    "en": "Monash University",
+    "region": "澳大利亚",
+    "alias": "蒙纳士 Monash"
+  },
+  "club-88382491a9f4420c5680": {
+    "name": "西南交通大学",
+    "en": "Southwest Jiaotong University",
+    "region": "中国大陆",
+    "alias": "SWJTU 西南交大"
+  },
+  "club-97a7d6128e8692ff2c27": {
+    "name": "西南政法大学",
+    "en": "Southwest University of Political Science and Law",
+    "region": "中国大陆",
+    "alias": "SWUPL 西政"
+  },
+  "club-ad93f8c58e1a51a9e499": {
+    "name": "西安交通大学",
+    "en": "Xi’an Jiaotong University",
+    "region": "中国大陆",
+    "alias": "XJTU 西交"
+  },
+  "club-6c67abc9e7f19bb0e5b5": {
+    "name": "西安电子科技大学",
+    "en": "Xidian University",
+    "region": "中国大陆",
+    "alias": "XDU 西电"
+  },
+  "club-826fd08d583b3706fcc6": {
+    "name": "重庆邮电大学",
+    "en": "Chongqing University of Posts and Telecommunications",
+    "region": "中国大陆",
+    "alias": "CQUPT 重邮"
+  },
+  "club-a8666adee4ccc2129bb1": {
+    "name": "长江师范学院",
+    "en": "Yangtze Normal University",
+    "region": "中国大陆",
+    "alias": "YZNU 长师"
+  },
+  "club-d3175f7c57d506bfefe3": {
+    "name": "阿姆斯特丹大学",
+    "en": "University of Amsterdam",
+    "region": "荷兰",
+    "alias": "UvA 阿大"
+  },
+  "club-5674399d9c6ba0b559da": {
+    "name": "香港中文大学",
+    "en": "The Chinese University of Hong Kong",
+    "region": "中国香港",
+    "alias": "CUHK 港中文"
+  },
+  "club-34495d0efdb3e6b99956": {
+    "name": "香港浸会大学",
+    "en": "Hong Kong Baptist University",
+    "region": "中国香港",
+    "alias": "HKBU 港浸会"
+  },
+  "club-de3b15165f56add6eb1a": {
+    "name": "香港理工大学",
+    "en": "The Hong Kong Polytechnic University",
+    "region": "中国香港",
+    "alias": "PolyU 港理工"
+  },
+  "club-623a7bb553268cd1fab3": {
+    "name": "马来亚大学",
+    "en": "Universiti Malaya",
+    "region": "马来西亚",
+    "alias": "UM University of Malaya 马大"
+  }
+}
