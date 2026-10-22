@@ -1,0 +1,39 @@
+# 三城人物替换 · 完整编辑提示词
+
+2026-10-22。内置 image_gen 编辑模式。以三张现有城市背景为编辑目标；主页本人图为主参考，公开人物照片仅辅助面部和身体细节。生成的站姿合成为概念稿，不是本人在三个城市现场拍摄的纪录照片。
+
+## shenzhen
+
+```text
+Use case: compositing / identity-preserve.
+Asset type: premium full-bleed photographic city fitness campaign background, vertical 9:16, no typography.
+Input image 1 is the EDIT TARGET city scene. Keep its background unchanged: exact framing, camera perspective, skyline architecture, sky/clouds, water, railings, paving, background lighting, and all non-person objects. Replace ONLY the foreground man.
+Input image 2 is the PRIMARY PERSON REFERENCE: the man on the right in the website's sunset swimming-pool hero, identified by the user as Alan Shao / 邵艾伦. Preserve that person's individual facial structure, slim athletic proportions, black hair and distinctive right-arm full sleeve tattoo faithfully. Image 3 is a supplementary clear face/tattoo photograph of the same requested subject. Image 4 is supplementary actual torso/anatomy reference; it is a mirror selfie, so do NOT accidentally mirror the tattoo to the wrong arm.
+Replace the generic model in image 1 with the specific person shown in images 2–4, not a generic handsome model. Precisely retain his distinctive face, eyes, nose, lips, skin tone, ears and slim natural muscle mass. The tattoo must resemble the actual eye and portrait design in image 2, on his RIGHT arm. Keep his black hairstyle from the homepage reference. No artificial beauty-filter skin, no exaggerated bodybuilding bulk, no random tribal tattoo.
+Create a seamless editorial photographic composite with realistic hands, believable anatomy, finely detailed skin, natural contact shadows, matching scene light and grain. Keep the body placement and standing composition of image 1. He is standing calmly in a cool relaxed pose, NOT running/exercising. Frame includes the whole original standing composition. The original scenery is a locked plate, do not redesign it or replace it with the reference photos' pool, gym, restaurant. Preserve the original clothing style of image 1 below the waist. No phones, glasses, drink, added people, text, logos, watermark, graphic overlays or collage panels. Output ONE finished portrait image at the same 9:16 aspect as input image 1.
+Shenzhen: keep the blue daytime bay, tall tapered China Resources tower on the right, gray stone ledge, silver railing and paved foreground exactly. Keep a relaxed lean against the ledge with anatomical right hand supported on screen-left and other hand in pocket, black long jogger pants and white sneakers. Head nearly toward camera with a composed gaze; actual Alan face, not original model face. Match clear soft sunshine.
+```
+
+## zhuhai
+
+```text
+Use case: compositing / identity-preserve.
+Asset type: premium full-bleed photographic city fitness campaign background, vertical 9:16, no typography.
+Input image 1 is the EDIT TARGET city scene. Keep its background unchanged: exact framing, camera perspective, skyline architecture, sky/clouds, water, railings, paving, background lighting, and all non-person objects. Replace ONLY the foreground man.
+Input image 2 is the PRIMARY PERSON REFERENCE: the man on the right in the website's sunset swimming-pool hero, identified by the user as Alan Shao / 邵艾伦. Preserve that person's individual facial structure, slim athletic proportions, black hair and distinctive right-arm full sleeve tattoo faithfully. Image 3 is a supplementary clear face/tattoo photograph of the same requested subject. Image 4 is supplementary actual torso/anatomy reference; it is a mirror selfie, so do NOT accidentally mirror the tattoo to the wrong arm.
+Replace the generic model in image 1 with the specific person shown in images 2–4, not a generic handsome model. Precisely retain his distinctive face, eyes, nose, lips, skin tone, ears and slim natural muscle mass. The tattoo must resemble the actual eye and portrait design in image 2, on his RIGHT arm. Keep his black hairstyle from the homepage reference. No artificial beauty-filter skin, no exaggerated bodybuilding bulk, no random tribal tattoo.
+Create a seamless editorial photographic composite with realistic hands, believable anatomy, finely detailed skin, natural contact shadows, matching scene light and grain. Keep the body placement and standing composition of image 1. He is standing calmly in a cool relaxed pose, NOT running/exercising. Frame includes the whole original standing composition. The original scenery is a locked plate, do not redesign it or replace it with the reference photos' pool, gym, restaurant. Preserve the original clothing style of image 1 below the waist. No phones, glasses, drink, added people, text, logos, watermark, graphic overlays or collage panels. Output ONE finished portrait image at the same 9:16 aspect as input image 1.
+Zhuhai: preserve the exact bright blue sea and sky, the white double-shell opera house at mid-right, the low stone seawall and paved foreground. Keep confident full-body static stance, weight on one leg, one hand in pocket, black athletic shorts, white crew socks and white trainers. Use the requested person's face with a natural three-quarter sideward gaze. Correct right-arm sleeve tattoo. Match hard coastal sunlight and crisp directional ground shadow.
+```
+
+## guangzhou
+
+```text
+Use case: compositing / identity-preserve.
+Asset type: premium full-bleed photographic city fitness campaign background, vertical 9:16, no typography.
+Input image 1 is the EDIT TARGET city scene. Keep its background unchanged: exact framing, camera perspective, skyline architecture, sky/clouds, water, railings, paving, background lighting, and all non-person objects. Replace ONLY the foreground man.
+Input image 2 is the PRIMARY PERSON REFERENCE: the man on the right in the website's sunset swimming-pool hero, identified by the user as Alan Shao / 邵艾伦. Preserve that person's individual facial structure, slim athletic proportions, black hair and distinctive right-arm full sleeve tattoo faithfully. Image 3 is a supplementary clear face/tattoo photograph of the same requested subject. Image 4 is supplementary actual torso/anatomy reference; it is a mirror selfie, so do NOT accidentally mirror the tattoo to the wrong arm.
+Replace the generic model in image 1 with the specific person shown in images 2–4, not a generic handsome model. Precisely retain his distinctive face, eyes, nose, lips, skin tone, ears and slim natural muscle mass. The tattoo must resemble the actual eye and portrait design in image 2, on his RIGHT arm. Keep his black hairstyle from the homepage reference. No artificial beauty-filter skin, no exaggerated bodybuilding bulk, no random tribal tattoo.
+Create a seamless editorial photographic composite with realistic hands, believable anatomy, finely detailed skin, natural contact shadows, matching scene light and grain. Keep the body placement and standing composition of image 1. He is standing calmly in a cool relaxed pose, NOT running/exercising. Frame includes the whole original standing composition. The original scenery is a locked plate, do not redesign it or replace it with the reference photos' pool, gym, restaurant. Preserve the original clothing style of image 1 below the waist. No phones, glasses, drink, added people, text, logos, watermark, graphic overlays or collage panels. Output ONE finished portrait image at the same 9:16 aspect as input image 1.
+Guangzhou: preserve the dark blue dusk skyline, Canton Tower on the right, warm city lights, water reflections, wet paving, left stone post and waterside railing exactly. Keep relaxed standing lean with anatomical right hand on screen-left stone post, black shorts and dark sneakers, legs casually crossed. Requested person's face slightly turned toward camera, cool calm expression. Match subtle near-camera flash against night scene; realistic tattoo highlights, not glossy plastic skin.
+```

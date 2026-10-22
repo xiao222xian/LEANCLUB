@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#17191b">
+  <title>内容管理 · Lean Club</title>
+  <link rel="stylesheet" href="/admin/style.css?v=20261022-summary">
+  <script src="/admin/app.js?v=20261022-alan-v1" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳至主要内容</a>
+  <section id="auth-view" class="auth-view" aria-labelledby="auth-title">
+    <div class="auth-art" aria-hidden="true">
+      <img src="/city-vote/assets/alan-v1/guangzhou.webp" alt="" class="auth-photo" fetchpriority="low">
+      <span class="auth-wordmark"><img src="/city-vote/assets/lean-emblem.svg" alt="">LEAN CLUB</span>
+      <div class="auth-art-copy"><span>THE CITY IS OUR CLUB.</span><p>一起练。<br>一起见。</p></div>
+      <span class="auth-art-foot">SHENZHEN · ZHUHAI · GUANGZHOU</span>
+    </div>
+    <div class="auth-main">
+      <a class="auth-home" href="/">返回主站</a>
+      <div class="auth-box">
+        <a href="/" class="auth-mobile-brand" aria-label="Lean Club 主站"><img src="/city-vote/assets/lean-emblem.svg" alt="">LEAN CLUB</a>
+        <p class="eyebrow">LEAN CLUB / STUDIO</p>
+        <h1 id="auth-title">内容管理</h1>
+        <p id="auth-description" class="auth-description">登录后，查看投票与管理城市海报。</p>
+        <div id="auth-loading" class="inline-loading" role="status"><span class="spinner" aria-hidden="true"></span>正在连接管理服务</div>
+        <div id="auth-error" class="notice notice-error" role="alert" hidden></div>
+        <div id="setup-unavailable" class="setup-unavailable" hidden>
+          <p>管理员账号尚未设置。</p>
+          <p class="muted">请在服务器本机打开管理页完成初始化，或通过服务器管理命令创建账号。</p>
+          <button id="retry-session" type="button" class="button button-primary">重新检查</button>
+        </div>
+        <form id="auth-form" hidden>
+          <div class="field">
+            <label for="username">用户名或邮箱</label>
+            <input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="254" required>
+            <span id="username-hint" class="field-hint" hidden>3–40 位用户名（字母或数字开头，可含 . _ -），也可使用邮箱</span>
+          </div>
+          <div class="field">
+            <label for="password">密码</label>
+            <div class="password-wrap"><input id="password" name="password" type="password" autocomplete="current-password" maxlength="128" required><button class="password-toggle" type="button" data-password-target="password" aria-label="显示密码" aria-pressed="false">显示</button></div>
+            <span id="password-hint" class="field-hint" hidden>至少 12 位，建议使用密码管理器生成并保存</span>
+          </div>
+          <div id="confirm-field" class="field" hidden>
+            <label for="confirm-password">确认密码</label>
+            <div class="password-wrap"><input id="confirm-password" name="confirm-password" type="password" autocomplete="new-password" maxlength="128"><button class="password-toggle" type="button" data-password-target="confirm-password" aria-label="显示确认密码" aria-pressed="false">显示</button></div>
+          </div>
+          <button id="auth-submit" class="button button-primary auth-submit" type="submit"><span id="auth-submit-label">登录管理台</span></button>
+        </form>
+        <p class="auth-foot">仅供 Lean Club 管理人员使用</p>
+      </div>
+      <span class="auth-bottom">LEAN CLUB · 内容与活动管理</span>
+    </div>
+  </section>
+
+  <div id="admin-view" class="admin-view" hidden>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Lean Club 主站"><img src="/city-vote/assets/lean-emblem.svg" alt="">LEAN CLUB<span>STUDIO</span></a>
+      <nav class="top-links" aria-label="站点导航"><a href="/">主站</a><a href="/city-vote">投票页</a></nav>
+      <div class="account"><span id="account-name"></span><button id="logout" type="button">退出</button></div>
+    </header>
+    <main id="main" class="main" tabindex="-1">
+      <div class="page-heading"><div class="heading-images" aria-hidden="true"><img src="/city-vote/assets/alan-v1/shenzhen.webp" alt=""><img src="/city-vote/assets/alan-v1/zhuhai.webp" alt=""><img src="/city-vote/assets/alan-v1/guangzhou.webp" alt=""></div><div class="heading-copy"><p class="eyebrow">LEAN CLUB / STUDIO</p><h1>俱乐部管理</h1><span class="campaign-label">SHENZHEN · ZHUHAI · GUANGZHOU</span></div></div>
+      <div class="tabs-row"><div class="tabs" role="tablist" aria-label="管理内容"><button type="button" id="tab-overview" role="tab" aria-controls="panel-overview" aria-selected="true" tabindex="0" data-panel="overview">数据概览</button><button type="button" id="tab-posters" role="tab" aria-controls="panel-posters" aria-selected="false" tabindex="-1" data-panel="posters">城市海报</button><button type="button" id="tab-feishu" role="tab" aria-controls="panel-feishu" aria-selected="false" tabindex="-1" data-panel="feishu">飞书通知</button></div><span id="last-updated" class="last-updated">等待数据</span></div>
+      <div id="app-message" class="notice" role="status" hidden></div>
+
+      <section id="panel-overview" role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
+        <div class="section-toolbar"><p>实时城市意向</p><button class="button button-quiet refresh-button" id="refresh-stats" type="button">刷新数据</button></div>
+        <div id="stats-error" class="notice notice-error" role="alert" hidden></div>
+        <div id="stats-content" class="stats-content" aria-busy="true">
+          <div class="metrics-grid">
+            <article class="metric metric-lead"><div class="metric-top"><h2>当前总票数</h2></div><strong id="metric-votes">—</strong><p>CITY VOTES</p></article>
+            <article class="metric"><h2>主站总浏览</h2><strong id="metric-home-pv">—</strong><p>累计页面浏览次数</p></article>
+            <article class="metric"><h2>今日主站浏览</h2><strong id="metric-home-today">—</strong><p><span id="metric-home-today-uv">—</span> 个独立浏览器</p></article>
+            <article class="metric"><h2>主站独立浏览器</h2><strong id="metric-home-uv">—</strong><p>累计去重浏览器数</p></article>
+          </div>
+          <div class="charts-grid">
+            <section class="panel votes-panel" aria-labelledby="votes-heading">
+              <div class="panel-heading"><h2 id="votes-heading">城市意向</h2><span class="micro-label">CITY VOTES</span></div>
+              <div id="votes-list" class="votes-list"></div>
+              <p id="votes-empty" class="empty-copy" hidden>等待第一票。</p>
+              <a class="text-link" href="/city-vote">打开投票页</a>
+            </section>
+            <section class="panel trend-panel" aria-labelledby="trend-heading">
+              <div class="panel-heading"><h2 id="trend-heading">近 14 天</h2><span id="trend-range" class="micro-label">访问与新增投票</span></div>
+              <div class="chart-legend" aria-hidden="true"><span><i class="legend-home"></i>主站浏览</span><span><i class="legend-vote"></i>投票页浏览</span><span><i class="legend-new"></i>新增投票</span></div>
+              <div id="trend-chart" class="trend-chart" role="img" aria-label="正在加载最近 14 天访问与投票数据"></div>
+              <div class="vote-traffic"><span>投票页总浏览 <strong id="metric-vote-pv">—</strong></span><span>今日 <strong id="metric-vote-today">—</strong></span><span>独立浏览器 <strong id="metric-vote-uv">—</strong></span></div>
+              <details class="data-details"><summary>查看每日数据</summary><div class="table-scroll"><table><caption class="sr-only">最近 14 天每日访问及新增投票</caption><thead><tr><th scope="col">日期</th><th scope="col">主站浏览</th><th scope="col">投票页浏览</th><th scope="col">新增投票</th></tr></thead><tbody id="daily-table"></tbody></table></div></details>
+            </section>
+          </div>
+        </div>
+        <details class="definitions"><summary>统计口径</summary><p>投票数以服务器保存结果为准。浏览量按页面访问累计，独立浏览器以本站浏览器标识去重。每日统计使用北京时间。</p></details>
+      </section>
+
+      <section id="panel-posters" role="tabpanel" aria-labelledby="tab-posters" tabindex="0" hidden>
+        <div class="section-toolbar"><p>三座城市，三种状态。</p><button class="button button-quiet refresh-button" id="refresh-posters" type="button">刷新海报</button></div>
+        <div id="posters-error" class="notice notice-error" role="alert" hidden></div>
+        <p class="poster-format">PNG / JPEG / WebP · 单张不超过 8 MB · 建议使用竖幅图片</p>
+        <div id="posters-loading" class="inline-loading" role="status"><span class="spinner" aria-hidden="true"></span>正在读取城市海报</div>
+        <div id="posters-grid" class="posters-grid"></div>
+      </section>
+      <section id="panel-feishu" role="tabpanel" aria-labelledby="tab-feishu" tabindex="0" hidden>
+        <div class="section-toolbar"><p>每一票，直达你的群。</p><button class="button button-quiet refresh-button" id="refresh-feishu" type="button">刷新状态</button></div>
+        <div id="feishu-error" class="notice notice-error" role="alert" hidden></div>
+        <div id="feishu-loading" class="inline-loading" role="status"><span class="spinner" aria-hidden="true"></span>正在读取通知设置</div>
+        <div id="feishu-content" class="notification-grid" hidden>
+          <form id="feishu-form" class="panel notification-settings" autocomplete="off">
+            <div class="panel-heading"><h2>飞书群机器人</h2><span id="feishu-connection" class="connection-badge">未连接</span></div>
+            <label class="notification-toggle" for="feishu-enabled"><span>开启新增投票通知<small>每一张新票，附三城累计票数</small></span><input id="feishu-enabled" type="checkbox" role="switch"><span class="switch-track" aria-hidden="true"></span></label>
+            <div class="field"><label for="feishu-webhook">Webhook 地址</label><input id="feishu-webhook" type="password" autocomplete="new-password" spellcheck="false" autocapitalize="none" maxlength="512" placeholder="粘贴飞书机器人的 Webhook" aria-describedby="feishu-webhook-hint"><span id="feishu-webhook-hint" class="field-hint">飞书群设置 / 群机器人 / 添加自定义机器人</span></div>
+            <div class="field"><label for="feishu-secret">签名密钥 <span class="optional-label">可选</span></label><input id="feishu-secret" type="password" autocomplete="new-password" spellcheck="false" maxlength="512" placeholder="机器人开启签名校验时填写" aria-describedby="feishu-secret-hint"><span id="feishu-secret-hint" class="field-hint">未开启签名校验可留空</span><label id="feishu-clear-secret-wrap" class="check-label" for="feishu-clear-secret" hidden><input id="feishu-clear-secret" type="checkbox">移除已保存的签名密钥</label></div>
+            <div class="notification-actions"><button id="feishu-save" type="submit" class="button button-primary">保存设置</button><button id="feishu-test" type="button" class="button button-secondary" disabled>发送测试消息</button></div>
+            <p id="feishu-feedback" class="notification-feedback" role="status" hidden></p>
+          </form>
+          <aside class="notification-preview" aria-label="群消息预览与发送状态">
+            <div class="notification-art" aria-hidden="true"><img src="/city-vote/assets/alan-v1/shenzhen.webp" alt=""><div><img class="notification-emblem" src="/city-vote/assets/lean-emblem.svg" alt=""><span>EVERY VOTE COUNTS.</span></div></div>
+            <div class="notification-preview-body"><p class="eyebrow">消息内容预览</p><h2>三城投票汇总</h2><p class="notification-description">总票数 · 城市明细 · 统计时间</p><div class="preview-city-totals" aria-label="消息内容示意，不是实时票数"><span>深圳<b>累计票数</b></span><span>珠海<b>累计票数</b></span><span>广州<b>累计票数</b></span></div><button id="feishu-summary" type="button" class="button notification-summary-action" disabled>立即推送汇总</button><div class="delivery-summary"><div><span>最新通知</span><strong id="feishu-delivery-state">暂无记录</strong></div><p id="feishu-delivery-detail">保存配置后，可发送测试消息确认连接。</p><p id="feishu-queue" hidden></p><button id="feishu-retry" type="button" class="button button-secondary" hidden>重试失败消息</button></div></div>
+          </aside>
+        </div>
+      </section>
+      <footer class="admin-footer"><span>Lean Club Studio</span><span>从线上，到现场。</span></footer>
+    </main>
+  </div>
+
+  <template id="vote-row-template"><div class="vote-row"><div class="vote-city"><span class="city-code"></span><h3></h3><span class="vote-count"></span></div><div class="vote-bar" role="meter" aria-valuemin="0" aria-valuemax="100"><span></span></div><span class="vote-share"></span></div></template>
+  <template id="poster-template">
+    <article class="poster-card">
+      <div class="poster-heading"><div><span class="micro-label poster-code"></span><h2 class="poster-city"></h2></div><a class="poster-open" target="_blank" rel="noopener" aria-label="打开城市投票页">预览</a></div>
+      <div class="poster-image-wrap"><img class="poster-image" alt="" loading="lazy"><span class="poster-badge">当前在线</span><div class="poster-image-error" hidden>图片暂时无法显示</div></div>
+      <div class="poster-source"><span class="poster-source-type"></span><time class="poster-time"></time></div>
+      <div class="preview-switch" role="group" aria-label="预览内容" hidden><button type="button" data-preview="current" aria-pressed="false">当前在线</button><button type="button" data-preview="draft" aria-pressed="true">新图预览</button></div>
+      <p class="selected-file" hidden></p>
+      <p class="poster-note" hidden>新图尚未发布，线上海报保持原样。</p>
+      <input class="poster-file-input" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+      <div class="poster-actions"><button class="button button-secondary choose-poster" type="button">选择新海报</button><button class="button button-primary publish-poster" type="button" disabled>发布海报</button></div>
+      <button type="button" class="text-button discard-poster" hidden>取消选择</button>
+      <details class="focus-settings"><summary>调整构图焦点 <span aria-hidden="true">＋</span></summary><div class="focus-controls"><div class="range-field"><label>水平位置 <output class="focus-x-value">50%</output></label><input class="focus-x" type="range" min="0" max="100" step="1" value="50"></div><div class="range-field"><label>垂直位置 <output class="focus-y-value">50%</output></label><input class="focus-y" type="range" min="0" max="100" step="1" value="50"></div><p class="field-hint">预览为裁切示意，发布前可打开投票页确认。</p><button type="button" class="button button-secondary save-focus" disabled>保存构图</button></div></details>
+      <div class="poster-bottom"><button type="button" class="text-button reset-poster">恢复默认海报</button><span class="focus-unsaved" hidden>构图未保存</span></div>
+      <div class="reset-confirm" hidden><p>恢复这座城市的默认海报和构图？</p><div><button type="button" class="button button-danger confirm-reset">确认恢复</button><button type="button" class="button button-quiet cancel-reset">取消</button></div></div>
+      <p class="poster-feedback" role="status" hidden></p>
+    </article>
+  </template>
+  <div id="live-status" class="sr-only" role="status" aria-live="polite"></div>
+  <noscript><p class="noscript">内容管理需要启用 JavaScript。<a href="/">返回主站</a></p></noscript>
+</body>
+</html>

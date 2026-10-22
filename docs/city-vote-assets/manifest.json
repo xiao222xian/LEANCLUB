@@ -1,0 +1,149 @@
+{
+  "recorded": "2026-10-22",
+  "status": "historical-v3; formerly-user-approved-for-main-site-integration; retained-for-reference",
+  "source": "built-in image_gen; historical generation prompt wording preserved; redundant EOF blank lines normalized as recorded",
+  "runtimeFiles": [
+    {
+      "file": "web/creator/city-vote/assets/shenzhen.webp",
+      "bytes": 294158,
+      "sha256": "0e79bb02443aadfce275689c47efab043b17009611235e287e31d9e774fa8463",
+      "width": 941,
+      "height": 1672,
+      "source_record": "../lmgua-city-vote/fullscreen-vote/assets/manifest.json"
+    },
+    {
+      "file": "web/creator/city-vote/assets/shenzhen-640.webp",
+      "bytes": 158530,
+      "sha256": "b989b72f032a64e073a7235f9e3356f8c94a3083b55d9c963eaab282b0e70ba1",
+      "width": 640,
+      "height": 1137,
+      "source_record": "../lmgua-city-vote/fullscreen-vote/assets/manifest.json"
+    },
+    {
+      "file": "web/creator/city-vote/assets/zhuhai.webp",
+      "bytes": 334696,
+      "sha256": "e6e08d8f933c3568c7395d795826d0dbb60d49e3565c3d044aeceaf77e79999e",
+      "width": 941,
+      "height": 1672,
+      "source_record": "../lmgua-city-vote/fullscreen-vote/assets/manifest.json"
+    },
+    {
+      "file": "web/creator/city-vote/assets/zhuhai-640.webp",
+      "bytes": 181346,
+      "sha256": "b4c9917a0b1ef38ead9419a72353f5761e349edc5ef7f9a6edb0e77247e87852",
+      "width": 640,
+      "height": 1137,
+      "source_record": "../lmgua-city-vote/fullscreen-vote/assets/manifest.json"
+    },
+    {
+      "file": "web/creator/city-vote/assets/guangzhou.webp",
+      "bytes": 336780,
+      "sha256": "3e1c2a7092144abc1d31c89e3f98af16f292c0a5074b7180230c8613c326718e",
+      "width": 941,
+      "height": 1672,
+      "source_record": "../lmgua-city-vote/fullscreen-vote/assets/manifest.json"
+    },
+    {
+      "file": "web/creator/city-vote/assets/guangzhou-640.webp",
+      "bytes": 195560,
+      "sha256": "7b69ccd69122a83de3c00325bfc73fce14d752b721474a4c039638db0df56783",
+      "width": 640,
+      "height": 1137,
+      "source_record": "../lmgua-city-vote/fullscreen-vote/assets/manifest.json"
+    },
+    {
+      "file": "web/creator/city-vote/assets/fonts/sans.ttf",
+      "bytes": 136676,
+      "sha256": "acad6de1fc93436f5c0f1f4137751ef04f1aea3063e7036535970ffcfbd79f72"
+    },
+    {
+      "file": "web/creator/city-vote/assets/fonts/SpaceGrotesk-OFL.txt",
+      "bytes": 4401,
+      "sha256": "18a4de52385f6b988782639d5d0cc1326e5a8c2de9a7f01d7b20d9aedcc60943",
+      "sourceBytes": 4495,
+      "sourceSha256": "564ce565c371c5e5bbf286006565a7c9aa55a9f56e7ca58d56e05d649dd61a72",
+      "normalization": "Removed one trailing space on line 21; normalized CRLF to LF; license wording unchanged."
+    },
+    {
+      "file": "web/creator/city-vote/assets/lean-emblem.svg",
+      "bytes": 163,
+      "sha256": "96fee05823b15649f889b313692eb1722c3916a10cd5031312b1a21848159673",
+      "source": "original code-authored SVG, 2026-10-22 editorial revision"
+    },
+    {
+      "file": "web/creator/city-vote/assets/film-grain.svg",
+      "bytes": 330,
+      "sha256": "f3a6a6c8d2bce14c2453171bd9a8bfeb5a24ec9dcde94721860760dc1ebdfd8d",
+      "source": "original code-authored SVG, 2026-10-22 editorial revision"
+    }
+  ],
+  "originalPngOutsideRepository": [
+    {
+      "file": "../lmgua-city-vote/backgrounds-v3/shenzhen.png",
+      "bytes": 2447855,
+      "sha256": "76c4a5a34259945ccfee6894dbbcf39851dbf0d8ffec71799f2938615adfce55",
+      "width": 941,
+      "height": 1672
+    },
+    {
+      "file": "../lmgua-city-vote/backgrounds-v3/zhuhai.png",
+      "bytes": 2587646,
+      "sha256": "7b76fc549cd541700534510bbd0b32a0f4d0c9ac5bab1300cb29103a246b84c6",
+      "width": 941,
+      "height": 1672
+    },
+    {
+      "file": "../lmgua-city-vote/backgrounds-v3/guangzhou.png",
+      "bytes": 2385025,
+      "sha256": "aad99b04bc263db759e2b6523fea414e844da2e29dbd8e9fb32f98647c97cc94",
+      "width": 941,
+      "height": 1672
+    }
+  ],
+  "archivedPromptRecords": [
+    {
+      "file": "docs/city-vote-assets/source-prompts/shenzhen-prompt.md",
+      "bytes": 7090,
+      "sha256": "ce720c66a879b179eb848b26a5e3887b965b970bf01c643be2f4cb4bee89bce1",
+      "source": "../lmgua-city-vote/backgrounds-v3/shenzhen-prompt.md",
+      "sourceBytes": 7091,
+      "sourceSha256": "e598d67310e8f24ac785cb9fa285fc11b58a08abc870e491fa119860b8da4dcd",
+      "normalization": "Removed redundant trailing empty line; prompt wording unchanged; LF line endings."
+    },
+    {
+      "file": "docs/city-vote-assets/source-prompts/zhuhai-prompt.md",
+      "bytes": 4200,
+      "sha256": "1501547bd90dba6eb3acc829331914ecd0f1c0dd419cce6dc6be45125493ad43",
+      "source": "../lmgua-city-vote/backgrounds-v3/zhuhai-prompt.md"
+    },
+    {
+      "file": "docs/city-vote-assets/source-prompts/guangzhou-prompt.md",
+      "bytes": 8034,
+      "sha256": "6447e97d239ec380213dcb57941368272dc19f81227939abb6dce522c0f03b24",
+      "source": "../lmgua-city-vote/backgrounds-v3/guangzhou-prompt.md",
+      "sourceBytes": 8036,
+      "sourceSha256": "0afdc248ef0137404f7a39683b09529d8ebafd9fcbb4a5ffcce0bcb14a10f93d",
+      "normalization": "Removed redundant trailing empty lines; prompt wording unchanged; LF line endings."
+    }
+  ],
+  "conversion": {
+    "sharp": "0.35.5",
+    "libvips": "8.18.7",
+    "webp": "1.6.0",
+    "quality": 92,
+    "effort": 6,
+    "smartSubsample": true,
+    "resizeKernel": "lanczos3",
+    "copiedWithoutModification": true
+  },
+  "font": {
+    "name": "Space Grotesk",
+    "license": "SIL Open Font License 1.1",
+    "source": "https://github.com/google/fonts/tree/main/ofl/spacegrotesk",
+    "downloadDateFromPriorRecord": "2026-10-22",
+    "upstreamCommit": "not recorded; exact local bytes fixed by SHA-256",
+    "binaryModified": false,
+    "licenseTextNormalization": "License wording unchanged; one trailing space removed and line endings normalized to LF. Original byte hash retained in runtimeFiles sourceSha256."
+  },
+  "supersededBy": "alan-v1-manifest.json"
+}

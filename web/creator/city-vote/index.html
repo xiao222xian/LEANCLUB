@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101717">
+  <meta name="description" content="Lean Club 首次线下见面，深圳、珠海、广州，第一站由你来定。">
+  <meta name="robots" content="noindex,nofollow">
+  <title>第一站，你来定。— Lean Club</title>
+  <link rel="icon" type="image/svg+xml" href="/city-vote/assets/lean-emblem.svg">
+  <link rel="stylesheet" href="/city-vote/style.css?v=20261022-alan-v1">
+  <script src="/city-vote/app.js?v=20261022-editorial" defer></script>
+</head>
+<body>
+  <header class="masthead">
+    <h1>第一站，你来定。</h1>
+    <a class="wordmark" href="/" aria-label="Lean Club 主站"><img src="/city-vote/assets/lean-emblem.svg" alt="" width="48" height="32"><span>LEAN CLUB<small>薄肌俱乐部</small></span></a>
+    <nav class="top-nav" aria-label="页面导航">
+      <button class="text-link" type="button" id="open-info">关于这次见面</button>
+      <a class="home-link" href="/">主站</a>
+    </nav>
+  </header>
+
+  <main class="stage" id="stage" aria-label="选择首次线下活动的城市">
+    <section class="city is-active" data-city="shenzhen" aria-labelledby="name-shenzhen" id="city-shenzhen">
+      <div class="photo-wrap"><img class="city-photo" src="/city-vote/assets/alan-v1/shenzhen.webp" srcset="/city-vote/assets/alan-v1/shenzhen-640.webp 640w, /city-vote/assets/alan-v1/shenzhen.webp 941w" sizes="(max-width: 800px) 100vw, 34vw" width="941" height="1672" alt="深圳湾与春笋建筑前的薄肌站姿人像，概念摄影" fetchpriority="high" decoding="async"></div>
+      <div class="shade" aria-hidden="true"></div>
+      <div class="city-content">
+        <p class="mobile-theme" aria-hidden="true">第一站，你来定。</p>
+        <p class="city-english" lang="en">SHENZHEN</p><h2 id="name-shenzhen">深圳</h2>
+        <div class="action-area">
+          <button class="vote-button" type="button" disabled data-vote="shenzhen"><span class="button-label">投深圳一票</span></button>
+          <button class="undo-button" type="button" data-undo="shenzhen" hidden>取消</button>
+        </div>
+      </div>
+    </section>
+    <section class="city" data-city="zhuhai" aria-labelledby="name-zhuhai" id="city-zhuhai">
+      <div class="photo-wrap"><img class="city-photo" src="/city-vote/assets/alan-v1/zhuhai.webp" srcset="/city-vote/assets/alan-v1/zhuhai-640.webp 640w, /city-vote/assets/alan-v1/zhuhai.webp 941w" sizes="(max-width: 800px) 100vw, 34vw" width="941" height="1672" alt="珠海日月贝与海面前的薄肌站姿人像，概念摄影" decoding="async"></div>
+      <div class="shade" aria-hidden="true"></div>
+      <div class="city-content">
+        <p class="mobile-theme" aria-hidden="true">第一站，你来定。</p>
+        <p class="city-english" lang="en">ZHUHAI</p><h2 id="name-zhuhai">珠海</h2>
+        <div class="action-area">
+          <button class="vote-button" type="button" disabled data-vote="zhuhai"><span class="button-label">投珠海一票</span></button>
+          <button class="undo-button" type="button" data-undo="zhuhai" hidden>取消</button>
+        </div>
+      </div>
+    </section>
+    <section class="city" data-city="guangzhou" aria-labelledby="name-guangzhou" id="city-guangzhou">
+      <div class="photo-wrap"><img class="city-photo" src="/city-vote/assets/alan-v1/guangzhou.webp" srcset="/city-vote/assets/alan-v1/guangzhou-640.webp 640w, /city-vote/assets/alan-v1/guangzhou.webp 941w" sizes="(max-width: 800px) 100vw, 34vw" width="941" height="1672" alt="广州塔与珠江夜色前的薄肌站姿人像，概念摄影" decoding="async"></div>
+      <div class="shade" aria-hidden="true"></div>
+      <div class="city-content">
+        <p class="mobile-theme" aria-hidden="true">第一站，你来定。</p>
+        <p class="city-english" lang="en">GUANGZHOU</p><h2 id="name-guangzhou">广州</h2>
+        <div class="action-area">
+          <button class="vote-button" type="button" disabled data-vote="guangzhou"><span class="button-label">投广州一票</span></button>
+          <button class="undo-button" type="button" data-undo="guangzhou" hidden>取消</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="city-switcher" aria-label="浏览候选城市">
+    <div class="city-tabs" role="tablist" aria-label="城市照片">
+      <button id="tab-shenzhen" type="button" role="tab" data-tab="shenzhen" aria-controls="city-shenzhen" aria-selected="true" tabindex="0">深圳</button>
+      <button id="tab-zhuhai" type="button" role="tab" data-tab="zhuhai" aria-controls="city-zhuhai" aria-selected="false" tabindex="-1">珠海</button>
+      <button id="tab-guangzhou" type="button" role="tab" data-tab="guangzhou" aria-controls="city-guangzhou" aria-selected="false" tabindex="-1">广州</button>
+    </div>
+  </nav>
+  <p class="page-note" id="page-note">首次线下 · 城市征集</p>
+  <div class="connection-message" id="connection-message" role="alert" hidden><span></span><button type="button" id="retry-connection">重试</button></div>
+  <div class="vote-toast" id="vote-toast" role="status" aria-live="polite" hidden></div>
+  <p class="sr-only" role="status" aria-live="polite" id="vote-status"></p>
+  <noscript><p class="no-script">开启 JavaScript 后可浏览城市并投票。</p></noscript>
+
+  <dialog class="confirm-dialog" id="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-eyebrow">
+    <div class="confirm-art" aria-hidden="true"><img id="confirm-photo" src="/city-vote/assets/alan-v1/shenzhen.webp" alt=""><div class="confirm-shade"></div></div>
+    <div class="confirm-content">
+      <div class="confirm-brand" aria-hidden="true"><img src="/city-vote/assets/lean-emblem.svg" alt="" width="36" height="24"><span>LEAN CLUB</span></div>
+      <p class="confirm-eyebrow" id="confirm-eyebrow">第一站，就在</p>
+      <h2 id="confirm-title">深圳</h2>
+      <p class="confirm-english" id="confirm-english" lang="en">SHENZHEN</p>
+      <p class="confirm-error" id="confirm-error" role="alert" hidden></p>
+      <div class="confirm-actions">
+        <button class="confirm-submit" type="button" id="confirm-submit"><span>确认投给深圳</span></button>
+        <button class="confirm-cancel" type="button" id="confirm-cancel" autofocus>再看看</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="info-dialog" id="info-dialog" aria-labelledby="info-title">
+    <img class="info-emblem" src="/city-vote/assets/lean-emblem.svg" alt="Lean Club" width="72" height="48">
+    <p class="info-kicker">薄肌俱乐部 · 首次线下</p>
+    <h2 id="info-title">一起练。<br>一起见。</h2>
+    <p>第一站，由你来定。<br>时间与场地，确定后公布。</p>
+    <p class="info-footnote">我们用必要的 Cookie 记住选择并统计访问。<br>海报为薄肌主题概念影像。</p>
+    <button class="close-button" type="button" id="close-info">回到现场</button>
+  </dialog>
+</body>
+</html>

@@ -1,0 +1,9 @@
+16e3d10d405de49a1a334c10c4a231fa8c4767fa3049dba614fb6d320cf00d02  web/creator/city-vote/assets/alan-v1/guangzhou-640.webp
+41bf447a8022c5abc1fdcd4e3f347ce6f84b74434a9a12f1dc23ffbf3a6c98a2  web/creator/city-vote/assets/alan-v1/guangzhou.webp
+e3dc10f3834b115e4f16421907a9654e620c7321d32ea82daf20ed59734d88b6  web/creator/city-vote/assets/alan-v1/shenzhen-640.webp
+2c3e21a3b7620dfe2e085ca487ba958a34bdf943a39df16c49967099e72a3a57  web/creator/city-vote/assets/alan-v1/shenzhen.webp
+67ac2b3d7f34ffd069773a278cdc344e05ffef973a0dc7ac4dff762ea10d8d2f  web/creator/city-vote/assets/alan-v1/zhuhai-640.webp
+4d1b7b8722daba32fd7bf275bc7c492456b0bc643920fdbccce85cb1f93b4cf6  web/creator/city-vote/assets/alan-v1/zhuhai.webp
+beb39c4079989f98ed73c23b321925b804e0a358afc1acd75a5561c0259dcf4a  docs/city-vote-assets/source-prompts/alan-v1-prompts.md
+0b5e1543895438297f46fbcaa7257d988aaf991850815255eebc5c64940638dc  docs/city-vote-assets/alan-v1-sources.md
+9591003c90532d833a40ca6ec502fff4b1d74ea8bf1308dcab291c4f70bc9e2f  docs/city-vote-assets/alan-v1-sources.json

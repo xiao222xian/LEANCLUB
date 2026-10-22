@@ -2,6 +2,7 @@
 import base64
 import binascii
 import json
+import ipaddress
 import os
 import re
 import struct
@@ -11,6 +12,9 @@ from socketserver import ThreadingMixIn
 from urllib.parse import urlsplit, unquote
 from store import Store, Problem
 from metadata import enrich_schools
+from campaign import CampaignStore
+from campaign_http import CampaignAPI
+from campaign_feishu import FeishuWorker
 
 MAX_BODY = 3 * 1024 * 1024
 MAX_IMAGE = 2 * 1024 * 1024
@@ -19,6 +23,9 @@ with open(os.path.join(ROOT, 'schools.json'), encoding='utf-8') as catalog_file:
     CATALOG = json.load(catalog_file)
 STORE = Store(os.environ.get('CLUB_DB', '/var/lib/leanmuscleclub/clubs.sqlite3'), CATALOG)
 ORIGIN = os.environ.get('CLUB_ORIGIN', 'https://leanmuscleclub.com')
+CAMPAIGN_STORE = CampaignStore(STORE.path, os.environ.get('CLUB_MEDIA_DIR'))
+CAMPAIGN = CampaignAPI(CAMPAIGN_STORE, ORIGIN, os.environ.get('CLUB_ALLOW_LOCAL_SETUP') == '1')
+TRUSTED_PROXIES = {str(ipaddress.ip_address(value.strip())) for value in os.environ.get('CLUB_TRUSTED_PROXY_IPS', '').split(',') if value.strip()}
 
 
 def validate_qr(value):
@@ -65,6 +72,9 @@ def validate_qr(value):
 
 class Handler(BaseHTTPRequestHandler):
     server_version = 'LeanClub'
+    def setup(self):
+        super().setup()
+        self.response_cookies = []
     def log_message(self, fmt, *args):
         # Never log bodies, contacts or edit keys.
         sys.stderr.write('%s %s\n' % (self.command, self.path.split('?')[0]))
@@ -76,15 +86,26 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header('Content-Length', str(len(raw)))
         self.send_header('Cache-Control', 'no-store')
         self.send_header('X-Content-Type-Options', 'nosniff')
+        for cookie in self.response_cookies:
+            self.send_header('Set-Cookie', cookie)
+        self.response_cookies = []
         self.end_headers()
         self.wfile.write(raw)
 
     def ip(self):
-        return self.headers.get('X-Real-IP', self.client_address[0])[:80]
+        peer = self.client_address[0]
+        if peer in TRUSTED_PROXIES:
+            try:
+                return str(ipaddress.ip_address(self.headers.get('X-Real-IP', peer)))
+            except ValueError:
+                pass
+        return peer
 
     def do_GET(self):
         try:
             path = urlsplit(self.path).path
+            if CAMPAIGN.matches(path):
+                return CAMPAIGN.get(self, path)
             if path == '/api/club/health':
                 with STORE.connect() as db:
                     db.execute('SELECT 1').fetchone()
@@ -104,8 +125,10 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         try:
-            if self.headers.get('Origin') != ORIGIN:
-                raise Problem(403, '请从官网填写页面提交。')
+            path = urlsplit(self.path).path
+            if CAMPAIGN.matches(path):
+                return CAMPAIGN.post(self, path)
+            CAMPAIGN.require_origin(self)
             if self.headers.get('Content-Type', '').split(';')[0] != 'application/json':
                 raise Problem(415, '请求格式不正确。')
             try:
@@ -143,4 +166,11 @@ class Server(ThreadingMixIn, HTTPServer):
 
 
 if __name__ == '__main__':
-    Server(('127.0.0.1', int(os.environ.get('CLUB_PORT', '5381'))), Handler).serve_forever()
+    server = Server(('127.0.0.1', int(os.environ.get('CLUB_PORT', '5381'))), Handler)
+    notifications = FeishuWorker(CAMPAIGN_STORE.notifications)
+    notifications.start()
+    try:
+        server.serve_forever()
+    finally:
+        server.server_close()
+        notifications.stop()

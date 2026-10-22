@@ -1,0 +1,119 @@
+{
+  "version": "alan-v1",
+  "recorded": "2026-10-22",
+  "status": "integrated-in-local-development; visual-feedback-pending",
+  "source": "built-in image_gen edit mode",
+  "image_type": "AI-assisted composites based on user-identified subject; not documentary city photographs",
+  "runtimeFiles": [
+    {
+      "file": "web/creator/city-vote/assets/alan-v1/guangzhou-640.webp",
+      "bytes": 167906,
+      "sha256": "16e3d10d405de49a1a334c10c4a231fa8c4767fa3049dba614fb6d320cf00d02",
+      "width": 640,
+      "height": 1137
+    },
+    {
+      "file": "web/creator/city-vote/assets/alan-v1/guangzhou.webp",
+      "bytes": 283964,
+      "sha256": "41bf447a8022c5abc1fdcd4e3f347ce6f84b74434a9a12f1dc23ffbf3a6c98a2",
+      "width": 941,
+      "height": 1672
+    },
+    {
+      "file": "web/creator/city-vote/assets/alan-v1/shenzhen-640.webp",
+      "bytes": 145108,
+      "sha256": "e3dc10f3834b115e4f16421907a9654e620c7321d32ea82daf20ed59734d88b6",
+      "width": 640,
+      "height": 1137
+    },
+    {
+      "file": "web/creator/city-vote/assets/alan-v1/shenzhen.webp",
+      "bytes": 254110,
+      "sha256": "2c3e21a3b7620dfe2e085ca487ba958a34bdf943a39df16c49967099e72a3a57",
+      "width": 941,
+      "height": 1672
+    },
+    {
+      "file": "web/creator/city-vote/assets/alan-v1/zhuhai-640.webp",
+      "bytes": 166930,
+      "sha256": "67ac2b3d7f34ffd069773a278cdc344e05ffef973a0dc7ac4dff762ea10d8d2f",
+      "width": 640,
+      "height": 1137
+    },
+    {
+      "file": "web/creator/city-vote/assets/alan-v1/zhuhai.webp",
+      "bytes": 283618,
+      "sha256": "4d1b7b8722daba32fd7bf275bc7c492456b0bc643920fdbccce85cb1f93b4cf6",
+      "width": 941,
+      "height": 1672
+    }
+  ],
+  "originalPngOutsideRepository": [
+    {
+      "city": "shenzhen",
+      "file": "shenzhen.png",
+      "included_in_repository": false,
+      "bytes": 2444326,
+      "sha256": "1a84a624de604317fabbe91e44961eb05344e531ef0ef09b9c100a130c387649",
+      "width": 941,
+      "height": 1672
+    },
+    {
+      "city": "zhuhai",
+      "file": "zhuhai.png",
+      "included_in_repository": false,
+      "bytes": 2538058,
+      "sha256": "0a3106666275540cb7bdb529decb86ed8346c8cd1756ee1bb8afd62fe42eb6f2",
+      "width": 941,
+      "height": 1672
+    },
+    {
+      "city": "guangzhou",
+      "file": "guangzhou.png",
+      "included_in_repository": false,
+      "bytes": 2374445,
+      "sha256": "ac83c0c01e790afd7f819846607c21025d4d1dbd7c4341623a547d70615001af",
+      "width": 941,
+      "height": 1672
+    }
+  ],
+  "archivedReferenceAndPromptRecords": [
+    {
+      "file": "docs/city-vote-assets/source-prompts/alan-v1-prompts.md",
+      "bytes": 8115,
+      "sha256": "beb39c4079989f98ed73c23b321925b804e0a358afc1acd75a5561c0259dcf4a",
+      "sourceSha256": "30bc7ed73450ec41a39a76a7d3dc2ea148f0d60815f20267de64965f2322ead5",
+      "sourceBytes": 8154,
+      "normalization": "CRLF line endings normalized to LF; complete wording preserved."
+    },
+    {
+      "file": "docs/city-vote-assets/alan-v1-sources.md",
+      "bytes": 2902,
+      "sha256": "0b5e1543895438297f46fbcaa7257d988aaf991850815255eebc5c64940638dc"
+    },
+    {
+      "file": "docs/city-vote-assets/alan-v1-sources.json",
+      "bytes": 2539,
+      "sha256": "9591003c90532d833a40ca6ec502fff4b1d74ea8bf1308dcab291c4f70bc9e2f",
+      "sourceSha256": "43bf5adb4d75649461c957ea5f1ecb53f9bac7f959f52d36e845a9ab9dd00d62",
+      "sourceBytes": 2589,
+      "normalization": "CRLF line endings normalized to LF; complete wording preserved."
+    }
+  ],
+  "conversion": {
+    "implementation": "backend/campaign.py CampaignStore.replace_poster",
+    "pillow": "12.3.0",
+    "format": "WEBP",
+    "quality": 90,
+    "method": 6,
+    "resizeKernel": "LANCZOS",
+    "metadata": "removed by decode and pixel copy",
+    "staticCopies": "byte-identical to corresponding CMS output; no private media path needed at runtime"
+  },
+  "limitations": [
+    "Background composition retained but not pixel-identical.",
+    "Face and tattoo are generated approximations; hairstyle retains highlights.",
+    "User visual approval of the new likeness is pending.",
+    "Reference attribution and rights limits are recorded in alan-v1-sources.md."
+  ]
+}

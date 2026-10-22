@@ -1,0 +1,50 @@
+{
+  "retrieved_on": "2026-10-22",
+  "primary": {
+    "local_path": "web/creator/lean-club-sunset-hero-v3.jpg",
+    "dimensions": [
+      1672,
+      941
+    ],
+    "sha256": "d66643d55e1c43c397b5fa777b1a3114817147fa83006bb0642b57d69c962d6c",
+    "attribution_basis": "用户明确指认主站人物为邵艾伦；这是现有项目素材，未做人脸识别验证",
+    "role": "三城编辑的首要身份、人物姿态和纹身参考",
+    "rights_status": "既有项目素材；未查明原始拍摄来源或授权",
+    "page_responsive_variant": "web/creator/images/hero-1672-v2.webp"
+  },
+  "public_context_source": "https://sopilot.net/zh/rank/topic/male-sex-toy-necessity-consumerism-debate",
+  "verification_limit": "X原帖通过web读取403，公开聚合页显示账号、原帖链接与对应媒体；媒体从pbs.twimg.com直接下载。未独立验证公众账号控制人或商业授权。",
+  "references": [
+    {
+      "file": "x-candidate-22.jpg",
+      "source_post": "https://x.com/AlanShao111/status/2107709961027633247",
+      "download_url": "https://pbs.twimg.com/media/HUAXCfpbMAAW5xF.jpg?name=orig",
+      "caption": "喝水是对嘞💦💦",
+      "role": "近期面部三分侧角度、挑染发型和手臂纹身参考",
+      "dimensions": [
+        1368,
+        2048
+      ],
+      "sha256": "107367adfa658c918be7a9567dac13e0428d04fc60959c917380b5e8ef903739",
+      "rights_status": "未查明；仅为用户请求的本地设计素材参考",
+      "attribution_basis": "公开聚合页标注账号 @AlanShao111，帖子链接、文案与图片在同一页面节点；非人脸识别",
+      "included_in_repository": false
+    },
+    {
+      "file": "x-candidate-13.jpg",
+      "source_post": "https://x.com/AlanShao111/status/2105447896451879289",
+      "download_url": "https://pbs.twimg.com/media/HTgNswIbsAAKUKG.jpg?name=orig",
+      "caption": "完了！！！吃完粉快变厚肌了！！！😭😭",
+      "role": "近景镜自拍，薄肌躯干与发型参考；手机部分遮脸",
+      "dimensions": [
+        1080,
+        1440
+      ],
+      "sha256": "0308f2f05bb2ffc60635601af5327cec5d7608c8ef0872733eb188aba6fd45e8",
+      "rights_status": "未查明；仅为用户请求的本地设计素材参考",
+      "attribution_basis": "公开聚合页标注账号 @AlanShao111，帖子链接、文案与图片在同一页面节点；非人脸识别",
+      "included_in_repository": false
+    }
+  ],
+  "record_scope": "Only references actually passed to built-in image_gen for alan-v1."
+}

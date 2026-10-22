@@ -1,0 +1,13 @@
+0e79bb02443aadfce275689c47efab043b17009611235e287e31d9e774fa8463  web/creator/city-vote/assets/shenzhen.webp
+b989b72f032a64e073a7235f9e3356f8c94a3083b55d9c963eaab282b0e70ba1  web/creator/city-vote/assets/shenzhen-640.webp
+e6e08d8f933c3568c7395d795826d0dbb60d49e3565c3d044aeceaf77e79999e  web/creator/city-vote/assets/zhuhai.webp
+b4c9917a0b1ef38ead9419a72353f5761e349edc5ef7f9a6edb0e77247e87852  web/creator/city-vote/assets/zhuhai-640.webp
+3e1c2a7092144abc1d31c89e3f98af16f292c0a5074b7180230c8613c326718e  web/creator/city-vote/assets/guangzhou.webp
+7b69ccd69122a83de3c00325bfc73fce14d752b721474a4c039638db0df56783  web/creator/city-vote/assets/guangzhou-640.webp
+acad6de1fc93436f5c0f1f4137751ef04f1aea3063e7036535970ffcfbd79f72  web/creator/city-vote/assets/fonts/sans.ttf
+18a4de52385f6b988782639d5d0cc1326e5a8c2de9a7f01d7b20d9aedcc60943  web/creator/city-vote/assets/fonts/SpaceGrotesk-OFL.txt
+ce720c66a879b179eb848b26a5e3887b965b970bf01c643be2f4cb4bee89bce1  docs/city-vote-assets/source-prompts/shenzhen-prompt.md
+1501547bd90dba6eb3acc829331914ecd0f1c0dd419cce6dc6be45125493ad43  docs/city-vote-assets/source-prompts/zhuhai-prompt.md
+6447e97d239ec380213dcb57941368272dc19f81227939abb6dce522c0f03b24  docs/city-vote-assets/source-prompts/guangzhou-prompt.md
+96fee05823b15649f889b313692eb1722c3916a10cd5031312b1a21848159673  web/creator/city-vote/assets/lean-emblem.svg
+f3a6a6c8d2bce14c2453171bd9a8bfeb5a24ec9dcde94721860760dc1ebdfd8d  web/creator/city-vote/assets/film-grain.svg
