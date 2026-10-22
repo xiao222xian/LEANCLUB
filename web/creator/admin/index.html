@@ -7,8 +7,8 @@
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#17191b">
   <title>内容管理 · Lean Club</title>
-  <link rel="stylesheet" href="/admin/style.css?v=20261022-feedback">
-  <script src="/admin/app.js?v=20261022-feedback" defer></script>
+  <link rel="stylesheet" href="/admin/style.css?v=20261023-events">
+  <script src="/admin/app.js?v=20261023-events" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳至主要内容</a>
@@ -64,7 +64,7 @@
     </header>
     <main id="main" class="main" tabindex="-1">
       <div class="page-heading"><div class="heading-images" aria-hidden="true"><img src="/city-vote/assets/alan-v1/shenzhen.webp" alt=""><img src="/city-vote/assets/alan-v1/zhuhai.webp" alt=""><img src="/city-vote/assets/alan-v1/guangzhou.webp" alt=""></div><div class="heading-copy"><p class="eyebrow">LEAN CLUB / STUDIO</p><h1>俱乐部管理</h1><span class="campaign-label">SHENZHEN · ZHUHAI · GUANGZHOU</span></div></div>
-      <div class="tabs-row"><div class="tabs" role="tablist" aria-label="管理内容"><button type="button" id="tab-overview" role="tab" aria-controls="panel-overview" aria-selected="true" tabindex="0" data-panel="overview">数据概览</button><button type="button" id="tab-feedback" role="tab" aria-controls="panel-feedback" aria-selected="false" tabindex="-1" data-panel="feedback">意见箱<span id="feedback-unread" class="tab-count" aria-hidden="true" hidden></span></button><button type="button" id="tab-posters" role="tab" aria-controls="panel-posters" aria-selected="false" tabindex="-1" data-panel="posters">城市海报</button><button type="button" id="tab-feishu" role="tab" aria-controls="panel-feishu" aria-selected="false" tabindex="-1" data-panel="feishu">飞书通知</button></div><span id="last-updated" class="last-updated">等待数据</span></div>
+      <div class="tabs-row"><div class="tabs" role="tablist" aria-label="管理内容"><button type="button" id="tab-overview" role="tab" aria-controls="panel-overview" aria-selected="true" tabindex="0" data-panel="overview">数据概览</button><button type="button" id="tab-feedback" role="tab" aria-controls="panel-feedback" aria-selected="false" tabindex="-1" data-panel="feedback">意见箱<span id="feedback-unread" class="tab-count" aria-hidden="true" hidden></span></button><button type="button" id="tab-events" role="tab" aria-controls="panel-events" aria-selected="false" tabindex="-1" data-panel="events">活动报名</button><button type="button" id="tab-posters" role="tab" aria-controls="panel-posters" aria-selected="false" tabindex="-1" data-panel="posters">城市海报</button><button type="button" id="tab-feishu" role="tab" aria-controls="panel-feishu" aria-selected="false" tabindex="-1" data-panel="feishu">飞书通知</button></div><span id="last-updated" class="last-updated">等待数据</span></div>
       <div id="app-message" class="notice" role="status" hidden></div>
 
       <section id="panel-overview" role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
@@ -108,6 +108,25 @@
         <p id="feedback-status" class="inbox-status" role="status" hidden></p>
       </section>
 
+      <section id="panel-events" role="tabpanel" aria-labelledby="tab-events" tabindex="0" hidden>
+        <div class="section-toolbar"><p>把每一次期待，变成见面。</p><div class="event-toolbar-actions"><a class="button button-secondary" href="/check-in">现场核销</a><button id="new-event" class="button button-primary" type="button">创建活动</button></div></div>
+        <div id="events-error" class="notice notice-error" role="alert" hidden></div>
+        <div class="event-list-heading"><span class="micro-label">EVENTS / 活动档案</span><button id="refresh-events" class="text-button" type="button">刷新活动</button></div>
+        <div id="events-loading" class="inline-loading" role="status" hidden><span class="spinner" aria-hidden="true"></span>正在读取活动</div>
+        <div id="events-list" class="events-list" aria-busy="false"></div>
+        <div id="events-empty" class="inbox-empty" hidden><span class="micro-label">FROM ONLINE TO REAL LIFE</span><h2>下一场见面，从这里开始。</h2><p>先创建草稿，确认时间和场地后再发布。</p></div>
+        <section id="registrations-view" class="registrations-view" aria-labelledby="registrations-title" hidden>
+          <div class="section-toolbar"><div><p class="eyebrow">GUEST LIST</p><h2 id="registrations-title" tabindex="-1">报名与订单</h2></div><button id="close-registrations" class="text-button" type="button">收起名单</button></div>
+          <div class="registration-metrics"><div><span>有效报名</span><strong id="event-registered">—</strong></div><div><span>剩余名额</span><strong id="event-remaining">—</strong></div><div><span>已核销</span><strong id="event-checked-in">—</strong></div></div>
+          <div id="payment-metrics" class="payment-metrics" aria-label="支付状态统计"></div>
+          <div class="registration-toolbar"><label for="registration-filter">订单与入场<select id="registration-filter"><option value="all">全部</option><option value="pending_payment">待支付</option><option value="paid">已支付</option><option value="registered">已付待入场</option><option value="checked_in">已核销</option><option value="expired">超时关闭</option><option value="cancelled">已取消</option><option value="refund_pending">待退款</option><option value="refunded">已退款</option></select></label><button id="refresh-registrations" class="text-button" type="button">刷新名单</button></div>
+          <div id="registrations-error" class="notice notice-error" role="alert" hidden></div>
+          <div id="registrations-list" class="registrations-list" aria-busy="false"></div>
+          <p id="registrations-empty" class="empty-copy" hidden>暂无符合条件的报名。</p>
+          <div id="registrations-pagination" class="inbox-pagination" hidden><span id="registrations-page-label"></span><div><button id="registrations-prev" class="button button-secondary" type="button">上一页</button><button id="registrations-next" class="button button-secondary" type="button">下一页</button></div></div>
+        </section>
+      </section>
+
       <section id="panel-posters" role="tabpanel" aria-labelledby="tab-posters" tabindex="0" hidden>
         <div class="section-toolbar"><p>三座城市，三种状态。</p><button class="button button-quiet refresh-button" id="refresh-posters" type="button">刷新海报</button></div>
         <div id="posters-error" class="notice notice-error" role="alert" hidden></div>
@@ -137,6 +156,26 @@
       <footer class="admin-footer"><span>Lean Club Studio</span><span>从线上，到现场。</span></footer>
     </main>
   </div>
+
+  <dialog id="event-editor" class="event-editor" aria-labelledby="event-editor-title">
+    <div class="event-editor-top"><div><p class="eyebrow">LEAN CLUB / EVENTS</p><h2 id="event-editor-title">创建活动</h2></div><button id="close-event-editor" class="text-button" type="button">关闭</button></div>
+    <form id="event-form">
+      <p id="event-editor-note" class="event-editor-note">先存为草稿，准备好了再发布。</p>
+      <div id="event-editor-error" class="notice notice-error" role="alert" hidden></div>
+      <div class="field"><label for="event-title">活动名称</label><input id="event-title" maxlength="60" minlength="2" required placeholder="给下一场见面，一个名字"></div>
+      <div class="field"><label for="event-subtitle">一句话介绍 <span class="optional-label">可选</span></label><input id="event-subtitle" maxlength="100" placeholder="让想来的人，一眼心动"></div>
+      <div class="event-form-grid"><div class="field"><label for="event-city">举办城市</label><select id="event-city"><option value="shenzhen">深圳</option><option value="zhuhai">珠海</option><option value="guangzhou">广州</option></select></div><div class="field"><label for="event-capacity">报名名额</label><input id="event-capacity" type="number" min="1" max="10000" step="1" required value="30"></div></div>
+      <div class="field"><label for="event-price">报名费用 · 人民币元</label><input id="event-price" type="text" inputmode="decimal" autocomplete="off" pattern="[0-9]+([.][0-9]{1,2})?" maxlength="10" required placeholder="请输入收费金额，如 128.00"><span class="field-hint">按每人计价，最多两位小数。订单保留创建时的价格。</span></div>
+      <div class="field"><label for="event-venue">场地名称</label><input id="event-venue" minlength="2" maxlength="100" required placeholder="确认好的场地名称"></div>
+      <div class="field"><label for="event-address">详细地址</label><input id="event-address" minlength="2" maxlength="200" required placeholder="街道、门牌与集合位置"></div>
+      <div class="event-form-grid"><div class="field"><label for="event-starts">开始时间 · 北京时间</label><input id="event-starts" type="datetime-local" required></div><div class="field"><label for="event-ends">结束时间 · 北京时间</label><input id="event-ends" type="datetime-local" required></div></div>
+      <div class="field"><label for="event-closes">报名截止 · 北京时间</label><input id="event-closes" type="datetime-local" required></div>
+      <div class="field"><label for="event-description">活动安排与参与须知 <span class="optional-label">可选</span></label><textarea id="event-description" rows="5" maxlength="5000" placeholder="活动内容、携带物品、集合方式，以及大家需要知道的事。"></textarea></div>
+      <fieldset class="event-poster-picker"><legend>活动海报</legend><label><input type="radio" name="event-poster" value="shenzhen" checked><img src="/city-vote/assets/alan-v1/shenzhen.webp" alt=""><span>深圳</span></label><label><input type="radio" name="event-poster" value="zhuhai"><img src="/city-vote/assets/alan-v1/zhuhai.webp" alt=""><span>珠海</span></label><label><input type="radio" name="event-poster" value="guangzhou"><img src="/city-vote/assets/alan-v1/guangzhou.webp" alt=""><span>广州</span></label></fieldset>
+      <div class="event-form-footer"><span id="event-save-hint">保存后可预览，再决定发布。</span><button id="save-event" class="button button-primary" type="submit">保存草稿</button></div>
+    </form>
+  </dialog>
+  <dialog id="event-confirm" class="event-confirm" aria-labelledby="event-confirm-title"><p class="eyebrow">LEAN CLUB / EVENTS</p><h2 id="event-confirm-title">确认操作</h2><p id="event-confirm-copy"></p><div id="event-confirm-error" class="notice notice-error" role="alert" hidden></div><div class="event-confirm-actions"><button id="event-confirm-back" class="button button-secondary" type="button">返回</button><button id="event-confirm-proceed" class="button button-primary" type="button">确认</button></div></dialog>
 
   <template id="vote-row-template"><div class="vote-row"><div class="vote-city"><span class="city-code"></span><h3></h3><span class="vote-count"></span></div><div class="vote-bar" role="meter" aria-valuemin="0" aria-valuemax="100"><span></span></div><span class="vote-share"></span></div></template>
   <template id="feedback-template"><article class="feedback-item"><div class="feedback-meta"><h2 class="feedback-category"></h2><span class="feedback-city"></span><time class="feedback-time"></time></div><p class="feedback-content"></p><div class="feedback-item-footer"><span class="feedback-state"></span><button class="button button-secondary feedback-mark" type="button">标记已看</button></div></article></template>

@@ -69,6 +69,8 @@ sudo python3 /tmp/bojizhuye-deploy/install.py \
 3. 若本项目正在运行，停止服务和通知worker。存在运行库时，通过SQLite backup API保存私密 `before.sqlite3`；源连接使用 `mode=ro`，源/目标连接均显式关闭，之后才允许新代码打开数据库。
 4. 切换 `current`，重载systemd并启动后端，验证健康后reload Nginx；以域名Host检查网页/API和公网初始化禁用，核实IP301的Location，最后启用开机启动。
 
+包含活动模块的新源码包还会检查 `/events`、`/ticket`、`/check-in` 及尾斜线路径和活动列表API。当前本地模板已加入这些路由；这项准备不代表活动或真实收款已经上线。升级前需安装包内固定依赖（包括 qrcode 8.2），不得复制本机QA数据库或模拟付款启动器。
+
 备份目录为 `/var/backups/bojizhuye-deploy/<时间-进程>/`，目录权限700、备份文件600。首次没有旧库时不会产生 `before.sqlite3`；升级的备份包含停止服务时的业务库，而不只是配置。检查结果不是公网交互、真实消息投递或整机重启验收。
 
 失败时自动恢复本项目的原配置、`current`及原服务启用状态，只在旧Nginx配置验证通过后reload；**不会自动恢复数据库，也不删除新release或业务数据**。本轮意见箱迁移仅新增 `campaign_feedback` 及索引，兼容原有表结构，既有账号、投票、访问、海报和机器人配置继续保留；新增意见队列的类型仍需对应代码支持。更换为不兼容schema的版本时不能只依赖代码回退。

@@ -336,7 +336,11 @@ def main():
         run('systemctl', 'reload', 'nginx')
         host = args.host + (':' + str(args.http_port) if args.http_port != 80 else '')
         base_url = 'http://127.0.0.1:' + str(args.http_port)
-        for route in ('/', '/schools', '/join', '/city-vote', '/city-vote/', '/admin', '/admin/', '/api/club/health'):
+        routes = ['/', '/schools', '/join', '/city-vote', '/city-vote/', '/admin', '/admin/', '/api/club/health']
+        # Older pinned archives need not contain the event module.
+        if (release / 'web/creator/events/index.html').is_file():
+            routes.extend(('/events', '/events/', '/ticket', '/ticket/', '/check-in', '/check-in/', '/api/campaign/events'))
+        for route in routes:
             http_check(base_url + route, host)
         session = http_check(base_url + '/api/admin/session', host, json_result=True)
         if session.get('setupAvailable'):

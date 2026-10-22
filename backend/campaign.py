@@ -22,6 +22,7 @@ import warnings
 from PIL import Image, ImageOps, UnidentifiedImageError
 from campaign_feishu import FeishuNotifications
 from campaign_feedback import CampaignFeedback
+from campaign_events import CampaignEvents
 from store import Problem
 
 CITIES = (('shenzhen', '深圳'), ('zhuhai', '珠海'), ('guangzhou', '广州'))
@@ -173,6 +174,7 @@ class CampaignStore:
                 raise ValueError('The campaign vote IP secret is invalid.')
         self.notifications = FeishuNotifications(self)
         self.feedback = CampaignFeedback(self)
+        self.events = CampaignEvents(self)
 
     @contextmanager
     def connect(self):

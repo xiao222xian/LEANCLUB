@@ -68,7 +68,7 @@ def main():
     try:
         if args.port == args.api_port:
             raise RuntimeError("网页和 API 必须使用不同端口。")
-        if importlib.util.find_spec("PIL") is None:
+        if any(importlib.util.find_spec(module) is None for module in ("PIL", "qrcode")):
             raise RuntimeError("请先安装依赖：python -m pip install -r requirements.txt")
         ensure_available(args.port)
         ensure_available(args.api_port)
@@ -76,7 +76,7 @@ def main():
         database.parent.mkdir(parents=True, exist_ok=True)
         media_dir = database.parent / "media"
         media_dir.mkdir(parents=True, exist_ok=True)
-        origin = "http://127.0.0.1:%s" % args.port
+        origin = "http://127.0.0.1" + (":%s" % args.port if args.port != 80 else "")
         environment = os.environ.copy()
         environment.update({
             "CLUB_DB": str(database),

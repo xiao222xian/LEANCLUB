@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101212"><meta name="description" content="Lean Club 薄肌俱乐部线下活动。在真实的世界，见到同频的人。">
+  <meta name="referrer" content="no-referrer"><title>线下见 — LEAN CLUB</title>
+  <link rel="icon" href="/city-vote/assets/lean-emblem.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/events/style.css?v=20261023-events-v1">
+  <script src="/events/common.js?v=20261023-events-v1" defer></script><script src="/events/app.js?v=20261023-events-v1" defer></script>
+</head>
+<body class="events-page">
+  <div class="ambient" aria-hidden="true"><img id="empty-shenzhen" src="/city-vote/assets/alan-v1/shenzhen.webp" alt=""><img id="empty-zhuhai" src="/city-vote/assets/alan-v1/zhuhai.webp" alt=""><img id="empty-guangzhou" src="/city-vote/assets/alan-v1/guangzhou.webp" alt=""></div>
+  <header class="site-header">
+    <a class="brand" href="/city-vote" aria-label="LEAN CLUB 城市投票"><img src="/city-vote/assets/lean-emblem.svg" alt="" width="42" height="28"><span>LEAN CLUB<small>薄肌俱乐部</small></span></a>
+    <p class="header-caption">REAL PEOPLE. REAL CONNECTION.</p>
+    <button class="capsule" id="open-mine" type="button" aria-haspopup="dialog">我的入场券<span class="ticket-count" id="ticket-count" hidden>0</span></button>
+  </header>
+  <main id="main-content">
+    <section class="waiting-state" id="waiting-state" aria-labelledby="waiting-title">
+      <span class="edition">LEAN CLUB / OFFLINE</span>
+      <h1 id="waiting-title">下一次见面，<br><em>正在准备。</em></h1>
+      <p id="waiting-copy">把喜欢的生活，过到一起。</p>
+      <div class="waiting-actions"><a class="primary-button" href="/city-vote">第一站，你来定</a><button class="text-button" type="button" id="retry-load" hidden>重新连接</button></div>
+      <p class="connection-status" id="connection-status" role="status">正在读取活动…</p>
+    </section>
+    <section class="event-stage" id="event-stage" hidden aria-labelledby="event-title">
+      <div class="event-image" aria-hidden="true"><img id="event-photo" src="/city-vote/assets/alan-v1/shenzhen.webp" alt=""><div class="event-image-shade"></div></div>
+      <div class="event-content">
+        <p class="edition"><span id="event-city">线下见</span><span class="edition-line"></span><span id="event-number">01</span></p>
+        <h1 id="event-title"></h1>
+        <p class="event-description" id="event-description"></p>
+        <dl class="event-details"><div><dt>WHEN</dt><dd id="event-date"></dd></div><div><dt>WHERE</dt><dd id="event-venue"></dd></div></dl>
+        <p class="event-address" id="event-address"></p>
+        <div class="event-price"><strong id="event-price"></strong><span>/ 人</span></div>
+        <div class="registration-action"><button class="primary-button" id="open-register" type="button" aria-haspopup="dialog">一起，线下见</button><p id="event-availability"></p></div>
+        <p class="event-deadline" id="event-deadline"></p>
+        <details class="event-long-description" id="event-long-description" hidden><summary>活动安排与须知</summary><p id="event-body"></p></details>
+      </div>
+      <nav class="event-picker" id="event-picker" aria-label="选择活动"></nav>
+    </section>
+  </main>
+  <footer class="site-footer"><a href="/city-vote">城市投票</a><span>LESS NOISE. MORE LIFE.</span><span>薄肌 · 线下见</span></footer>
+  <dialog class="registration-dialog" id="register-dialog" aria-labelledby="register-title">
+    <div class="dialog-art" aria-hidden="true"><img id="register-photo" src="/city-vote/assets/alan-v1/shenzhen.webp" alt=""></div>
+    <button class="close-dialog" id="close-register" type="button" aria-label="关闭报名"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+    <div class="dialog-body">
+      <p class="edition">LEAN CLUB / RSVP</p><h2 id="register-title" tabindex="-1">为你，<br><em>留一个位置。</em></h2>
+      <p class="dialog-event-name" id="register-event-name"></p>
+      <form id="register-form" novalidate>
+        <div class="field"><label for="register-name">怎么称呼你</label><input id="register-name" name="name" type="text" autocomplete="nickname" maxlength="30" placeholder="称呼或昵称" required></div>
+        <div class="field"><label for="register-phone">手机号码</label><input id="register-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" maxlength="24" placeholder="用于活动联系" required></div>
+        <p class="cancellation-note">活动开始前可取消。已付款订单需申请退款，由主办方确认处理。</p>
+        <label class="consent"><input id="register-consent" type="checkbox" required><span>我已确认费用与取消说明，同意将称呼和手机号用于活动联系与入场核验，仅主办团队可见。</span></label>
+        <p class="form-error" id="register-error" role="alert" hidden></p>
+        <button class="text-button" id="refresh-registration-price" type="button" hidden>查看最新费用</button>
+        <div class="registration-total"><span>本次报名 · 1 人</span><strong id="register-price"></strong></div>
+        <button class="primary-button" id="register-submit" type="submit">锁定名额，去付款</button>
+        <p class="form-note">付款确认后发放入场券，未付款名额限时保留。</p>
+      </form>
+    </div>
+  </dialog>
+  <dialog class="mine-dialog" id="mine-dialog" aria-labelledby="mine-title">
+    <button class="close-dialog" id="close-mine" type="button" aria-label="关闭我的入场券"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+    <div class="dialog-body"><p class="edition">YOUR NEXT CONNECTION</p><h2 id="mine-title" tabindex="-1">我的入场券</h2><p class="mine-note">显示在当前浏览器报名的活动。</p><div id="mine-list" class="mine-list" aria-live="polite"></div><button class="text-button" id="retry-mine" type="button" hidden>重新加载</button></div>
+  </dialog>
+  <noscript><p class="no-script">开启 JavaScript 后可查看活动与报名。</p></noscript>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#111a1b"><meta name="color-scheme" content="dark"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><title>现场核销 · LEAN CLUB</title><link rel="stylesheet" href="/check-in/style.css?v=20261023-events"><script src="/check-in/app.js?v=20261023-events" defer></script></head>
+<body><div class="stage" aria-hidden="true"><img id="stage-photo" src="/city-vote/assets/alan-v1/shenzhen.webp" alt=""><div class="stage-shade"></div></div>
+<header class="checkin-header"><a class="brand" href="/city-vote"><img src="/city-vote/assets/lean-emblem.svg" alt="">LEAN CLUB</a><a class="studio-link" href="/admin">管理台</a></header>
+<main class="checkin-main"><div class="heading"><span class="eyebrow">FROM ONLINE TO REAL LIFE</span><h1>现场见。</h1><p>LEAN CLUB / CHECK IN</p></div>
+<section class="checkin-card" aria-label="活动入场核销">
+  <div id="session-loading" class="loading" role="status">正在连接核销服务</div>
+  <div id="global-error" class="notice error" role="alert" hidden></div>
+  <button id="retry-session" class="secondary" type="button" hidden>重新连接</button>
+  <form id="login-form" hidden><div class="section-label"><span>STAFF ACCESS</span><span>工作人员登录</span></div><h2>欢迎回到现场。</h2><p class="small-copy">登录后核对来宾，确认入场。</p><label for="username">用户名或邮箱</label><input id="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="254" required><label for="password">密码</label><input id="password" type="password" autocomplete="current-password" maxlength="128" required><button id="login-submit" class="primary" type="submit">登录核销台</button><p class="quiet">仅供 LEAN CLUB 工作人员使用</p></form>
+  <div id="workspace" hidden><div class="section-label"><span id="staff-name">STAFF</span><button id="logout" class="plain" type="button">退出登录</button></div>
+    <form id="code-form"><label for="ticket-code">入场票号</label><div class="code-input"><input id="ticket-code" type="text" placeholder="输入票号，或粘贴票码链接" maxlength="2048" autocomplete="off" autocapitalize="off" spellcheck="false" required><button id="preview-ticket" class="secondary" type="submit">核对</button></div></form>
+    <div class="scan-options"><button id="open-camera" class="plain scan-button" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8V3h5m8 0h5v5M3 16v5h5m8 0h5v-5M7 12h10"/></svg>扫描入场码</button><p id="camera-hint">用手机扫一扫打开票码链接，或输入票号。</p></div>
+    <div id="camera-view" class="camera-view" hidden><video id="camera-video" muted playsinline></video><span class="camera-frame" aria-hidden="true"></span><button id="close-camera" class="secondary" type="button">关闭相机</button><p id="camera-status" role="status">将入场码放进框内</p></div>
+    <div id="ticket-loading" class="loading" role="status" hidden>正在核对入场凭证</div><div id="ticket-error" class="notice error" role="alert" hidden></div>
+    <div id="ticket-result" class="ticket-result" aria-live="polite" hidden>
+      <div id="result-symbol" class="result-symbol" aria-hidden="true">·</div><span id="result-label" class="eyebrow"></span><h2 id="result-title" tabindex="-1"></h2><p id="result-reason" class="result-reason"></p>
+      <div class="guest-details"><div class="guest-head"><strong id="guest-name"></strong><span id="guest-ticket"></span></div><p id="guest-phone"></p><h3 id="guest-event"></h3><div class="event-details"><span id="guest-time"></span><span id="guest-venue"></span></div><p id="checked-in-time" hidden></p></div>
+      <p id="confirm-hint" class="small-copy" hidden>核对本人信息后，确认本次入场。</p><button id="confirm-checkin" class="primary" type="button" hidden>确认核销 · 允许入场</button><button id="next-ticket" class="secondary" type="button">核对下一位</button>
+    </div>
+    <div id="ready-state" class="ready-state"><div class="ready-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><img src="/city-vote/assets/lean-emblem.svg" alt=""></div><h2>每一次见面，都值得。</h2><p>核对票码后，手动确认入场。</p></div>
+  </div>
+</section><footer class="checkin-footer"><span>LEAN CLUB / LIVE TOGETHER</span><span>从线上，到现场。</span></footer></main><noscript>请开启 JavaScript 使用核销台。</noscript></body></html>

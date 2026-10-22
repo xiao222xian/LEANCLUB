@@ -122,6 +122,7 @@
   }
 
   function clearProtectedContent() {
+    resetEvents();
     for (const record of state.posters.values()) releaseDraft(record);
     state.posters.clear();
     state.postersLoaded = false;
@@ -355,13 +356,14 @@
       if (active && focus) tab.focus();
     }
     for (const panel of $$('[role="tabpanel"]')) panel.hidden = panel.id !== `panel-${name}`;
-    document.title = `${({ posters: '城市海报', overview: '数据概览', feedback: '意见箱', feishu: '飞书通知' })[name]} · Lean Club`;
+    document.title = `${({ posters: '城市海报', overview: '数据概览', feedback: '意见箱', events: '活动报名', feishu: '飞书通知' })[name]} · Lean Club`;
     if (name === 'posters' && !state.postersLoaded && !state.postersLoading) loadPosters();
     if (name === 'overview') refreshVisibleStats();
     if (name === 'feedback' && !state.feedback && !state.feedbackLoading) loadFeedback();
     window.clearTimeout(state.feishuTimer);
     state.feishuTimer = null;
     if (name === 'feishu') loadFeishu();
+    if (name === 'events') loadEvents();
   }
   for (const tab of $$('[role="tab"]')) {
     tab.addEventListener('click', () => selectPanel(tab.dataset.panel));
@@ -1131,12 +1133,160 @@
   }
   $('#refresh-posters').addEventListener('click', loadPosters);
   window.addEventListener('beforeunload', event => {
-    if (!state.feishuDirty && !state.feishuBusy && ![...state.posters.values()].some(record => record.file || focusChanged(record) || record.busy)) return;
+    if (!eventState.dirty && !eventState.busy && !state.feishuDirty && !state.feishuBusy && ![...state.posters.values()].some(record => record.file || focusChanged(record) || record.busy)) return;
     event.preventDefault();
     event.returnValue = '';
   });
   window.addEventListener('pagehide', event => {
     if (!event.persisted) for (const record of state.posters.values()) if (record.objectUrl) URL.revokeObjectURL(record.objectUrl);
   });
+
+  const EVENT_STATES = { draft: '草稿', published: '已发布', closed: '停止报名', cancelled: '已取消' };
+  const PAYMENT_STATES = { pending_payment: '待支付', paid: '已支付', expired: '超时关闭', cancelled: '已取消', refund_pending: '待退款', refunded: '已退款' };
+  function money(fen) { const n = Number(fen); return Number.isSafeInteger(n) && n >= 0 ? `${Math.floor(n / 100)}.${String(n % 100).padStart(2, '0')}` : '—'; }
+  function parsePrice(value) { const match = /^(\d{1,7})(?:\.(\d{1,2}))?$/.exec(value.trim()); if (!match) return null; const fen = Number(match[1]) * 100 + Number((match[2] || '').padEnd(2, '0')); return Number.isSafeInteger(fen) && fen > 0 && fen <= 10000000 ? fen : null; }
+  const REG_STATES = { registered: '待入场', checked_in: '已核销', cancelled: '已取消' };
+  const eventState = { items: [], loading: false, busy: false, editing: null, dirty: false, returnFocus: null, action: null, registrationId: null, page: 1, pages: 1, registrationLoading: false, revision: 0, posters: {} };
+  function node(tag, className, text) { const el = document.createElement(tag); if (className) el.className = className; if (text !== undefined) el.textContent = text; return el; }
+  function eventDate(value) { const date = new Date(value); return Number.isFinite(date.getTime()) ? feedbackDateFormat.format(date) : '待确定'; }
+  function eventCity(value) { return CITIES.find(city => city.id === value)?.name || ''; }
+  function resetEvents() {
+    eventState.items = []; eventState.editing = null; eventState.busy = false; eventState.loading = false;
+    eventState.dirty = false; eventState.registrationId = null; eventState.registrationLoading = false; eventState.revision++;
+    $('#events-list').replaceChildren(); $('#registrations-list').replaceChildren(); $('#registrations-view').hidden = true;
+    for (const id of ['event-editor', 'event-confirm']) if ($(`#${id}`).open) $(`#${id}`).close();
+    $('#event-form').reset(); $('#events-loading').hidden = true; $('#payment-metrics').replaceChildren();
+    for (const id of ['save-event', 'close-event-editor', 'event-confirm-proceed', 'event-confirm-back', 'refresh-events', 'refresh-registrations']) $(`#${id}`).disabled = false;
+    message($('#events-error'), ''); message($('#event-editor-error'), ''); message($('#registrations-error'), '');
+  }
+  function eventPhoto(city) { const url = eventState.posters[city]; return typeof url === 'string' && url.startsWith('/') && !url.startsWith('//') ? url : `/city-vote/assets/alan-v1/${CITIES.some(item => item.id === city) ? city : 'shenzhen'}.webp`; }
+  function renderEvents() {
+    const fragment = document.createDocumentFragment();
+    for (const item of eventState.items) {
+      const card = node('article', 'event-card'); card.dataset.status = item.status;
+      const art = node('div', 'event-card-art'); const image = node('img'); image.src = eventPhoto(item.posterCity); image.alt = ''; image.loading = 'lazy'; art.append(image, node('span', 'event-state', EVENT_STATES[item.status] || item.status));
+      const body = node('div', 'event-card-body'); body.append(node('p', 'micro-label', `${eventCity(item.city)} / ${eventDate(item.startsAt)}`), node('h2', '', item.title), node('p', 'event-card-venue', `${item.venue} · ¥${money(item.priceFen)} / 人`));
+      const numbers = node('div', 'event-card-numbers');
+      for (const [label, value] of [['有效报名', item.registeredCount], ['剩余名额', item.remaining], ['已核销', item.checkedInCount]]) { const number = node('span', '', label); number.append(node('strong', '', formatCount(value))); numbers.append(number); }
+      body.append(numbers);
+      if (!item.paymentReady && item.status !== 'cancelled') body.append(node('p', 'event-payment-pending', '收款渠道待配置，暂不接受报名订单。'));
+      const actions = node('div', 'event-card-actions');
+      const action = (label, fn, style = 'button-secondary') => { const btn = node('button', `button ${style}`, label); btn.type = 'button'; btn.disabled = eventState.busy; btn.addEventListener('click', fn); actions.append(btn); };
+      action('报名与订单', () => openRegistrations(item));
+      if (item.status !== 'cancelled') action('编辑', () => openEventEditor(item));
+      if (item.status === 'draft' || item.status === 'closed') action(item.status === 'draft' ? '发布活动' : '重新开放', () => confirmEventAction(item, 'published'), 'button-primary');
+      if (item.status === 'published') action('停止报名', () => confirmEventAction(item, 'closed'));
+      if (item.status !== 'cancelled') action('取消活动', () => confirmEventAction(item, 'cancelled'), 'event-cancel');
+      if (item.status !== 'draft') { const link = node('a', 'event-public-link', '查看活动页'); link.href = `/events?event=${encodeURIComponent(item.id)}`; link.target = '_blank'; link.rel = 'noopener'; actions.append(link); }
+      body.append(actions); card.append(art, body); fragment.append(card);
+    }
+    $('#events-list').replaceChildren(fragment); $('#events-empty').hidden = eventState.items.length !== 0;
+  }
+  async function loadEvents() {
+    if (!state.authenticated || eventState.loading || eventState.busy) return;
+    const epoch = state.epoch; eventState.loading = true; $('#events-loading').hidden = false; $('#refresh-events').disabled = true;
+    message($('#events-error'), ''); $('#events-list').setAttribute('aria-busy', 'true');
+    try {
+      const [data, posters] = await Promise.all([api('/api/admin/events'), api('/api/admin/posters').catch(() => null)]);
+      if (epoch !== state.epoch) return;
+      if (!Array.isArray(data.events)) throw new RequestError('活动数据不完整，请刷新重试。');
+      if (posters?.cities) for (const city of posters.cities) eventState.posters[city.id] = city.posterUrl;
+      eventState.items = data.events; renderEvents();
+    } catch (error) { if (epoch === state.epoch) message($('#events-error'), error.message); }
+    finally { if (epoch === state.epoch) { eventState.loading = false; $('#events-loading').hidden = true; $('#refresh-events').disabled = false; $('#events-list').setAttribute('aria-busy', 'false'); } }
+  }
+  function localBeijing(value) { if (!value) return ''; const ms = Date.parse(value); return Number.isFinite(ms) ? new Date(ms + 8 * 3600000).toISOString().slice(0, 16) : ''; }
+  function openEventEditor(item = null) {
+    if (eventState.busy) return; eventState.editing = item; eventState.dirty = false; eventState.returnFocus = document.activeElement;
+    $('#event-form').reset(); $('#event-price').value = item ? money(item.priceFen) : ''; message($('#event-editor-error'), '');
+    $('#event-editor-title').textContent = item ? '编辑活动' : '创建活动';
+    const isDraft = !item || item.status === 'draft';
+    $('#event-editor-note').textContent = isDraft ? '先存为草稿，准备好了再发布。' : '保存后立即更新活动详情。时间或地点变化，请及时通知已报名的朋友。';
+    $('#event-save-hint').textContent = isDraft ? '草稿不会向用户开放报名。' : `${formatCount(item.registeredCount)} 人已报名，请谨慎调整安排。`;
+    $('#save-event').textContent = isDraft ? '保存草稿' : '保存修改';
+    const fields = { title: 'title', subtitle: 'subtitle', city: 'city', capacity: 'capacity', venue: 'venue', address: 'address', description: 'description' };
+    if (item) for (const [id, key] of Object.entries(fields)) $(`#event-${id}`).value = item[key] ?? '';
+    for (const [id, key] of [['starts', 'startsAt'], ['ends', 'endsAt'], ['closes', 'registrationClosesAt']]) $(`#event-${id}`).value = item ? localBeijing(item[key]) : '';
+    for (const radio of $$('[name="event-poster"]')) { radio.checked = radio.value === (item?.posterCity || 'shenzhen'); radio.parentElement.querySelector('img').src = eventPhoto(radio.value); }
+    $('#event-editor').showModal(); $('#event-title').focus();
+  }
+  function closeEventEditor() {
+    if (eventState.busy) return;
+    if (eventState.dirty && !window.confirm('尚未保存的活动修改将丢失，确认关闭？')) return;
+    eventState.dirty = false; $('#event-editor').close(); eventState.returnFocus?.focus();
+  }
+  $('#event-form').addEventListener('input', () => { eventState.dirty = true; });
+  $('#close-event-editor').addEventListener('click', closeEventEditor);
+  $('#event-editor').addEventListener('cancel', event => { event.preventDefault(); closeEventEditor(); });
+  $('#event-form').addEventListener('submit', async event => {
+    event.preventDefault(); if (eventState.busy || !$('#event-form').reportValidity()) return;
+    const values = {}; for (const key of ['title', 'subtitle', 'city', 'venue', 'address', 'description']) values[key] = $(`#event-${key}`).value.trim();
+    const price = parsePrice($('#event-price').value);
+    if (price === null) { message($('#event-editor-error'), '请输入 0.01–100000.00 元的收费金额，最多保留两位小数。'); $('#event-price').focus(); return; }
+    values.priceFen = price;
+    values.capacity = Number($('#event-capacity').value); values.posterCity = $('[name="event-poster"]:checked').value;
+    for (const [id, key] of [['starts', 'startsAt'], ['ends', 'endsAt'], ['closes', 'registrationClosesAt']]) values[key] = `${$(`#event-${id}`).value}:00+08:00`;
+    if (Date.parse(values.endsAt) <= Date.parse(values.startsAt)) { message($('#event-editor-error'), '结束时间应晚于开始时间。'); $('#event-ends').focus(); return; }
+    if (Date.parse(values.registrationClosesAt) > Date.parse(values.startsAt)) { message($('#event-editor-error'), '报名截止时间不能晚于活动开始。'); $('#event-closes').focus(); return; }
+    if (!eventState.editing) values.status = 'draft';
+    const epoch = state.epoch; eventState.busy = true; state.busy++; $('#save-event').disabled = true; $('#close-event-editor').disabled = true; message($('#event-editor-error'), '');
+    try {
+      await api(eventState.editing ? `/api/admin/events/${eventState.editing.id}` : '/api/admin/events', { method: 'POST', body: values });
+      if (epoch !== state.epoch) return;
+      eventState.dirty = false; $('#event-editor').close(); message($('#app-message'), '活动已保存。'); eventState.returnFocus?.focus();
+    } catch (error) { if (epoch === state.epoch) message($('#event-editor-error'), error.message); }
+    finally { if (epoch === state.epoch) { eventState.busy = false; state.busy--; $('#save-event').disabled = false; $('#close-event-editor').disabled = false; if (!$('#event-editor').open) loadEvents(); } }
+  });
+  function confirmEventAction(item, status) {
+    eventState.action = { item, status }; eventState.returnFocus = document.activeElement;
+    const copy = status === 'cancelled' ? [`取消「${item.title}」？`, `目前有 ${formatCount(item.registeredCount)} 人已付报名、${formatCount(item.pendingCount)} 人待支付。取消后入场票立即失效，待支付订单关闭；已付款订单转待退款，不代表资金已退回。请另行通知参与者并处理退款。`, '确认取消活动'] : status === 'closed' ? ['停止接受新报名？', '已有报名和入场凭证继续有效，仍可按活动时间核销。', '停止报名'] : ['向大家开放报名？', item.paymentReady ? '请确认时间、地点与活动安排准确。发布后，用户可创建报名订单；付款确认后才能领取入场码。' : '收款渠道尚未开通。发布后可公开查看活动，但开通收款前不会接受报名订单。', '确认发布'];
+    $('#event-confirm-title').textContent = copy[0]; $('#event-confirm-copy').textContent = copy[1]; $('#event-confirm-proceed').textContent = copy[2];
+    $('#event-confirm-proceed').classList.toggle('button-danger', status === 'cancelled'); message($('#event-confirm-error'), ''); $('#event-confirm').showModal(); $('#event-confirm-back').focus();
+  }
+  function closeEventConfirm() { if (eventState.busy) return; $('#event-confirm').close(); eventState.returnFocus?.focus(); }
+  $('#event-confirm-back').addEventListener('click', closeEventConfirm);
+  $('#event-confirm').addEventListener('cancel', event => { event.preventDefault(); closeEventConfirm(); });
+  $('#event-confirm-proceed').addEventListener('click', async () => {
+    if (eventState.busy || !eventState.action) return; const epoch = state.epoch; const { item, status } = eventState.action;
+    eventState.busy = true; state.busy++; $('#event-confirm-proceed').disabled = true; $('#event-confirm-back').disabled = true;
+    try { await api(`/api/admin/events/${item.id}`, { method: 'POST', body: { status } }); if (epoch !== state.epoch) return; $('#event-confirm').close(); message($('#app-message'), `活动已更新：${EVENT_STATES[status]}。`); }
+    catch (error) { if (epoch === state.epoch) message($('#event-confirm-error'), error.message); }
+    finally { if (epoch === state.epoch) { eventState.busy = false; state.busy--; $('#event-confirm-proceed').disabled = false; $('#event-confirm-back').disabled = false; if (!$('#event-confirm').open) { loadEvents(); if (eventState.registrationId === item.id) loadRegistrations(); } } }
+  });
+  function openRegistrations(item) {
+    eventState.registrationId = item.id; eventState.page = 1; $('#registration-filter').value = 'all'; $('#registrations-title').textContent = item.title;
+    $('#registrations-view').hidden = false; $('#registrations-title').focus({ preventScroll: true }); $('#registrations-view').scrollIntoView({ block: 'start', behavior: 'smooth' }); loadRegistrations();
+  }
+  async function loadRegistrations() {
+    if (!state.authenticated || !eventState.registrationId) return;
+    const epoch = state.epoch; const revision = ++eventState.revision; const id = eventState.registrationId;
+    eventState.registrationLoading = true; $('#registrations-list').setAttribute('aria-busy', 'true'); message($('#registrations-error'), '');
+    $('#registrations-list').replaceChildren(); $('#registrations-empty').hidden = true; $('#registrations-pagination').hidden = true;
+    $('#refresh-registrations').disabled = true;
+    try {
+      const data = await api(`/api/admin/events/${encodeURIComponent(id)}/registrations?page=${eventState.page}&status=${$('#registration-filter').value}`);
+      if (epoch !== state.epoch || revision !== eventState.revision) return;
+      $('#event-registered').textContent = formatCount(data.event.registeredCount); $('#event-remaining').textContent = formatCount(data.event.remaining); $('#event-checked-in').textContent = formatCount(data.event.checkedInCount);
+      eventState.page = data.page; eventState.pages = data.totalPages;
+      const paymentMetrics = document.createDocumentFragment(); for (const [key, label] of Object.entries(PAYMENT_STATES)) { const metric = node('div'); metric.append(node('span', '', label), node('strong', '', formatCount(data.stats?.[key]))); paymentMetrics.append(metric); } $('#payment-metrics').replaceChildren(paymentMetrics);
+      const fragment = document.createDocumentFragment();
+      for (const item of data.items) {
+        const row = node('article', 'registration-row'); const main = node('div', 'registration-identity'); main.append(node('h3', '', item.name), node('span', 'registration-number', item.ticketNumber || '付款后出票'));
+        const phone = node('button', 'registration-phone', item.phoneMasked); phone.type = 'button'; phone.setAttribute('aria-label', `${item.name}的手机号，点击显示完整号码`); phone.setAttribute('aria-pressed', 'false');
+        phone.addEventListener('click', () => { const visible = phone.getAttribute('aria-pressed') === 'true'; phone.textContent = visible ? item.phoneMasked : item.phone; phone.setAttribute('aria-pressed', String(!visible)); phone.setAttribute('aria-label', `${item.name}的手机号，点击${visible ? '显示完整号码' : '隐藏号码'}`); });
+        const detail = node('div', 'registration-detail'); detail.append(node('span', `registration-status status-${item.paymentStatus}`, PAYMENT_STATES[item.paymentStatus] || item.paymentStatus), node('span', 'registration-amount', `¥${money(item.amountFen)}`), node('span', 'registration-entry-status', item.paymentStatus === 'paid' ? REG_STATES[item.status] : ''), node('time', '', item.checkedInAt ? `入场 ${eventDate(item.checkedInAt)}` : `报名 ${eventDate(item.createdAt)}`)); row.append(main, phone, detail); fragment.append(row);
+      }
+      $('#registrations-list').replaceChildren(fragment); $('#registrations-empty').hidden = data.items.length !== 0; $('#registrations-pagination').hidden = data.total <= data.pageSize;
+      $('#registrations-page-label').textContent = `${data.page} / ${data.totalPages} 页 · ${formatCount(data.total)} 人`; $('#registrations-prev').disabled = data.page <= 1; $('#registrations-next').disabled = data.page >= data.totalPages;
+    } catch (error) { if (epoch === state.epoch && revision === eventState.revision) message($('#registrations-error'), error.message); }
+    finally { if (epoch === state.epoch && revision === eventState.revision) { eventState.registrationLoading = false; $('#registrations-list').setAttribute('aria-busy', 'false'); $('#refresh-registrations').disabled = false; } }
+  }
+  $('#new-event').addEventListener('click', () => openEventEditor()); $('#refresh-events').addEventListener('click', loadEvents);
+  $('#close-registrations').addEventListener('click', () => { eventState.revision++; eventState.registrationId = null; $('#registrations-view').hidden = true; $('#registrations-list').replaceChildren(); $('#tab-events').focus(); });
+  $('#registration-filter').addEventListener('change', () => { eventState.page = 1; loadRegistrations(); });
+  $('#refresh-registrations').addEventListener('click', loadRegistrations);
+  $('#registrations-prev').addEventListener('click', () => { if (!eventState.registrationLoading && eventState.page > 1) { eventState.page--; loadRegistrations(); } });
+  $('#registrations-next').addEventListener('click', () => { if (!eventState.registrationLoading && eventState.page < eventState.pages) { eventState.page++; loadRegistrations(); } });
+
   loadSession();
 })();

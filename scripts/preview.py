@@ -20,6 +20,12 @@ ROUTES = {
     "/city-vote/": "/city-vote/index.html",
     "/admin": "/admin/index.html",
     "/admin/": "/admin/index.html",
+    "/events": "/events/index.html",
+    "/events/": "/events/index.html",
+    "/ticket": "/ticket/index.html",
+    "/ticket/": "/ticket/index.html",
+    "/check-in": "/check-in/index.html",
+    "/check-in/": "/check-in/index.html",
 }
 REQUEST_HEADERS = {"content-type", "origin", "referer", "sec-fetch-site", "cookie", "x-csrf-token", "accept"}
 RESPONSE_HEADERS = {

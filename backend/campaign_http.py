@@ -8,6 +8,7 @@ from urllib.parse import parse_qs, urlsplit
 
 from campaign import IPVoteConflict, MAX_POSTER_BYTES, SESSION_AGE, VISITOR_AGE
 from campaign_feedback import validate as validate_feedback
+from events_http import EventsAPI
 from store import Problem
 
 VISITOR_COOKIE = 'lean_visitor'
@@ -27,6 +28,7 @@ class CampaignAPI:
         self.secure = parsed.scheme == 'https'
         self.local_setup = allow_local_setup and parsed.hostname in ('127.0.0.1', 'localhost', '::1')
         self.allowed_origins = {configured}
+        self.events = EventsAPI(self)
         if self.local_setup:
             # The explicit loopback launcher serves these names on the same port.
             # Production keeps the single configured origin.
@@ -148,6 +150,8 @@ class CampaignAPI:
         return data
 
     def get(self, handler, path):
+        if self.events.matches(path):
+            return self.events.get(handler, path)
         if path == '/api/campaign':
             self.store.limit(handler.ip(), 'campaign-read', 120, 60)
             visitor = self.visitor(handler)
@@ -194,6 +198,8 @@ class CampaignAPI:
 
     def post(self, handler, path):
         self.require_origin(handler)
+        if self.events.matches(path):
+            return self.events.post(handler, path)
         if path == '/api/campaign/feedback':
             data = self.json_body(handler)
             self.store.limit(handler.ip(), 'feedback-request', 60, 60)
