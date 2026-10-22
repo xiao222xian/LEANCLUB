@@ -1,8 +1,8 @@
 """Private Feishu configuration and a durable, asynchronous campaign outbox.
 
-Only aggregate vote counts are sent. Credentials never enter public responses,
-outbox records, or exception messages. Outbox rows are inserted in the vote's
-transaction, so a network failure cannot undo a vote. Delivery is at least once:
+Aggregate vote counts and submitted anonymous feedback are sent. Credentials never
+enter public responses, outbox records, or exception messages. Outbox rows share
+the vote/feedback transaction, so a network failure cannot undo a submission. Delivery is at least once:
 after an ambiguous network timeout, Feishu may receive the same notification twice.
 """
 import base64
@@ -23,7 +23,7 @@ WEBHOOK = re.compile(r'https://open\.feishu\.cn(?::443)?/open-apis/bot/v2/hook/[
 MAX_ATTEMPTS = 5
 RETRY_SECONDS = (5, 30, 120, 600)
 SHANGHAI = timezone(timedelta(hours=8))
-NOTIFICATION_KINDS = frozenset(('new', 'test', 'summary'))
+NOTIFICATION_KINDS = frozenset(('new', 'test', 'summary', 'feedback'))
 MANUAL_KINDS = frozenset(('test', 'summary'))
 
 
@@ -49,6 +49,22 @@ def build_payload(event, signing_secret='', now=None):
         raise ValueError('Unsupported notification kind.')
     snapshot = json.loads(event['snapshot'])
     city_name = dict(CITIES).get(event['city'])
+    if event['kind'] == 'feedback':
+        category = {'activity': '活动玩法', 'training': '训练交流', 'other': '其他想法'}[snapshot['category']]
+        moment = datetime.fromtimestamp(event['created'], SHANGHAI).strftime('%Y.%m.%d %H:%M:%S')
+        def plain(content, size='normal'):
+            # Feishu JSON 2.0 plain-text div; never interpret user text as markup.
+            # https://open.feishu.cn/document/feishu-cards/card-json-v2-components/content-components/plain-text
+            return {'tag': 'div', 'text': {'tag': 'plain_text', 'content': content, 'text_size': size}}
+        elements = [plain(category + (' · ' + city_name if city_name else ''), 'heading-2'),
+                    plain(snapshot['content']), {'tag': 'hr'}, plain(moment + ' · 北京时间', 'notation')]
+        payload = {'msg_type': 'interactive', 'card': {
+            'schema': '2.0', 'config': {'update_multi': True},
+            'header': {'title': {'tag': 'plain_text', 'content': 'LEAN CLUB · 薄肌俱乐部'},
+                       'subtitle': {'tag': 'plain_text', 'content': '收到一条新想法'}, 'template': 'turquoise'},
+            'body': {'direction': 'vertical', 'padding': '20px 16px 16px 16px',
+                     'vertical_spacing': '12px', 'elements': elements}}}
+        return sign_payload(payload, signing_secret, now)
     titles = {'new': '新的一票', 'summary': '当前票数汇总', 'test': '连接测试'}
     heading = '%s +1' % city_name if event['kind'] == 'new' else titles[event['kind']]
     total = sum(snapshot.values())
@@ -74,6 +90,10 @@ def build_payload(event, signing_secret='', now=None):
                               {'tag': 'hr'},
                               {'tag': 'column_set', 'flex_mode': 'none', 'horizontal_spacing': '12px', 'columns': columns},
                               {'tag': 'hr'}, text(moment + ' · 北京时间', 'notation')]}}}
+    return sign_payload(payload, signing_secret, now)
+
+
+def sign_payload(payload, signing_secret, now):
     if signing_secret:
         stamp = str(int(now))
         key = (stamp + '\n' + signing_secret).encode('utf-8')
@@ -148,21 +168,25 @@ class FeishuNotifications:
         # Older releases queued change notifications. Never resume them after
         # upgrading, including an interrupted lease or an administrator retry.
         db.execute("""UPDATE campaign_feishu_outbox SET status='cancelled',error=NULL,lease_until=NULL,lease_token=NULL
-            WHERE kind NOT IN ('new','test','summary') AND status IN ('pending','retrying','failed','sending')""")
+            WHERE kind NOT IN ('new','test','summary','feedback') AND status IN ('pending','retrying','failed','sending')""")
 
     @staticmethod
-    def enqueue(db, kind, city, previous_city, now):
+    def enqueue(db, kind, city, previous_city, now, snapshot=None):
         if kind not in NOTIFICATION_KINDS:
             return None
         config = db.execute('SELECT * FROM campaign_feishu_config WHERE id=1').fetchone()
         if not config['webhook'] or (kind not in MANUAL_KINDS and not config['enabled']):
             return None
-        counts = {city_id: 0 for city_id, _ in CITIES}
-        counts.update({row['city']: row['n'] for row in db.execute('SELECT city,COUNT(*) AS n FROM campaign_votes GROUP BY city')})
+        if kind == 'feedback':
+            if not isinstance(snapshot, dict) or set(snapshot) != {'content', 'category'}:
+                raise ValueError('Feedback notifications require the submitted text and category.')
+        else:
+            snapshot = {city_id: 0 for city_id, _ in CITIES}
+            snapshot.update({row['city']: row['n'] for row in db.execute('SELECT city,COUNT(*) AS n FROM campaign_votes GROUP BY city')})
         event_id = uuid.uuid4().hex
         db.execute('''INSERT INTO campaign_feishu_outbox
             (id,kind,city,previous_city,snapshot,created,revision,available) VALUES(?,?,?,?,?,?,?,?)''',
-                   (event_id, kind, city, previous_city, json.dumps(counts), now, config['revision'], now))
+                   (event_id, kind, city, previous_city, json.dumps(snapshot, ensure_ascii=False), now, config['revision'], now))
         # Keep delivery history useful but bounded in time. Unsent events survive.
         db.execute("DELETE FROM campaign_feishu_outbox WHERE status IN ('sent','cancelled') AND created<?", (now - 30 * 86400,))
         return event_id
@@ -246,7 +270,7 @@ class FeishuNotifications:
             if not config['webhook']:
                 raise Problem(400, '请先保存飞书机器人 Webhook。')
             cursor = db.execute('''UPDATE campaign_feishu_outbox SET status='pending',attempts=0,error=NULL,available=?
-                WHERE status='failed' AND revision=? AND kind IN ('new','test','summary')
+                WHERE status='failed' AND revision=? AND kind IN ('new','test','summary','feedback')
                 AND (?=1 OR kind IN ('test','summary'))''',
                                 (self.store.clock(), config['revision'], config['enabled']))
             count = cursor.rowcount
@@ -266,7 +290,7 @@ class FeishuNotifications:
             if not config['webhook'] or config['next_send_at'] > now:
                 return None
             event = db.execute("""SELECT * FROM campaign_feishu_outbox WHERE status IN ('pending','retrying')
-                AND available<=? AND revision=? AND kind IN ('new','test','summary')
+                AND available<=? AND revision=? AND kind IN ('new','test','summary','feedback')
                 AND (?=1 OR kind IN ('test','summary'))
                 ORDER BY created,rowid LIMIT 1""", (now, config['revision'], config['enabled'])).fetchone()
             if event is None:

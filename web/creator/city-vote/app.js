@@ -16,6 +16,12 @@
   const cancelButton = document.querySelector('#confirm-cancel');
   const confirmError = document.querySelector('#confirm-error');
   const infoButton = document.querySelector('#open-info');
+  const feedbackDialog = document.querySelector('#feedback-dialog');
+  const feedbackButton = document.querySelector('#open-feedback');
+  const feedbackForm = document.querySelector('#feedback-form');
+  const feedbackContent = document.querySelector('#feedback-content');
+  const feedbackError = document.querySelector('#feedback-error');
+  const feedbackSubmit = document.querySelector('#feedback-submit');
   const queryCity = new URLSearchParams(location.search).get('city');
   let active = cities.includes(queryCity) ? queryCity : 'shenzhen';
   let pending = null;
@@ -23,6 +29,8 @@
   let canChange = true;
   let ready = false;
   let initialCampaign = true;
+  let campaignLoadPromise = null;
+  let campaignIdentityReady = false;
   let loading = false;
   let submitting = false;
   let gesture = null;
@@ -31,6 +39,10 @@
   let analyticsAttempts = 0;
   let analyticsEventId;
   let errorMessage = '';
+  let feedbackSending = false;
+  let feedbackSaved = false;
+  let feedbackDraftStarted = false;
+  let feedbackRequest = null;
 
   function announce(message) { status.textContent = message; }
   function notify(message, isError = false) {
@@ -53,6 +65,17 @@
       if (error.name === 'AbortError' || error instanceof TypeError) throw new Error('网络连接不稳定，请重试。');
       throw error;
     } finally { clearTimeout(timeout); }
+  }
+
+  function randomId() {
+    // getRandomValues also works on HTTP; randomUUID requires a secure context.
+    const bytes = new Uint8Array(16);
+    if (window.crypto?.getRandomValues) crypto.getRandomValues(bytes);
+    else for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+    bytes[6] = (bytes[6] & 15) | 64;
+    bytes[8] = (bytes[8] & 63) | 128;
+    const hex = [...bytes].map(b => b.toString(16).padStart(2, '0')).join('');
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
   }
 
   function render() {
@@ -145,42 +168,47 @@
     analyticsAttempts += 1;
     // Analytics must never block voting, including older WebViews without randomUUID.
     Promise.resolve().then(() => {
-      if (!analyticsEventId) {
-        const bytes = new Uint8Array(16);
-        if (window.crypto?.getRandomValues) crypto.getRandomValues(bytes);
-        else for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
-        bytes[6] = (bytes[6] & 15) | 64;
-        bytes[8] = (bytes[8] & 63) | 128;
-        const hex = [...bytes].map(b => b.toString(16).padStart(2, '0')).join('');
-        analyticsEventId = `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
-      }
+      if (!analyticsEventId) analyticsEventId = randomId();
       return api('/api/analytics/page', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ page: 'vote', eventId: analyticsEventId }) });
     }).catch(() => { analyticsSent = false; });
   }
-  async function loadCampaign() {
-    if (loading || submitting) return;
+  function loadCampaign() {
+    if (campaignLoadPromise) return campaignLoadPromise;
+    if (submitting) return Promise.resolve();
     loading = true;
     errorMessage = '';
     render();
-    try {
-      const data = await api('/api/campaign');
-      applyPosters(data.cities);
-      acceptVoteState(data);
-      if (initialCampaign && chosen && !cities.includes(queryCity)) active = chosen;
-      initialCampaign = false;
-      ready = true;
-    } catch (error) {
-      ready = false;
-      errorMessage = error.message;
-    } finally {
-      loading = false;
-      render();
-    }
-    if (ready) recordPageView();
+    campaignLoadPromise = (async () => {
+      try {
+        const data = await api('/api/campaign');
+        applyPosters(data.cities);
+        acceptVoteState(data);
+        if (initialCampaign && chosen && !cities.includes(queryCity)) active = chosen;
+        initialCampaign = false;
+        ready = true;
+        campaignIdentityReady = true;
+      } catch (error) {
+        ready = false;
+        errorMessage = error.message;
+      } finally {
+        loading = false;
+        render();
+      }
+      if (ready) recordPageView();
+    })().finally(() => { campaignLoadPromise = null; });
+    return campaignLoadPromise;
+  }
+
+  async function ensureCampaignIdentity() {
+    if (campaignIdentityReady) return;
+    // Wait for the same initial GET before any feedback POST can create a visitor.
+    // Otherwise a late GET cookie could replace the feedback's idempotency owner.
+    await loadCampaign();
+    if (!campaignIdentityReady) throw new Error(errorMessage || '连接还未就绪，请稍后重试。');
   }
 
   function switchCity(city, focusTab = false) {
-    if (!cities.includes(city) || submitting || confirmDialog.open) return;
+    if (!cities.includes(city) || submitting || confirmDialog.open || feedbackDialog.open) return;
     const previous = panels.find(panel => panel.dataset.city === active);
     const focusInside = previous.contains(document.activeElement);
     active = city;
@@ -189,7 +217,7 @@
     if (mobile.matches && (focusTab || focusInside)) tabs.find(tab => tab.dataset.tab === city).focus({ preventScroll: true });
   }
   function openConfirmation(city) {
-    if (!ready || loading || submitting || confirmDialog.open || (chosen && !canChange)) return;
+    if (!ready || loading || submitting || confirmDialog.open || feedbackDialog.open || (chosen && !canChange)) return;
     active = city;
     pending = city;
     confirmError.hidden = true;
@@ -248,6 +276,99 @@
     }
   }
 
+  function updateFeedbackCount() {
+    document.querySelector('#feedback-count').textContent = `${[...feedbackContent.value].length} / 1000`;
+  }
+
+  function showFeedback() {
+    if (feedbackDialog.open || confirmDialog.open || dialog.open) return;
+    gesture = null;
+    if (feedbackSaved) {
+      feedbackSaved = false;
+      feedbackDraftStarted = false;
+      document.querySelector('#feedback-compose').hidden = false;
+      document.querySelector('#feedback-success').hidden = true;
+      feedbackDialog.setAttribute('aria-labelledby', 'feedback-title');
+    }
+    if (!feedbackDraftStarted) {
+      feedbackForm.querySelector(`input[name="city"][value="${active}"]`).checked = true;
+      feedbackDraftStarted = true;
+    }
+    const poster = panels.find(p => p.dataset.city === active).querySelector('.city-photo');
+    const feedbackPhoto = document.querySelector('#feedback-photo');
+    feedbackPhoto.src = poster.currentSrc || poster.src;
+    feedbackPhoto.style.objectPosition = getComputedStyle(poster).objectPosition;
+    feedbackDialog.showModal();
+    // Keep the full composition visible on mobile before opening its keyboard.
+    document.querySelector('#feedback-title').focus({ preventScroll: true });
+  }
+
+  async function submitFeedback(event) {
+    event.preventDefault();
+    if (feedbackSending || feedbackSaved) return;
+    const payload = {
+      content: feedbackContent.value.trim(),
+      category: feedbackForm.querySelector('input[name="category"]:checked').value,
+      city: feedbackForm.querySelector('input[name="city"]:checked').value || null
+    };
+    const length = [...payload.content].length;
+    const nonWhitespaceLength = [...payload.content.replace(/\s/g, '')].length;
+    if (nonWhitespaceLength < 5 || length > 1000) {
+      feedbackError.textContent = nonWhitespaceLength < 5 ? '再多聊一点吧，至少写 5 个字。' : '想法很丰富，先精简到 1000 字以内吧。';
+      feedbackError.hidden = false;
+      feedbackContent.setAttribute('aria-invalid', 'true');
+      feedbackContent.focus();
+      return;
+    }
+    const fingerprint = JSON.stringify(payload);
+    // A retry after a lost response uses the same key, including close/reopen.
+    if (feedbackRequest?.fingerprint !== fingerprint) feedbackRequest = { fingerprint, id: randomId() };
+    feedbackSending = true;
+    feedbackError.hidden = true;
+    feedbackContent.removeAttribute('aria-invalid');
+    feedbackForm.setAttribute('aria-busy', 'true');
+    for (const control of feedbackForm.querySelectorAll('input,textarea,button')) control.disabled = true;
+    feedbackSubmit.classList.add('is-busy');
+    feedbackSubmit.querySelector('span').textContent = '正在送出…';
+    try {
+      await ensureCampaignIdentity();
+      const result = await api('/api/campaign/feedback', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...payload, requestId: feedbackRequest.id })
+      });
+      if (result.ok !== true) throw new Error('暂时无法确认是否收到，请再试一次。');
+      feedbackSaved = true;
+      feedbackForm.reset();
+      updateFeedbackCount();
+      feedbackRequest = null;
+      document.querySelector('#feedback-compose').hidden = true;
+      document.querySelector('#feedback-success').hidden = false;
+      feedbackDialog.setAttribute('aria-labelledby', 'feedback-success-title');
+      if (feedbackDialog.open) {
+        feedbackDialog.scrollTop = 0;
+        document.querySelector('#feedback-success-title').focus({ preventScroll: true });
+      } else notify('你的想法，收到了。');
+      announce('想法已收到，谢谢你一起参与。');
+      if ('BroadcastChannel' in window) {
+        try {
+          const updates = new BroadcastChannel('lean-campaign-events');
+          updates.postMessage({ type: 'feedback-created' });
+          updates.close();
+        } catch { /* Admin polling remains available. */ }
+      }
+    } catch (error) {
+      feedbackError.textContent = error.message;
+      feedbackError.hidden = false;
+      if (!feedbackDialog.open) notify('想法暂未确认送达，内容已保留在意见箱。', true);
+    } finally {
+      feedbackSending = false;
+      feedbackForm.setAttribute('aria-busy', 'false');
+      for (const control of feedbackForm.querySelectorAll('input,textarea,button')) control.disabled = false;
+      feedbackSubmit.classList.remove('is-busy');
+      feedbackSubmit.querySelector('span').textContent = feedbackError.hidden ? '送出想法' : '重新送出';
+    }
+  }
+
   for (const panel of panels) {
     const city = panel.dataset.city;
     panel.querySelector('[data-vote]').addEventListener('click', () => {
@@ -275,7 +396,7 @@
     });
   });
   stage.addEventListener('pointerdown', event => {
-    if (!mobile.matches || submitting || confirmDialog.open || event.button !== 0 || event.target.closest('button,a')) return;
+    if (!mobile.matches || submitting || confirmDialog.open || feedbackDialog.open || event.button !== 0 || event.target.closest('button,a')) return;
     gesture = { x: event.clientX, y: event.clientY, id: event.pointerId };
   });
   window.addEventListener('pointerup', event => {
@@ -302,6 +423,23 @@
     if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) dialog.close();
   });
   dialog.addEventListener('close', () => infoButton.focus({ preventScroll: true }));
+  feedbackButton.addEventListener('click', showFeedback);
+  feedbackForm.addEventListener('submit', submitFeedback);
+  feedbackForm.addEventListener('input', () => {
+    feedbackDraftStarted = true;
+    updateFeedbackCount();
+    feedbackContent.removeAttribute('aria-invalid');
+    feedbackError.hidden = true;
+    feedbackSubmit.querySelector('span').textContent = '送出想法';
+  });
+  document.querySelector('#close-feedback').addEventListener('click', () => feedbackDialog.close());
+  document.querySelector('#feedback-done').addEventListener('click', () => feedbackDialog.close());
+  feedbackDialog.addEventListener('click', event => {
+    if (event.target !== feedbackDialog) return;
+    const r = feedbackDialog.getBoundingClientRect();
+    if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) feedbackDialog.close();
+  });
+  feedbackDialog.addEventListener('close', () => feedbackButton.focus({ preventScroll: true }));
   confirmButton.addEventListener('click', submitVote);
   cancelButton.addEventListener('click', () => { if (!submitting) confirmDialog.close('cancel'); });
   confirmDialog.addEventListener('cancel', event => { if (submitting) event.preventDefault(); });

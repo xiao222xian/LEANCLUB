@@ -3,7 +3,7 @@
 All campaign tables are namespaced; the pre-existing school directory is untouched.
 Visitor and session credentials are opaque random values, stored only as digests.
 """
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from datetime import datetime, timedelta, timezone
 import hashlib
 import hmac
@@ -21,6 +21,7 @@ import warnings
 
 from PIL import Image, ImageOps, UnidentifiedImageError
 from campaign_feishu import FeishuNotifications
+from campaign_feedback import CampaignFeedback
 from store import Problem
 
 CITIES = (('shenzhen', '深圳'), ('zhuhai', '珠海'), ('guangzhou', '广州'))
@@ -171,6 +172,7 @@ class CampaignStore:
             if len(self._vote_ip_secret) != 32:
                 raise ValueError('The campaign vote IP secret is invalid.')
         self.notifications = FeishuNotifications(self)
+        self.feedback = CampaignFeedback(self)
 
     @contextmanager
     def connect(self):
@@ -194,10 +196,10 @@ class CampaignStore:
                 raise Problem(429, '操作过于频繁，请稍后再试。')
             db.execute('INSERT INTO campaign_rate_events VALUES(?,?,?)', (digest(key), kind, now))
 
-    def visitor(self, token):
+    def visitor(self, token, db=None):
         """Return (digest, fresh cookie token or None); never accept a chosen ID."""
         now = int(self.clock())
-        with self.connect() as db:
+        with self.connect() if db is None else nullcontext(db) as db:
             if isinstance(token, str) and TOKEN.fullmatch(token):
                 row = db.execute('SELECT token_hash FROM campaign_visitors WHERE token_hash=? AND expires>?',
                                  (digest(token), now)).fetchone()

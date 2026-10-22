@@ -18,11 +18,19 @@
     timeZone: 'Asia/Shanghai', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit', hour12: false
   });
+  const feedbackDateFormat = new Intl.DateTimeFormat('zh-CN', {
+    timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false
+  });
+  const FEEDBACK_CATEGORIES = { activity: '活动玩法', training: '训练交流', other: '其他想法' };
   const state = {
     authenticated: false, csrf: '', setup: false, epoch: 0,
     panel: 'overview', statsLoading: false, postersLoading: false,
     postersLoaded: false, posters: new Map(), busy: 0,
-    feishu: null, feishuLoading: false, feishuBusy: false, feishuDirty: false, feishuTimer: null, feishuRevision: 0
+    feishu: null, feishuLoading: false, feishuBusy: false, feishuDirty: false, feishuTimer: null, feishuRevision: 0,
+    feedback: null, feedbackFilter: 'all', feedbackPage: 1, feedbackLoading: false,
+    feedbackBusy: false, feedbackRevision: 0, feedbackBadgeLoading: false,
+    feedbackBadgeAt: 0, feedbackSignature: null, feedbackTimer: null
   };
 
   class RequestError extends Error {
@@ -120,6 +128,24 @@
     state.statsLoading = false;
     state.postersLoading = false;
     state.busy = 0;
+    window.clearInterval(state.feedbackTimer);
+    state.feedbackTimer = null;
+    state.feedback = null;
+    state.feedbackFilter = 'all';
+    state.feedbackPage = 1;
+    state.feedbackLoading = false;
+    state.feedbackBusy = false;
+    state.feedbackBadgeLoading = false;
+    state.feedbackBadgeAt = 0;
+    state.feedbackSignature = null;
+    state.feedbackRevision += 1;
+    $('#feedback-list').replaceChildren();
+    $('#feedback-total').textContent = '等待加载';
+    for (const id of ['feedback-empty', 'feedback-pagination', 'feedback-loading', 'feedback-update']) $(`#${id}`).hidden = true;
+    message($('#feedback-error'), '');
+    message($('#feedback-status'), '');
+    renderUnread(0);
+    feedbackControls();
     window.clearTimeout(state.feishuTimer);
     state.feishuTimer = null;
     state.feishu = null;
@@ -236,6 +262,9 @@
     $('#admin-view').hidden = false;
     selectPanel('overview', false);
     loadStats();
+    window.clearInterval(state.feedbackTimer);
+    state.feedbackTimer = window.setInterval(refreshFeedbackBadge, 30000);
+    refreshFeedbackBadge(true);
     document.title = '数据概览 · Lean Club';
   }
 
@@ -326,9 +355,10 @@
       if (active && focus) tab.focus();
     }
     for (const panel of $$('[role="tabpanel"]')) panel.hidden = panel.id !== `panel-${name}`;
-    document.title = `${({ posters: '城市海报', overview: '数据概览', feishu: '飞书通知' })[name]} · Lean Club`;
+    document.title = `${({ posters: '城市海报', overview: '数据概览', feedback: '意见箱', feishu: '飞书通知' })[name]} · Lean Club`;
     if (name === 'posters' && !state.postersLoaded && !state.postersLoading) loadPosters();
     if (name === 'overview') refreshVisibleStats();
+    if (name === 'feedback' && !state.feedback && !state.feedbackLoading) loadFeedback();
     window.clearTimeout(state.feishuTimer);
     state.feishuTimer = null;
     if (name === 'feishu') loadFeishu();
@@ -499,9 +529,208 @@
     if (!event.persisted) voteUpdates?.close();
     window.clearTimeout(state.feishuTimer);
     state.feishuTimer = null;
+    window.clearInterval(state.feedbackTimer);
+    state.feedbackTimer = null;
     $('#feishu-webhook').value = '';
     $('#feishu-secret').value = '';
   });
+
+  function renderUnread(value) {
+    const unread = count(value);
+    const badge = $('#feedback-unread');
+    badge.textContent = unread > 99 ? '99+' : formatCount(unread);
+    badge.hidden = unread === 0;
+    $('#tab-feedback').setAttribute('aria-label', unread ? `意见箱，${formatCount(unread)} 条待看` : '意见箱');
+  }
+
+  function feedbackControls() {
+    const locked = state.feedbackLoading || state.feedbackBusy;
+    $('#feedback-list').setAttribute('aria-busy', String(locked));
+    $('#refresh-feedback').disabled = locked;
+    $('#refresh-feedback').setAttribute('aria-busy', String(state.feedbackLoading));
+    $('#feedback-load-new').disabled = locked;
+    for (const button of $$('[data-feedback-filter]')) {
+      button.disabled = locked;
+      button.setAttribute('aria-pressed', String(button.dataset.feedbackFilter === state.feedbackFilter));
+    }
+    for (const button of $$('.feedback-mark')) button.disabled = locked;
+    $('#feedback-prev').disabled = locked || !state.feedback || state.feedbackPage <= 1;
+    $('#feedback-next').disabled = locked || !state.feedback || state.feedbackPage >= state.feedback.totalPages;
+    $('#logout').disabled = state.busy > 0;
+  }
+
+  function validFeedbackItem(item) {
+    return item && (typeof item.id === 'string' && item.id.length > 0 || Number.isSafeInteger(item.id) && item.id > 0)
+      && typeof item.content === 'string' && Object.hasOwn(FEEDBACK_CATEGORIES, item.category)
+      && (item.city === null || CITIES.some(city => city.id === item.city))
+      && ['new', 'read'].includes(item.status) && typeof item.createdAt === 'string'
+      && Number.isFinite(new Date(item.createdAt).getTime());
+  }
+
+  function validateFeedback(data) {
+    const integer = value => Number.isSafeInteger(value) && value >= 0;
+    if (!data || !Array.isArray(data.items) || !data.items.every(validFeedbackItem)
+      || !['total', 'unread', 'page', 'pageSize', 'totalPages'].every(key => integer(data[key]))
+      || data.page < 1 || data.pageSize < 1) throw new RequestError('意见数据不完整，请重新加载。');
+  }
+
+  function renderFeedback(data) {
+    state.feedback = data;
+    state.feedbackPage = data.page;
+    renderUnread(data.unread);
+    const filterLabel = { all: '全部', new: '待看', read: '已看' }[state.feedbackFilter];
+    $('#feedback-total').textContent = `${filterLabel} ${formatCount(data.total)} 条`;
+    const fragment = document.createDocumentFragment();
+    for (const item of data.items) {
+      const element = $('#feedback-template').content.firstElementChild.cloneNode(true);
+      element.dataset.id = String(item.id);
+      element.dataset.status = item.status;
+      const category = FEEDBACK_CATEGORIES[item.category];
+      const categoryId = `feedback-category-${String(item.id).replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+      $('.feedback-category', element).textContent = category;
+      $('.feedback-category', element).id = categoryId;
+      element.setAttribute('aria-labelledby', categoryId);
+      $('.feedback-city', element).textContent = CITIES.find(city => city.id === item.city)?.name || '不限城市';
+      const time = $('.feedback-time', element);
+      time.textContent = `${feedbackDateFormat.format(new Date(item.createdAt))} · 北京时间`;
+      time.dateTime = item.createdAt;
+      $('.feedback-content', element).textContent = item.content;
+      $('.feedback-state', element).textContent = item.status === 'new' ? '待看' : '已看';
+      const button = $('.feedback-mark', element);
+      button.textContent = item.status === 'new' ? '标记已看' : '标记待看';
+      button.setAttribute('aria-label', `将这条${category}${item.status === 'new' ? '标记已看' : '标记待看'}`);
+      button.addEventListener('click', () => changeFeedbackStatus(item, button));
+      fragment.append(element);
+    }
+    $('#feedback-list').replaceChildren(fragment);
+    $('#feedback-empty').hidden = data.items.length > 0;
+    $('#feedback-empty-title').textContent = state.feedbackFilter === 'new' ? '待看的意见已清空' : state.feedbackFilter === 'read' ? '还没有已看意见' : '还没有收到意见';
+    $('#feedback-empty-copy').textContent = state.feedbackFilter === 'new' ? '谢谢你认真听见每一种想法。' : state.feedbackFilter === 'read' ? '标记已看的意见，会保留在这里。' : '新的想法，会在这里相遇。';
+    $('#feedback-pagination').hidden = data.totalPages <= 1;
+    $('#feedback-page-label').textContent = `${data.page} / ${Math.max(1, data.totalPages)} 页`;
+    $('#feedback-update').hidden = true;
+  }
+
+  async function loadFeedback(options = {}) {
+    if (!state.authenticated || state.feedbackLoading || state.feedbackBusy) return;
+    const epoch = state.epoch;
+    const filter = options.filter || state.feedbackFilter;
+    const page = options.page || state.feedbackPage;
+    const previousFilter = state.feedbackFilter;
+    state.feedbackLoading = true;
+    state.feedbackFilter = filter;
+    state.feedbackRevision += 1;
+    $('#feedback-loading').hidden = Boolean(state.feedback);
+    message($('#feedback-error'), '');
+    if (!options.keepStatus) message($('#feedback-status'), '');
+    feedbackControls();
+    let completed = false;
+    try {
+      const params = new URLSearchParams({ status: filter, page: String(page) });
+      let data = await api(`/api/admin/feedback?${params}`);
+      if (state.epoch !== epoch) return false;
+      validateFeedback(data);
+      if (data.page > Math.max(1, data.totalPages)) {
+        params.set('page', String(Math.max(1, data.totalPages)));
+        data = await api(`/api/admin/feedback?${params}`);
+        if (state.epoch !== epoch) return false;
+        validateFeedback(data);
+      }
+      renderFeedback(data);
+      if (filter === 'all' && data.page === 1) state.feedbackSignature = `${data.total}:${data.items[0]?.id || ''}`;
+      announce(`${filter === 'new' ? '待看' : filter === 'read' ? '已看' : '全部'}意见已加载，共 ${formatCount(data.total)} 条。`);
+      if (options.navigate && state.panel === 'feedback') {
+        $('#feedback-list').focus({ preventScroll: true });
+        $('#panel-feedback').scrollIntoView({ block: 'start', behavior: 'instant' });
+      }
+      completed = true;
+    } catch (error) {
+      if (state.epoch === epoch) {
+        state.feedbackFilter = previousFilter;
+        message($('#feedback-error'), error.message);
+      }
+    } finally {
+      if (state.epoch === epoch) {
+        state.feedbackLoading = false;
+        $('#feedback-loading').hidden = true;
+        feedbackControls();
+      }
+    }
+    return completed;
+  }
+
+  async function changeFeedbackStatus(item, button) {
+    if (!state.authenticated || state.feedbackBusy || state.feedbackLoading) return;
+    const epoch = state.epoch;
+    const nextStatus = item.status === 'new' ? 'read' : 'new';
+    state.feedbackBusy = true;
+    state.feedbackRevision += 1;
+    state.busy += 1;
+    feedbackControls();
+    button.textContent = '正在保存';
+    message($('#feedback-error'), '');
+    message($('#feedback-status'), '');
+    let saved = false;
+    try {
+      const data = await api(`/api/admin/feedback/${encodeURIComponent(item.id)}/status`, { method: 'POST', body: { status: nextStatus } });
+      if (state.epoch !== epoch) return;
+      if (!validFeedbackItem(data.item) || !Number.isSafeInteger(data.unread) || data.unread < 0) throw new RequestError('状态已提交，请刷新确认结果。');
+      renderUnread(data.unread);
+      if (state.feedback) {
+        const index = state.feedback.items.findIndex(entry => String(entry.id) === String(item.id));
+        if (index >= 0) state.feedback.items[index] = data.item;
+        state.feedback.unread = data.unread;
+        renderFeedback(state.feedback);
+      }
+      message($('#feedback-status'), nextStatus === 'read' ? '已标记为已看。' : '已移回待看。');
+      saved = true;
+    } catch (error) {
+      if (state.epoch === epoch) message($('#feedback-error'), error.message);
+    } finally {
+      if (state.epoch === epoch) {
+        state.feedbackBusy = false;
+        state.busy = Math.max(0, state.busy - 1);
+        button.textContent = item.status === 'new' ? '标记已看' : '标记待看';
+        feedbackControls();
+      }
+    }
+    if (saved && state.epoch === epoch) {
+      await loadFeedback({ keepStatus: true });
+      if (state.epoch !== epoch || state.panel !== 'feedback') return;
+      const matching = $$('.feedback-item').find(element => element.dataset.id === String(item.id));
+      const focusTarget = matching ? $('.feedback-mark', matching) : $('.feedback-mark') || $('#feedback-list');
+      focusTarget.focus({ preventScroll: true });
+    }
+  }
+
+  async function refreshFeedbackBadge(force = false) {
+    if (!state.authenticated || document.visibilityState !== 'visible' || state.feedbackBadgeLoading || state.feedbackLoading || state.feedbackBusy) return;
+    if (force !== true && Date.now() - state.feedbackBadgeAt < 30000) return;
+    const epoch = state.epoch;
+    const revision = state.feedbackRevision;
+    state.feedbackBadgeLoading = true;
+    state.feedbackBadgeAt = Date.now();
+    try {
+      const data = await api('/api/admin/feedback?status=all&page=1');
+      if (state.epoch !== epoch || revision !== state.feedbackRevision) return;
+      validateFeedback(data);
+      renderUnread(data.unread);
+      const signature = `${data.total}:${data.items[0]?.id || ''}`;
+      if (state.feedback && state.feedbackSignature !== null && state.feedbackSignature !== signature) $('#feedback-update').hidden = false;
+      state.feedbackSignature = signature;
+    } catch { /* Badge refresh never replaces the current list or interrupts reading. */ }
+    finally { if (state.epoch === epoch) state.feedbackBadgeLoading = false; }
+  }
+
+  for (const button of $$('[data-feedback-filter]')) button.addEventListener('click', () => {
+    if (button.dataset.feedbackFilter !== state.feedbackFilter || !state.feedback) loadFeedback({ filter: button.dataset.feedbackFilter, page: 1 });
+  });
+  $('#refresh-feedback').addEventListener('click', () => loadFeedback());
+  $('#feedback-load-new').addEventListener('click', () => loadFeedback({ page: 1 }));
+  $('#feedback-prev').addEventListener('click', () => loadFeedback({ page: state.feedbackPage - 1, navigate: true }));
+  $('#feedback-next').addEventListener('click', () => loadFeedback({ page: state.feedbackPage + 1, navigate: true }));
+  document.addEventListener('visibilitychange', refreshFeedbackBadge);
+  window.addEventListener('focus', refreshFeedbackBadge);
 
   function feishuControls() {
     const locked = state.feishuBusy || (state.feishuLoading && !state.feishu);
@@ -540,7 +769,7 @@
     const labels = { pending: '等待发送', sending: '正在发送', retrying: '等待自动重试', sent: '已发送', failed: '发送失败', cancelled: '已取消' };
     $('#feishu-delivery-state').textContent = delivery ? labels[delivery.status] || '等待更新' : '暂无记录';
     $('#feishu-delivery-state').dataset.status = delivery?.status || '';
-    const type = ({ test: '测试消息', summary: '当前票数汇总', change: '历史改投通知', new: '新增投票通知' })[delivery?.kind] || '投票通知';
+    const type = ({ test: '测试消息', summary: '当前票数汇总', change: '历史改投通知', new: '新增投票通知', feedback: '新增意见通知' })[delivery?.kind] || '活动通知';
     const time = formatDate(delivery?.sentAt || delivery?.createdAt);
     $('#feishu-delivery-detail').textContent = delivery ? `${type}${time ? ` · ${time}` : ''}${delivery.error ? ` · ${delivery.error}` : ''}` : '保存配置后，可发送测试消息确认连接。';
     const pending = count(settings.pendingCount), failed = count(settings.failedCount);
@@ -633,6 +862,12 @@
   $('#feishu-test').addEventListener('click', () => changeFeishu('test'));
   $('#feishu-summary').addEventListener('click', () => changeFeishu('summary'));
   $('#feishu-retry').addEventListener('click', () => changeFeishu('retry'));
+  for (const button of $$('[data-notification-preview]')) button.addEventListener('click', () => {
+    const name = button.dataset.notificationPreview;
+    for (const option of $$('[data-notification-preview]')) option.setAttribute('aria-pressed', String(option === button));
+    $('#notification-preview-votes').hidden = name !== 'votes';
+    $('#notification-preview-feedback').hidden = name !== 'feedback';
+  });
   $('#refresh-feishu').addEventListener('click', () => loadFeishu());
   for (const input of $$('#feishu-form input')) input.addEventListener('input', () => {
     state.feishuDirty = true;

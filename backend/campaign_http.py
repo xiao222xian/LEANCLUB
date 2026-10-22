@@ -4,9 +4,10 @@ from http.cookies import SimpleCookie, CookieError
 import json
 import re
 import socket
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 
 from campaign import IPVoteConflict, MAX_POSTER_BYTES, SESSION_AGE, VISITOR_AGE
+from campaign_feedback import validate as validate_feedback
 from store import Problem
 
 VISITOR_COOKIE = 'lean_visitor'
@@ -159,6 +160,19 @@ class CampaignAPI:
         if path == '/api/admin/stats':
             self.admin(handler)
             return handler.send_json(200, self.store.stats())
+        if path == '/api/admin/feedback':
+            self.admin(handler)
+            try:
+                query = parse_qs(urlsplit(handler.path).query, keep_blank_values=True,
+                                 strict_parsing=True, max_num_fields=2)
+                if set(query) - {'status', 'page'} or any(len(values) != 1 for values in query.values()):
+                    raise ValueError()
+                page = query.get('page', ['1'])[0]
+                if not re.fullmatch(r'[1-9][0-9]{0,6}', page):
+                    raise ValueError()
+            except ValueError:
+                raise Problem(400, '筛选或页码参数无效。')
+            return handler.send_json(200, self.store.feedback.list(query.get('status', ['all'])[0], int(page)))
         if path == '/api/admin/feishu':
             self.admin(handler)
             return handler.send_json(200, self.store.notifications.settings())
@@ -180,6 +194,26 @@ class CampaignAPI:
 
     def post(self, handler, path):
         self.require_origin(handler)
+        if path == '/api/campaign/feedback':
+            data = self.json_body(handler)
+            self.store.limit(handler.ip(), 'feedback-request', 60, 60)
+            validate_feedback(data)
+            # Roll back newly issued anonymous identities with quota/transaction
+            # failures, and do not set a cookie until the submission commits.
+            with self.store.connect() as db:
+                db.execute('BEGIN IMMEDIATE')
+                visitor, fresh = self.store.visitor(self.cookie(handler, VISITOR_COOKIE), db=db)
+                result = self.store.feedback.submit(visitor, handler.ip(), data, db=db)
+            if fresh:
+                self.set_cookie(handler, VISITOR_COOKIE, fresh, VISITOR_AGE)
+            return handler.send_json(200 if result['duplicate'] else 201, result)
+        feedback_match = re.fullmatch(r'/api/admin/feedback/([^/]+)/status', path)
+        if feedback_match:
+            self.admin(handler, writing=True)
+            data = self.json_body(handler)
+            if set(data) != {'status'}:
+                raise Problem(400, '请指定意见状态。')
+            return handler.send_json(200, self.store.feedback.set_status(feedback_match[1], data['status']))
         if path == '/api/campaign/vote':
             data = self.json_body(handler)
             self.store.limit(handler.ip(), 'vote', 60, 60)

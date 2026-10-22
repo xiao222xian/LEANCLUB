@@ -1,0 +1,29 @@
+# Managed by bojizhuye deploy/ubuntu. Do not reuse for another application.
+[Unit]
+Description=Boji homepage and city campaign API
+After=network.target
+
+[Service]
+Type=simple
+User=bojizhuye
+Group=bojizhuye
+WorkingDirectory=/opt/bojizhuye/current
+EnvironmentFile=/etc/bojizhuye/bojizhuye.env
+ExecStart=/opt/bojizhuye/current/.venv/bin/python /opt/bojizhuye/current/backend/server.py
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=20
+UMask=0077
+StateDirectory=bojizhuye
+StateDirectoryMode=0700
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/bojizhuye
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

@@ -2,12 +2,16 @@
 
 Lean Club 薄肌社群主页、三城线下活动投票与内容管理。当前开发仓库：[papaoo/bojizhuye](https://github.com/papaoo/bojizhuye)，基于 [xiao222xian/LEANCLUB](https://github.com/xiao222xian/LEANCLUB) 继续开发，保留上游历史与素材来源。
 
+本项目试运行：[主页](http://boji.tensorbot.xyz/) · [三城投票](http://boji.tensorbot.xyz/city-vote)。固定版本已部署到自有 Ubuntu 服务，当前使用 HTTP；SSL 由用户申请，admin已初始化并按用户指定更新摘要；飞书配置已迁移开启，9票清理并保留访问统计，没有发送测试消息。公网真实登录及飞书设置页面检查通过，首条消息投递、完整业务与真机验收仍待完成。部署状态、验证范围及恢复记录见[部署记录](docs/deployment-152-136-108-87.md)。下方 `leanmuscleclub.com` 为上游参考网站，并非本轮发布地址。
+
+本轮新增“有个想法”意见入口、后台意见箱及飞书意见提醒，行为、接口与隐私范围见[意见箱说明](docs/feedback.md)。这些代码仍处于本地开发验收阶段，尚未更新上述已部署版本，也未向真实群发送意见测试消息。
+
 <a href="https://leanmuscleclub.com/">
   <img src="docs/assets/home-desktop.png" width="100%" alt="Lean Club 真实首页：学校搜索、加入入口与高校标识滚动栏" />
 </a>
 
 <p align="center">
-  <a href="https://leanmuscleclub.com/"><strong>访问网站 ↗</strong></a>
+  <a href="https://leanmuscleclub.com/"><strong>上游参考网站 ↗</strong></a>
   &nbsp;&nbsp; · &nbsp;&nbsp;
   <a href="https://leanmuscleclub.com/schools"><strong>找到你的学校 ↗</strong></a>
 </p>
@@ -35,7 +39,7 @@ Lean Club 薄肌社群主页、三城线下活动投票与内容管理。当前�
 
 前端使用 HTML、CSS 和 JavaScript，后端使用 Python、SQLite 与 Pillow 图片解码。原有学校搜索、地区筛选、俱乐部详情和加入入口继续保留；城市投票和基础内容管理以独立模块接入。
 
-**本次城市投票与管理模块目前仅在本地开发和验证，尚未上线到上述公开网站。** 投票经弹窗确认，同一 IP 只记一票，原浏览器可改选；后台自动刷新统计。共用网络的设备可能共用一个公网 IP，票数不代表实名独立人数；无需填写联系方式即可参与。
+**城市投票与管理模块已随固定提交 `cb66b6a` 部署到 `boji.tensorbot.xyz`，没有发布到上述上游网站。** HTTP 页面、健康、三张素材与 IP 跳转已核实，线上admin已按用户指定更新摘要，密码不写入文档或源码；飞书配置已迁移开启，公网真实登录及设置页面检查通过；首条消息投递、投票交互与海报维护尚未验收。投票经弹窗确认，同一 IP 只记一票，原浏览器可改选；后台自动刷新统计。共用网络的设备可能共用一个公网 IP，票数不代表实名独立人数；无需填写联系方式即可参与。
 
 <details>
 <summary><strong>在本地运行 →</strong></summary>
