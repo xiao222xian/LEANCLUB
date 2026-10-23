@@ -1,5 +1,13 @@
 # Ubuntu 单机部署包
 
+2026-10-24：完整升级已另建 [HTTPS官网/公共网关升级流程](../../docs/fullstack-site-upgrade.md)，入口为 `upgrade-fullstack-site.py`，保留旧证书和数据，要求先部署Java与console，再执行双域后端与显式schema迁移。新的完整发布授权使用这套流程；以下HTTP安装器与早期“仅改品牌”说明作为历史参考，不能直接覆盖现用HTTPS。新域SSL/vhost由 `enable-leanschool-https.py` 独立处理。
+
+Java/MySQL/Redis与 `/console/` 的准备、初始化、启动和回退见 [平台执行说明](../yudao/PLATFORM-RUNBOOK.md)。见 [发布记录](../../docs/fullstack-release-20261024.md)与 [双域说明](../../docs/domain-compatibility.md)。当前脚本已本机测试，服务器尚未执行。
+
+2026-10-23 品牌更新：当前目标主站为 `https://www.leanschool.net`（薄肌学院 / LEAN SCHOOL），`install.py` 的默认主机名已更新。下文旧域名、旧提交及首次安装命令保留为历史恢复参考；现有 `enable-uploaded-https.py` 也是旧域首次启用专用脚本，不能用于此次迁移。运行中的服务、Origin、TLS 和 DNS 没有因源码默认值更新而切换。
+
+新域正式切换须采用新证书、现有 HTTPS 配置的增量变更与对应 `CLUB_ORIGIN=https://www.leanschool.net`，按[迁移方案](../../../../02-brand/LEAN-SCHOOL-MIGRATION.md)保留旧投票身份过渡路径。不要运行下文 HTTP 安装器覆盖现网 HTTPS，也不要把本地尚未发布的 v5 整套代码随品牌修改一起上线。
+
 支持首次部署和按精确 Git 提交升级。`--revision` 必须是40位小写提交SHA；省略时仍使用旧版本 `cb66b6a4d6417d3f047cb7ec636fa4f7aea2c2fb`，不会自动选择最新提交。目标是 `http://boji.tensorbot.xyz`，可将 IP `152.136.108.87` 的80端口请求301跳转至域名并保留路径与查询。当前install.py仅配置HTTP；生产已于2026-10-23单独启用HTTPS。**不要用此HTTP工具覆盖现用HTTPS配置**，新管理标记会阻止旧工具覆盖。证书、Origin、更新和回退见[HTTPS运维记录](../../docs/https-20261023.md)。实际已部署版本和验收范围以[部署记录](../../docs/deployment-152-136-108-87.md)为准；工具更新不代表新版已经上线。
 
 ## 部署边界

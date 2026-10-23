@@ -60,7 +60,7 @@ def build_payload(event, signing_secret='', now=None):
                     plain(snapshot['content']), {'tag': 'hr'}, plain(moment + ' · 北京时间', 'notation')]
         payload = {'msg_type': 'interactive', 'card': {
             'schema': '2.0', 'config': {'update_multi': True},
-            'header': {'title': {'tag': 'plain_text', 'content': 'LEAN CLUB · 薄肌俱乐部'},
+            'header': {'title': {'tag': 'plain_text', 'content': 'LEAN SCHOOL · 薄肌学院'},
                        'subtitle': {'tag': 'plain_text', 'content': '收到一条新想法'}, 'template': 'turquoise'},
             'body': {'direction': 'vertical', 'padding': '20px 16px 16px 16px',
                      'vertical_spacing': '12px', 'elements': elements}}}
@@ -80,7 +80,7 @@ def build_payload(event, signing_secret='', now=None):
     payload = {'msg_type': 'interactive', 'card': {
         'schema': '2.0',
         'config': {'update_multi': True},
-        'header': {'title': {'tag': 'plain_text', 'content': 'LEAN CLUB · 薄肌俱乐部'},
+        'header': {'title': {'tag': 'plain_text', 'content': 'LEAN SCHOOL · 薄肌学院'},
                    'subtitle': {'tag': 'plain_text', 'content': titles[event['kind']]},
                    'template': 'turquoise' if event['kind'] == 'new' else 'grey'},
         'body': {'direction': 'vertical', 'padding': '20px 16px 16px 16px', 'vertical_spacing': '12px',
@@ -108,7 +108,7 @@ def deliver(webhook, payload):
     try:
         raw = json.dumps(payload, ensure_ascii=False).encode('utf-8')
         connection.request('POST', webhook[len('https://open.feishu.cn'):], body=raw,
-                           headers={'Content-Type': 'application/json; charset=utf-8', 'User-Agent': 'LeanClub/1.0'})
+                           headers={'Content-Type': 'application/json; charset=utf-8', 'User-Agent': 'LeanSchool/1.0'})
         response = connection.getresponse()
         body = response.read(65537)
         if not 200 <= response.status < 300:
@@ -128,7 +128,7 @@ def deliver(webhook, payload):
         if code != 0:
             messages = {19021: '签名校验失败，请检查签名密钥与服务器时间。',
                         19022: '飞书拒绝了服务器 IP，请检查机器人 IP 白名单。',
-                        19024: '飞书关键词校验失败，请将机器人关键词设为 LEAN CLUB 或薄肌俱乐部。',
+                        19024: '飞书关键词校验失败，请将机器人关键词设为 LEAN SCHOOL 或薄肌学院。',
                         11232: '飞书发送频率受限，稍后自动重试。'}
             message = messages.get(code, '飞书未接受消息（错误码 %s）。' % code)
             raise DeliveryFailure(message, retryable=code not in (19021, 19022, 19024))

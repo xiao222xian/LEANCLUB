@@ -1,0 +1,100 @@
+# Managed by LEAN SCHOOL full-stack deployment.
+# Query strings can contain upstream refresh tokens. Never log $request_uri/$request.
+log_format leanschool_uri '$remote_addr [$time_local] $request_method $uri $status $body_bytes_sent';
+map $http_upgrade $leanschool_connection { default upgrade; '' close; }
+
+server {
+    listen 80;
+    server_name www.leanschool.net;
+    access_log /var/log/nginx/leanschool.access.log leanschool_uri;
+    return 301 https://www.leanschool.net$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name www.leanschool.net;
+    ssl_certificate /etc/nginx/ssl/www.leanschool.net/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/www.leanschool.net/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    root /opt/bojizhuye/current/web/creator;
+    index index.html;
+    server_tokens off;
+    autoindex off;
+    access_log /var/log/nginx/leanschool.access.log leanschool_uri;
+    add_header X-Content-Type-Options nosniff always;
+    add_header Referrer-Policy strict-origin-when-cross-origin always;
+
+    location ^~ /internal/ { return 404; }
+    location ^~ /actuator/ { return 404; }
+    location ^~ /druid/ { return 404; }
+    location ^~ /v3/api-docs { return 404; }
+    location ^~ /swagger { return 404; }
+
+    location ^~ /api/ {
+        client_max_body_size 9m;
+        proxy_read_timeout 25s;
+        proxy_pass http://127.0.0.1:5381;
+        include /etc/nginx/snippets/leanschool-proxy.conf;
+    }
+    # This service enforces the method/path/query allowlist and tenant identity.
+    location ^~ /app-api/ {
+        client_max_body_size 32k;
+        proxy_read_timeout 25s;
+        proxy_pass http://127.0.0.1:5382;
+        include /etc/nginx/snippets/leanschool-proxy.conf;
+    }
+    location ^~ /admin-api/ {
+        client_max_body_size 16m;
+        proxy_pass http://127.0.0.1:48080;
+        include /etc/nginx/snippets/leanschool-proxy.conf;
+        proxy_read_timeout 120s;
+    }
+    location = /infra/ws {
+        proxy_pass http://127.0.0.1:48080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $leanschool_connection;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 120s;
+    }
+    location = /console { return 302 /console/; }
+    location ^~ /console/ {
+        root /opt/leanschool/ui/current;
+        add_header Cache-Control no-cache;
+        add_header X-Content-Type-Options nosniff always;
+        add_header Referrer-Policy strict-origin-when-cross-origin always;
+        # Static misses must remain 404: otherwise a stale JS import receives HTML.
+        location ~ /\. { return 404; }
+        location /console/assets/ { try_files $uri =404; }
+        location /console/brand/ { try_files $uri =404; }
+        location ~* \.(?:html|css|js|mjs|map|json|png|jpe?g|webp|gif|svg|ico|avif|woff2?|ttf|otf|eot|txt|xml|pdf|wasm)$ {
+            try_files $uri =404;
+        }
+        try_files $uri $uri/ /console/index.html;
+    }
+    location = /admin { return 302 /console/login?redirect=/leanclub/content; }
+    location = /admin/ { return 302 /console/login?redirect=/leanclub/content; }
+    location = /legacy-admin { try_files /admin/index.html =404; }
+    location = /legacy-admin/ { try_files /admin/index.html =404; }
+    location = /check-in { return 302 /console/leanclub/registrations; }
+    location = /check-in/ { return 302 /console/leanclub/registrations; }
+    location = / { try_files /index.html =404; }
+    location = /schools { try_files /lean-school-ranking.html =404; }
+    location = /join { try_files /school-submit.html =404; }
+    location = /city-vote { try_files /city-vote/index.html =404; }
+    location = /city-vote/ { try_files /city-vote/index.html =404; }
+    location = /events { try_files /events/index.html =404; }
+    location = /events/ { try_files /events/index.html =404; }
+    location = /ticket { try_files /ticket/index.html =404; }
+    location = /ticket/ { try_files /ticket/index.html =404; }
+    location ~ /\. { deny all; }
+    location ~* \.(?:html|css|js)$ {
+        add_header Cache-Control no-cache;
+        add_header X-Content-Type-Options nosniff always;
+        add_header Referrer-Policy strict-origin-when-cross-origin always;
+        try_files $uri =404;
+    }
+    location / { try_files $uri =404; }
+}

@@ -22,6 +22,7 @@ import warnings
 from PIL import Image, ImageOps, UnidentifiedImageError
 from campaign_feishu import FeishuNotifications
 from campaign_feedback import CampaignFeedback
+from campaign_comments import CampaignComments
 from campaign_events import CampaignEvents
 from store import Problem
 
@@ -174,6 +175,7 @@ class CampaignStore:
                 raise ValueError('The campaign vote IP secret is invalid.')
         self.notifications = FeishuNotifications(self)
         self.feedback = CampaignFeedback(self)
+        self.comments = CampaignComments(self)
         self.events = CampaignEvents(self)
 
     @contextmanager

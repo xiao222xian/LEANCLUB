@@ -3,26 +3,28 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#101212"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer">
-  <title>我的入场券 — LEAN CLUB</title><link rel="icon" href="/city-vote/assets/lean-emblem.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/events/style.css?v=20261023-events-v1"><link rel="stylesheet" href="/ticket/style.css?v=20261023-events-v1">
-  <script src="/events/common.js?v=20261023-events-v1" defer></script><script src="/ticket/app.js?v=20261023-events-v1" defer></script>
+  <title>我的入场券 — LEAN SCHOOL</title><link rel="icon" href="/city-vote/assets/lean-emblem.svg?v=20261023-leanschool" type="image/svg+xml">
+  <link rel="stylesheet" href="/events/style.css?v=20261023-member-orders-v1"><link rel="stylesheet" href="/ticket/style.css?v=20261023-events-v1">
+  <script src="/events/common.js?v=20261023-member-orders-v1" defer></script>
+  <link rel="stylesheet" href="/site-portal.css?v=20261023-v5"><script src="/site-portal.js?v=20261023-member-orders-v1" defer></script>
+  <script src="/ticket/app.js?v=20261023-payment-states-v1" defer></script>
 </head>
 <body class="ticket-page">
   <div class="ticket-ambient" aria-hidden="true"><img id="ambient-photo" src="/city-vote/assets/alan-v1/shenzhen.webp" alt=""></div>
-  <header class="site-header"><a class="brand" href="/events" aria-label="LEAN CLUB 线下活动"><img src="/city-vote/assets/lean-emblem.svg" alt="" width="42" height="28"><span>LEAN CLUB<small>薄肌俱乐部</small></span></a><p class="header-caption">REAL PEOPLE. REAL CONNECTION.</p><a class="capsule" href="/events?mine=1">我的入场券</a></header>
+  <header class="site-header"><a class="brand" href="/events" aria-label="LEAN SCHOOL 线下活动"><img src="/city-vote/assets/lean-emblem.svg?v=20261023-leanschool" alt="" width="42" height="28"><span>LEAN SCHOOL<small>薄肌学院</small></span></a><p class="header-caption">REAL PEOPLE. REAL CONNECTION.</p><a class="capsule" href="/events?mine=1">我的入场券</a><button class="capsule" type="button" data-member-open><span data-member-label>登录 / 注册</span></button></header>
   <main class="ticket-main">
-    <div class="ticket-loading" id="ticket-loading" role="status"><span class="edition">LEAN CLUB / ADMIT ONE</span><h1>我们，现场见。</h1><p id="loading-message">正在读取你的入场券…</p><button class="primary-button" id="retry-ticket" type="button" hidden>重新读取</button><a class="text-button" id="back-events" href="/events" hidden>查看活动</a></div>
+    <div class="ticket-loading" id="ticket-loading" role="status"><span class="edition">LEAN SCHOOL / ADMIT ONE</span><h1>我们，现场见。</h1><p id="loading-message">正在读取你的入场券…</p><button class="primary-button" id="ticket-sign-in" type="button" hidden>登录查看报名</button><button class="primary-button" id="retry-ticket" type="button" hidden>重新读取</button><a class="text-button" id="back-events" href="/events" hidden>查看活动</a></div>
     <section class="ticket-experience" id="ticket-experience" hidden aria-label="电子入场券">
       <div class="ticket-heading"><p class="edition" id="ticket-kicker">YOU'RE ON THE LIST</p><h1 id="ticket-headline">期待见到你。</h1><p id="ticket-intro">把这一刻，留给真实的连接。</p></div>
       <article class="admission-ticket" id="admission-ticket">
-        <div class="ticket-cover"><img class="ticket-photo" id="ticket-photo" src="/city-vote/assets/alan-v1/shenzhen.webp" alt=""><div class="ticket-cover-shade"></div><div class="ticket-cover-brand"><img src="/city-vote/assets/lean-emblem.svg" alt="" width="40" height="28"><span>LEAN CLUB / OFFLINE</span></div><div class="ticket-cover-content"><p id="ticket-city"></p><h2 id="ticket-title"></h2><p class="ticket-cover-subtitle" id="ticket-subtitle"></p></div><span class="ticket-vertical" aria-hidden="true">LESS NOISE. MORE LIFE.</span></div>
+        <div class="ticket-cover"><img class="ticket-photo" id="ticket-photo" src="/city-vote/assets/alan-v1/shenzhen.webp" alt=""><div class="ticket-cover-shade"></div><div class="ticket-cover-brand"><img src="/city-vote/assets/lean-emblem.svg?v=20261023-leanschool" alt="" width="40" height="28"><span>LEAN SCHOOL / OFFLINE</span></div><div class="ticket-cover-content"><p id="ticket-city"></p><h2 id="ticket-title"></h2><p class="ticket-cover-subtitle" id="ticket-subtitle"></p></div><span class="ticket-vertical" aria-hidden="true">LESS NOISE. MORE LIFE.</span></div>
         <div class="ticket-stub"><div class="ticket-topline"><span id="ticket-type">ADMIT ONE</span><span class="ticket-state" id="ticket-state">待入场</span></div>
           <div class="ticket-qr-area" id="ticket-qr-area"><img id="ticket-qr" width="220" height="220" alt="专属入场核销二维码"><p>入场时向工作人员出示</p></div>
           <div class="order-state" id="order-state" hidden><span class="order-state-symbol" aria-hidden="true">LC</span><p class="order-state-title" id="order-state-title"></p><p id="order-state-copy"></p><button class="primary-button" id="payment-action" type="button" hidden>继续付款</button><p id="payment-error" class="form-error" role="alert" hidden></p></div>
           <p class="ticket-number" id="ticket-number"></p>
           <dl class="ticket-facts"><div><dt>活动时间</dt><dd id="ticket-date"></dd></div><div><dt>活动地点</dt><dd id="ticket-venue"></dd></div><div class="ticket-address-row"><dt>详细地址</dt><dd id="ticket-address"></dd></div><div><dt>参与者</dt><dd id="ticket-name"></dd></div><div><dt>联系号码</dt><dd id="ticket-phone"></dd></div><div id="ticket-price-row" hidden><dt>报名费用</dt><dd id="ticket-price"></dd></div></dl>
           <p class="checkin-time" id="checkin-time" hidden></p>
-          <div class="ticket-bottomline"><span>薄肌俱乐部</span><span>ONE PERSON · ONE PASS</span></div>
+          <div class="ticket-bottomline"><span>薄肌学院</span><span>ONE PERSON · ONE PASS</span></div>
         </div>
       </article>
       <div class="ticket-actions"><button class="primary-button" id="save-ticket" type="button">保存入场券</button><button class="secondary-button" id="refresh-ticket" type="button">刷新状态</button><button class="text-button" id="open-cancel" type="button" hidden>取消报名</button></div>
@@ -30,7 +32,7 @@
     </section>
   </main>
   <footer class="site-footer"><a href="/events">返回活动</a><span>SEE YOU IN REAL LIFE.</span><span>薄肌 · 线下见</span></footer>
-  <dialog class="cancel-dialog" id="cancel-dialog" aria-labelledby="cancel-title"><div class="dialog-body"><p class="edition">LEAN CLUB / YOUR PLACE</p><h2 id="cancel-title" tabindex="-1">这次，要错过了？</h2><p class="cancel-description" id="cancel-description">取消后将释放你的名额，原入场券立即失效。</p><p class="form-error" id="cancel-error" role="alert" hidden></p><div class="cancel-actions"><button class="primary-button" id="keep-ticket" type="button" autofocus>保留名额</button><button class="text-button" id="confirm-cancel" type="button">确认取消</button></div></div></dialog>
+  <dialog class="cancel-dialog" id="cancel-dialog" aria-labelledby="cancel-title"><div class="dialog-body"><p class="edition">LEAN SCHOOL / YOUR PLACE</p><h2 id="cancel-title" tabindex="-1">这次，要错过了？</h2><p class="cancel-description" id="cancel-description">确认取消本次报名？订单与退款进度以实际处理结果为准。</p><p class="form-error" id="cancel-error" role="alert" hidden></p><div class="cancel-actions"><button class="primary-button" id="keep-ticket" type="button" autofocus>暂不取消</button><button class="text-button" id="confirm-cancel" type="button">确认取消</button></div></div></dialog>
   <noscript><p class="no-script">开启 JavaScript 后可查看电子入场券。</p></noscript>
 </body>
 </html>

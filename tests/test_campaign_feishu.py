@@ -149,7 +149,7 @@ class FeishuStoreTests(unittest.TestCase):
             self.assertEqual(column['weight'], 1)
             self.assertEqual([item['content'] for item in column['elements']], [name, '**%s**' % count, '票'])
         serialized = json.dumps(payload, ensure_ascii=False)
-        for value in ('LEAN CLUB', '薄肌俱乐部', '广州 +1', '北京时间', '累计有效票'):
+        for value in ('LEAN SCHOOL', '薄肌学院', '广州 +1', '北京时间', '累计有效票'):
             self.assertIn(value, serialized)
         self.assertLess(len(serialized.encode('utf-8')), 20000)
         expected = base64.b64encode(hmac.new((str(int(self.now)) + '\n' + SECRET).encode(), b'', hashlib.sha256).digest()).decode()

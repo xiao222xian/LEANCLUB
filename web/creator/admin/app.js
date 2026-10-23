@@ -266,7 +266,7 @@
     window.clearInterval(state.feedbackTimer);
     state.feedbackTimer = window.setInterval(refreshFeedbackBadge, 30000);
     refreshFeedbackBadge(true);
-    document.title = '数据概览 · Lean Club';
+    document.title = '数据概览 · LEAN SCHOOL';
   }
 
   function validateStats(data) {
@@ -339,7 +339,7 @@
     try {
       await api('/api/admin/logout', { method: 'POST' });
       showAuth({ setupRequired: false, setupAvailable: false });
-      document.title = '内容管理 · Lean Club';
+      document.title = '内容管理 · LEAN SCHOOL';
       $('#username').focus();
       announce('已退出管理台。');
     } catch (error) {
@@ -356,7 +356,7 @@
       if (active && focus) tab.focus();
     }
     for (const panel of $$('[role="tabpanel"]')) panel.hidden = panel.id !== `panel-${name}`;
-    document.title = `${({ posters: '城市海报', overview: '数据概览', feedback: '意见箱', events: '活动报名', feishu: '飞书通知' })[name]} · Lean Club`;
+    document.title = `${({ posters: '城市海报', overview: '数据概览', feedback: '意见箱', events: '活动报名', feishu: '飞书通知' })[name]} · LEAN SCHOOL`;
     if (name === 'posters' && !state.postersLoaded && !state.postersLoading) loadPosters();
     if (name === 'overview') refreshVisibleStats();
     if (name === 'feedback' && !state.feedback && !state.feedbackLoading) loadFeedback();

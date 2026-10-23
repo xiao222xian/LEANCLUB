@@ -346,7 +346,7 @@ class CampaignHTTPTests(unittest.TestCase):
         self.assertFalse(session['setupAvailable'])
         self.assertFalse(session['setupRequired'])
         self.assertEqual(self.request('POST', '/api/admin/setup', {'username': 'another', 'password': 'Synthetic-password-631'})[0], 409)
-        production = CampaignAPI(self.store, 'https://leanmuscleclub.com', allow_local_setup=True)
+        production = CampaignAPI(self.store, 'https://www.leanschool.net', allow_local_setup=True)
         self.assertFalse(production.local_setup)
         self.assertFalse(CampaignAPI(self.store, self.origin, allow_local_setup=False).local_setup)
         self.api.local_setup = False

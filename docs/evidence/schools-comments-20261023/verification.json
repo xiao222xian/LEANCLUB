@@ -1,0 +1,45 @@
+{
+  "date": "2026-10-23",
+  "environment": "local-loopback",
+  "productionDeployed": false,
+  "homepageMarqueeChanged": false,
+  "schoolSearch": {
+    "query": "深圳",
+    "total": 8,
+    "selectedId": 2031,
+    "selectedName": "深圳大学",
+    "opensDetail": true,
+    "directoryAndClubDistinct": true,
+    "mobileLayoutWidth": 375,
+    "mobileScrollWidth": 375
+  },
+  "comments": {
+    "browserPublish": true,
+    "appearsInFeedAndDanmaku": true,
+    "originalAdminHide": true,
+    "hiddenPublicRows": 0,
+    "hiddenActiveCommentDanmaku": 0,
+    "originalAdminRestore": true,
+    "ownedSyntheticFixtureRemoved": true,
+    "otherUsersCommentsPreserved": true,
+    "privateFeedbackExposed": false,
+    "externalNotificationsSent": false
+  },
+  "motion": {
+    "activeCommentDeduplicated": true,
+    "reducedMotionBandHidden": true,
+    "reducedMotionToggleDisabled": true
+  },
+  "checks": {
+    "pythonTargetedPass": 95,
+    "javaTargetedPass": 8,
+    "homepageControllerPass": 9,
+    "publicClientRegression": "passed",
+    "adminAsyncState": "passed",
+    "vueTypecheck": "passed",
+    "vueBuild": "passed",
+    "sqliteIntegrity": "ok",
+    "foreignKeyErrors": 0
+  },
+  "screenshots": "Desktop browser viewport checks, not physical-phone or WeChat acceptance."
+}

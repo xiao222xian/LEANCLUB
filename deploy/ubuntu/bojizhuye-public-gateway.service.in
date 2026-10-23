@@ -1,0 +1,28 @@
+# Managed by bojizhuye public MEMBER gateway. No database access is required.
+[Unit]
+Description=Lean School public MEMBER API gateway
+After=network.target
+
+[Service]
+Type=simple
+User=bojizhuye
+Group=bojizhuye
+WorkingDirectory=/opt/bojizhuye/current
+EnvironmentFile=/etc/bojizhuye/public-gateway.env
+ExecStart=/opt/bojizhuye/current/.venv/bin/python /opt/bojizhuye/current/deploy/ubuntu/public-gateway.py
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=15
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+InaccessiblePaths=-/var/lib/bojizhuye
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "hero": {
+    "eyebrow": "LEAN SCHOOL / CAMPUS & BEYOND",
+    "title": "多运动。多思考。\n做有复利的事。",
+    "subtitle": "LEAN BODY. STRONG MIND.",
+    "image": "/images/hero-1672-v2.webp",
+    "mobileImage": "/images/hero-1024-v2.webp",
+    "primaryLabel": "加入薄肌学院 ↗",
+    "primaryHref": "/#account",
+    "secondaryLabel": "看看线下活动 ↗",
+    "secondaryHref": "/events"
+  },
+  "navigation": [
+    {
+      "label": "线下活动",
+      "href": "/events"
+    },
+    {
+      "label": "高校俱乐部",
+      "href": "/schools"
+    },
+    {
+      "label": "关于薄肌学院",
+      "href": "/#about"
+    }
+  ],
+  "campaign": {
+    "enabled": true,
+    "title": "下一站，见面。",
+    "description": "",
+    "href": "/city-vote",
+    "buttonLabel": "投出你的城市"
+  },
+  "voices": [
+    {
+      "name": "孙宇晨",
+      "quote": "Muscle is the most important bank account in your body. You can be financially rich and still be physically poor.",
+      "source": "",
+      "image": "/images/sun-avatar-v1.webp"
+    },
+    {
+      "name": "自己造船的路飞",
+      "quote": "I never really had that youthful fire. Building lean muscle is the first step toward reclaiming it—because it’s the one thing that depends entirely on you, not fate.",
+      "source": "",
+      "image": "/images/luffy-avatar-v1.webp"
+    },
+    {
+      "name": "陈昌文",
+      "quote": "The level of the five people around you determines your wealth. Take on people above your level. Don’t let those below it drag you down.",
+      "source": "",
+      "image": "/images/chen-avatar-v1.webp"
+    },
+    {
+      "name": "峰哥",
+      "quote": "Every problem young people have comes down to sexual frustration. And all that frustration comes from not having lean muscle.",
+      "source": "",
+      "image": "/images/feng-avatar-v1.webp"
+    },
+    {
+      "name": "Jack叔叔",
+      "quote": "Jack puts lean-muscle theory to the test. His two-hour livestream took it from physical training to mindset. Viewers call him the “Chief Method Extractor.”",
+      "source": "",
+      "image": "/images/jack-avatar-v1.webp"
+    }
+  ],
+  "schoolSection": {
+    "enabled": true,
+    "title": "学校不同。\n一起向上。",
+    "description": "从运动开始，找到可以一起成长的人。选择自己的学校，认识同频的伙伴，再在线下见面。",
+    "buttonLabel": "找到本校俱乐部 ↗"
+  },
+  "footer": {
+    "brand": "LEAN SCHOOL",
+    "description": "多运动。多思考。做有复利的事。",
+    "contactLabel": "城市投票",
+    "contactHref": "/city-vote",
+    "icpText": "",
+    "icpHref": "https://beian.miit.gov.cn/",
+    "copyright": "薄肌学院"
+  }
+}

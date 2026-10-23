@@ -19,19 +19,20 @@ class ClubTests(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def test_publish_persist_and_public_overwrite(self):
+    def test_persist_owner_edit_and_reject_public_takeover(self):
         result = self.store.save(self.data, 'test-ip')
         self.assertEqual(result['id'], 'school-1')
         self.assertEqual(Store(self.path, []).profile('school-1','reader')['contact'], self.data['contact'])
-        result2 = self.store.save(dict(self.data, count=31, contact='新的负责人', qr=None), 'other-ip')
-        self.assertEqual(result2['revision'], 2)
+        with self.assertRaises(Problem) as ctx:
+            self.store.save(dict(self.data, count=31, contact='未经授权的替换', qr=None), 'other-ip')
+        self.assertEqual(ctx.exception.status, 403)
         self.assertEqual(len(self.store.summary()), 1)
-        self.assertEqual(self.store.summary()[0]['count'], 31)
-        self.assertEqual(self.store.profile('school-1','reader')['contact'], '新的负责人')
-        with self.assertRaises(Problem):
-            self.store.edit_profile(result['editKey'])
-        edited = dict(self.data, editKey=result2['editKey'], revision=2, count=40)
+        self.assertEqual(self.store.summary()[0]['count'], 20)
+        self.assertEqual(self.store.profile('school-1','reader')['contact'], self.data['contact'])
+        self.assertEqual(self.store.edit_profile(result['editKey'])['revision'], 1)
+        edited = dict(self.data, editKey=result['editKey'], revision=1, count=40)
         self.store.save(edited, 'test-ip')
+        self.assertEqual(self.store.summary()[0]['count'], 40)
         with self.assertRaises(Problem):
             self.store.save(edited, 'test-ip')
         public = self.store.profile('school-1','reader')

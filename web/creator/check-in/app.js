@@ -40,7 +40,7 @@
     const checked = registration.status === 'checked_in'; const accepted = outcome === 'success'; const eligible = Boolean(data.eligible) && !checked;
     $('#ticket-result').dataset.tone = accepted ? 'success' : eligible ? 'ready' : 'blocked';
     $('#result-symbol').textContent = accepted ? '✓' : eligible ? '·' : '!';
-    $('#result-label').textContent = accepted ? 'WELCOME TO LEAN CLUB' : eligible ? 'READY TO MEET' : 'PLEASE CHECK';
+    $('#result-label').textContent = accepted ? 'WELCOME TO LEAN SCHOOL' : eligible ? 'READY TO MEET' : 'PLEASE CHECK';
     $('#result-title').textContent = accepted ? '核销成功，欢迎入场。' : checked ? '这张票已核销。' : eligible ? '入场凭证有效。' : '暂不能入场。';
     $('#result-reason').textContent = accepted ? '本次入场已记录。' : checked ? '已有入场记录，请勿重复放行。' : eligible ? '请核对来宾与活动信息。' : (data.reason || '此入场凭证当前不可核销。');
     $('#checked-in-time').textContent = registration.checkedInAt ? `首次核销：${fmt(registration.checkedInAt)} · 北京时间` : ''; $('#checked-in-time').hidden = !registration.checkedInAt;

@@ -1,6 +1,7 @@
 """Start the local API and same-origin website; stop only child processes we own."""
 import argparse
 import importlib.util
+import json
 import os
 import socket
 import subprocess
@@ -63,6 +64,8 @@ def main():
     parser.add_argument("--port", type=port_number, default=4180, help="网页端口（默认 4180）")
     parser.add_argument("--api-port", type=port_number, default=5381, help="API 端口（默认 5381）")
     parser.add_argument("--db", type=Path, default=ROOT / "data" / "local.sqlite3", help="本地 SQLite 数据库")
+    parser.add_argument("--operations-config", type=Path, help="忽略目录中的本地运营桥接配置，仅供服务间使用")
+    parser.add_argument("--member-orders-config", type=Path, help="独立会员报名桥接配置，仅供服务间使用")
     args = parser.parse_args()
     children = []
     try:
@@ -78,6 +81,18 @@ def main():
         media_dir.mkdir(parents=True, exist_ok=True)
         origin = "http://127.0.0.1" + (":%s" % args.port if args.port != 80 else "")
         environment = os.environ.copy()
+        if args.operations_config:
+            settings = json.loads(args.operations_config.read_text(encoding='utf-8-sig'))
+            if settings.get('enabled') is not True:
+                raise RuntimeError('本地运营桥接配置未启用。')
+            environment['LEANCLUB_OPERATIONS_SECRET'] = settings['secret']
+            environment['LEANCLUB_OPERATIONS_TENANT'] = str(settings['tenant'])
+        if args.member_orders_config:
+            settings = json.loads(args.member_orders_config.read_text(encoding='utf-8-sig'))
+            if settings.get('enabled') is not True:
+                raise RuntimeError('本地会员报名桥接配置未启用。')
+            environment['LEANCLUB_MEMBER_ORDERS_SECRET'] = settings['secret']
+            environment['LEANCLUB_MEMBER_ORDERS_TENANT'] = str(settings['tenant'])
         environment.update({
             "CLUB_DB": str(database),
             "CLUB_MEDIA_DIR": str(media_dir),

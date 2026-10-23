@@ -9,7 +9,7 @@ from store import Problem
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Lean Club administrator management')
+    parser = argparse.ArgumentParser(description='LEAN SCHOOL administrator management')
     parser.add_argument('action', choices=('create-admin', 'reset-password'))
     parser.add_argument('--username', required=True)
     args = parser.parse_args()

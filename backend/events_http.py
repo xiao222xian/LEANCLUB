@@ -73,8 +73,5 @@ class EventsAPI:
             return handler.send_json(200, result)
         match = re.fullmatch(r'/api/campaign/events/([^/]+)/register', path)
         if match:
-            api.store.limit(handler.ip(), 'event-register-minute', 12, 60)
-            api.store.limit(handler.ip(), 'event-register-day', 100, 86400)
-            result = self.events.register(api.visitor(handler), match[1], data, api.origin)
-            return handler.send_json(200 if result['duplicate'] else 201, result)
+            raise Problem(410, '新的活动报名请登录会员后使用活动页面入口，原有报名仍可凭原链接查看。')
         raise Problem(404, '接口不存在。')

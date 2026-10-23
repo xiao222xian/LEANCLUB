@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light">
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#17191b">
-  <title>内容管理 · Lean Club</title>
+  <title>内容管理 · LEAN SCHOOL</title>
   <link rel="stylesheet" href="/admin/style.css?v=20261023-events">
   <script src="/admin/app.js?v=20261023-events" defer></script>
 </head>
@@ -15,15 +15,15 @@
   <section id="auth-view" class="auth-view" aria-labelledby="auth-title">
     <div class="auth-art" aria-hidden="true">
       <img src="/city-vote/assets/alan-v1/guangzhou.webp" alt="" class="auth-photo" fetchpriority="low">
-      <span class="auth-wordmark"><img src="/city-vote/assets/lean-emblem.svg" alt="">LEAN CLUB</span>
+      <span class="auth-wordmark"><img src="/city-vote/assets/lean-emblem.svg?v=20261023-leanschool" alt="">LEAN SCHOOL</span>
       <div class="auth-art-copy"><span>THE CITY IS OUR CLUB.</span><p>一起练。<br>一起见。</p></div>
       <span class="auth-art-foot">SHENZHEN · ZHUHAI · GUANGZHOU</span>
     </div>
     <div class="auth-main">
       <a class="auth-home" href="/">返回主站</a>
       <div class="auth-box">
-        <a href="/" class="auth-mobile-brand" aria-label="Lean Club 主站"><img src="/city-vote/assets/lean-emblem.svg" alt="">LEAN CLUB</a>
-        <p class="eyebrow">LEAN CLUB / STUDIO</p>
+        <a href="/" class="auth-mobile-brand" aria-label="LEAN SCHOOL 主站"><img src="/city-vote/assets/lean-emblem.svg?v=20261023-leanschool" alt="">LEAN SCHOOL</a>
+        <p class="eyebrow">LEAN SCHOOL / STUDIO</p>
         <h1 id="auth-title">内容管理</h1>
         <p id="auth-description" class="auth-description">登录后，查看投票与管理城市海报。</p>
         <div id="auth-loading" class="inline-loading" role="status"><span class="spinner" aria-hidden="true"></span>正在连接管理服务</div>
@@ -50,20 +50,20 @@
           </div>
           <button id="auth-submit" class="button button-primary auth-submit" type="submit"><span id="auth-submit-label">登录管理台</span></button>
         </form>
-        <p class="auth-foot">仅供 Lean Club 管理人员使用</p>
+        <p class="auth-foot">仅供 LEAN SCHOOL 管理人员使用</p>
       </div>
-      <span class="auth-bottom">LEAN CLUB · 内容与活动管理</span>
+      <span class="auth-bottom">LEAN SCHOOL · 内容与活动管理</span>
     </div>
   </section>
 
   <div id="admin-view" class="admin-view" hidden>
     <header class="topbar">
-      <a class="brand" href="/" aria-label="Lean Club 主站"><img src="/city-vote/assets/lean-emblem.svg" alt="">LEAN CLUB<span>STUDIO</span></a>
+      <a class="brand" href="/" aria-label="LEAN SCHOOL 主站"><img src="/city-vote/assets/lean-emblem.svg?v=20261023-leanschool" alt="">LEAN SCHOOL<span>STUDIO</span></a>
       <nav class="top-links" aria-label="站点导航"><a href="/">主站</a><a href="/city-vote">投票页</a></nav>
       <div class="account"><span id="account-name"></span><button id="logout" type="button">退出</button></div>
     </header>
     <main id="main" class="main" tabindex="-1">
-      <div class="page-heading"><div class="heading-images" aria-hidden="true"><img src="/city-vote/assets/alan-v1/shenzhen.webp" alt=""><img src="/city-vote/assets/alan-v1/zhuhai.webp" alt=""><img src="/city-vote/assets/alan-v1/guangzhou.webp" alt=""></div><div class="heading-copy"><p class="eyebrow">LEAN CLUB / STUDIO</p><h1>俱乐部管理</h1><span class="campaign-label">SHENZHEN · ZHUHAI · GUANGZHOU</span></div></div>
+      <div class="page-heading"><div class="heading-images" aria-hidden="true"><img src="/city-vote/assets/alan-v1/shenzhen.webp" alt=""><img src="/city-vote/assets/alan-v1/zhuhai.webp" alt=""><img src="/city-vote/assets/alan-v1/guangzhou.webp" alt=""></div><div class="heading-copy"><p class="eyebrow">LEAN SCHOOL / STUDIO</p><h1>俱乐部管理</h1><span class="campaign-label">SHENZHEN · ZHUHAI · GUANGZHOU</span></div></div>
       <div class="tabs-row"><div class="tabs" role="tablist" aria-label="管理内容"><button type="button" id="tab-overview" role="tab" aria-controls="panel-overview" aria-selected="true" tabindex="0" data-panel="overview">数据概览</button><button type="button" id="tab-feedback" role="tab" aria-controls="panel-feedback" aria-selected="false" tabindex="-1" data-panel="feedback">意见箱<span id="feedback-unread" class="tab-count" aria-hidden="true" hidden></span></button><button type="button" id="tab-events" role="tab" aria-controls="panel-events" aria-selected="false" tabindex="-1" data-panel="events">活动报名</button><button type="button" id="tab-posters" role="tab" aria-controls="panel-posters" aria-selected="false" tabindex="-1" data-panel="posters">城市海报</button><button type="button" id="tab-feishu" role="tab" aria-controls="panel-feishu" aria-selected="false" tabindex="-1" data-panel="feishu">飞书通知</button></div><span id="last-updated" class="last-updated">等待数据</span></div>
       <div id="app-message" class="notice" role="status" hidden></div>
 
@@ -103,7 +103,7 @@
         <div id="feedback-update" class="inbox-update" role="status" hidden><span>意见箱有更新</span><button id="feedback-load-new" type="button">刷新查看</button></div>
         <div id="feedback-loading" class="inline-loading" role="status" hidden><span class="spinner" aria-hidden="true"></span>正在读取意见</div>
         <div id="feedback-list" class="feedback-list" tabindex="-1" aria-label="用户意见" aria-busy="false"></div>
-        <div id="feedback-empty" class="inbox-empty" hidden><span class="micro-label">LEAN CLUB / INBOX</span><h2 id="feedback-empty-title">还没有收到意见</h2><p id="feedback-empty-copy">新的想法，会在这里相遇。</p></div>
+        <div id="feedback-empty" class="inbox-empty" hidden><span class="micro-label">LEAN SCHOOL / INBOX</span><h2 id="feedback-empty-title">还没有收到意见</h2><p id="feedback-empty-copy">新的想法，会在这里相遇。</p></div>
         <div id="feedback-pagination" class="inbox-pagination" hidden><span id="feedback-page-label"></span><div><button id="feedback-prev" class="button button-secondary" type="button">上一页</button><button id="feedback-next" class="button button-secondary" type="button">下一页</button></div></div>
         <p id="feedback-status" class="inbox-status" role="status" hidden></p>
       </section>
@@ -148,17 +148,17 @@
             <p id="feishu-feedback" class="notification-feedback" role="status" hidden></p>
           </form>
           <aside class="notification-preview" aria-label="群消息预览与发送状态">
-            <div class="notification-art" aria-hidden="true"><img src="/city-vote/assets/alan-v1/shenzhen.webp" alt=""><div><img class="notification-emblem" src="/city-vote/assets/lean-emblem.svg" alt=""><span>EVERY VOTE COUNTS.</span></div></div>
+            <div class="notification-art" aria-hidden="true"><img src="/city-vote/assets/alan-v1/shenzhen.webp" alt=""><div><img class="notification-emblem" src="/city-vote/assets/lean-emblem.svg?v=20261023-leanschool" alt=""><span>EVERY VOTE COUNTS.</span></div></div>
             <div class="notification-preview-body"><p class="eyebrow">消息内容预览</p><div class="notification-preview-tabs" role="group" aria-label="选择通知预览"><button type="button" data-notification-preview="votes" aria-pressed="true">投票汇总</button><button type="button" data-notification-preview="feedback" aria-pressed="false">新增意见</button></div><div id="notification-preview-votes"><h2>三城投票汇总</h2><p class="notification-description">总票数 · 城市明细 · 统计时间</p><div class="preview-city-totals" aria-label="消息内容示意，不是实时票数"><span>深圳<b>累计票数</b></span><span>珠海<b>累计票数</b></span><span>广州<b>累计票数</b></span></div></div><div id="notification-preview-feedback" hidden><h2>收到一条新意见</h2><p class="notification-description">意见类型 · 城市 · 北京时间</p><p class="feedback-message-preview">用户提交的意见内容</p></div><button id="feishu-summary" type="button" class="button notification-summary-action" disabled>立即推送投票汇总</button><div class="delivery-summary"><div><span>最新通知</span><strong id="feishu-delivery-state">暂无记录</strong></div><p id="feishu-delivery-detail">保存配置后，可发送测试消息确认连接。</p><p id="feishu-queue" hidden></p><button id="feishu-retry" type="button" class="button button-secondary" hidden>重试失败消息</button></div></div>
           </aside>
         </div>
       </section>
-      <footer class="admin-footer"><span>Lean Club Studio</span><span>从线上，到现场。</span></footer>
+      <footer class="admin-footer"><span>LEAN SCHOOL Studio</span><span>从线上，到现场。</span></footer>
     </main>
   </div>
 
   <dialog id="event-editor" class="event-editor" aria-labelledby="event-editor-title">
-    <div class="event-editor-top"><div><p class="eyebrow">LEAN CLUB / EVENTS</p><h2 id="event-editor-title">创建活动</h2></div><button id="close-event-editor" class="text-button" type="button">关闭</button></div>
+    <div class="event-editor-top"><div><p class="eyebrow">LEAN SCHOOL / EVENTS</p><h2 id="event-editor-title">创建活动</h2></div><button id="close-event-editor" class="text-button" type="button">关闭</button></div>
     <form id="event-form">
       <p id="event-editor-note" class="event-editor-note">先存为草稿，准备好了再发布。</p>
       <div id="event-editor-error" class="notice notice-error" role="alert" hidden></div>
@@ -175,7 +175,7 @@
       <div class="event-form-footer"><span id="event-save-hint">保存后可预览，再决定发布。</span><button id="save-event" class="button button-primary" type="submit">保存草稿</button></div>
     </form>
   </dialog>
-  <dialog id="event-confirm" class="event-confirm" aria-labelledby="event-confirm-title"><p class="eyebrow">LEAN CLUB / EVENTS</p><h2 id="event-confirm-title">确认操作</h2><p id="event-confirm-copy"></p><div id="event-confirm-error" class="notice notice-error" role="alert" hidden></div><div class="event-confirm-actions"><button id="event-confirm-back" class="button button-secondary" type="button">返回</button><button id="event-confirm-proceed" class="button button-primary" type="button">确认</button></div></dialog>
+  <dialog id="event-confirm" class="event-confirm" aria-labelledby="event-confirm-title"><p class="eyebrow">LEAN SCHOOL / EVENTS</p><h2 id="event-confirm-title">确认操作</h2><p id="event-confirm-copy"></p><div id="event-confirm-error" class="notice notice-error" role="alert" hidden></div><div class="event-confirm-actions"><button id="event-confirm-back" class="button button-secondary" type="button">返回</button><button id="event-confirm-proceed" class="button button-primary" type="button">确认</button></div></dialog>
 
   <template id="vote-row-template"><div class="vote-row"><div class="vote-city"><span class="city-code"></span><h3></h3><span class="vote-count"></span></div><div class="vote-bar" role="meter" aria-valuemin="0" aria-valuemax="100"><span></span></div><span class="vote-share"></span></div></template>
   <template id="feedback-template"><article class="feedback-item"><div class="feedback-meta"><h2 class="feedback-category"></h2><span class="feedback-city"></span><time class="feedback-time"></time></div><p class="feedback-content"></p><div class="feedback-item-footer"><span class="feedback-state"></span><button class="button button-secondary feedback-mark" type="button">标记已看</button></div></article></template>

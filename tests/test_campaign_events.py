@@ -5,7 +5,6 @@ import io
 from pathlib import Path
 import sys
 import tempfile
-from types import SimpleNamespace
 import unittest
 import uuid
 from unittest.mock import patch
@@ -16,6 +15,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'backend'))
 from campaign import CampaignStore
 from campaign_events import iso
 from store import Problem
+from payment_fake import FakePaymentAdapter
+from payment_lifecycle import PaymentWorker
 import test_campaign as http_support
 
 ORIGIN = 'http://127.0.0.1:4180'
@@ -49,7 +50,7 @@ class EventsStoreTests(unittest.TestCase):
         self.now = 1792674000
         self.store = CampaignStore(Path(self.tmp.name) / 'events.sqlite3', clock=lambda: self.now)
         self.events = self.store.events
-        self.events.payment_adapter = SimpleNamespace(ready=True)
+        self.events.payment_adapter = FakePaymentAdapter(self.store.clock)
         self.visitor = self.store.visitor(None)[0]
         self.event = self.events.save(event_body(self.now))['event']
 
@@ -142,16 +143,19 @@ class EventsStoreTests(unittest.TestCase):
         self.assertEqual(len({item['orderToken'] for item in results}), 1)
         self.assertEqual(sum(not item['duplicate'] for item in results), 1)
 
-    def test_expiry_releases_capacity_and_cannot_check_in(self):
+    def test_expiry_does_not_release_until_durable_local_fence_and_cannot_check_in(self):
         self.events.save({'capacity': 1}, self.event['id'])
         receipt = self.register()
         self.now += 1800
         expired = self.events.ticket(receipt['orderToken'], ORIGIN)
-        self.assertEqual(expired['order']['status'], 'expired')
-        self.assertEqual(expired['event']['pendingCount'], 0)
-        self.assertEqual(expired['event']['remaining'], 1)
+        self.assertEqual(expired['order']['status'], 'pending_payment')
+        self.assertEqual(expired['event']['pendingCount'], 1)
+        self.assertEqual(expired['event']['remaining'], 0)
         self.assertIsNone(expired['qrDataUrl'])
         self.assert_problem(409, self.events.check_in, receipt['orderToken'], str(uuid.uuid4()), ORIGIN, 'test-admin')
+        # No create was ever attempted; worker atomically fences the never-sent
+        # command before freeing the seat. A mere timestamp cannot do this.
+        PaymentWorker(self.events.payments, self.events.payment_adapter).run_once()
         self.assertEqual(self.events.registrations(self.event['id'], 'expired')['total'], 1)
         replacement = self.register()
         self.assertNotEqual(replacement['orderToken'], receipt['orderToken'])
@@ -163,13 +167,15 @@ class EventsStoreTests(unittest.TestCase):
         self.now += 60
         self.assert_problem(409, self.register, registration_body(phone='13900000002'))
 
-    def test_cancel_pending_only_owner_can_cancel_and_seat_released(self):
+    def test_cancel_pending_only_owner_can_cancel_and_waits_for_worker(self):
         receipt = self.register()
         self.assert_problem(403, self.events.cancel, receipt['orderToken'], ORIGIN, self.store.visitor(None)[0])
         result = self.events.cancel(receipt['orderToken'], ORIGIN, self.visitor)
-        self.assertEqual(result['order']['status'], 'cancelled')
-        self.assertEqual(result['event']['remaining'], 5)
+        self.assertEqual(result['order']['status'], 'closing')
+        self.assertEqual(result['event']['remaining'], 4)
         self.assertEqual(self.events.cancel(receipt['orderToken'], ORIGIN, self.visitor), result)
+        PaymentWorker(self.events.payments, self.events.payment_adapter).run_once()
+        self.assertEqual(self.events.ticket(receipt['orderToken'], ORIGIN)['order']['status'], 'cancelled')
 
     def test_paid_refund_request_invalidates_ticket_but_does_not_claim_refunded(self):
         receipt = self.paid()
@@ -245,6 +251,10 @@ class EventsStoreTests(unittest.TestCase):
         self.store.create_admin('test-admin', 'synthetic-password-123')
         token, session = self.store.new_session('test-admin')
         with self.store.connect() as db:
+            from payment_schema import TABLES, VERSION
+            for table in TABLES:
+                db.execute('DROP TABLE ' + table)
+            db.execute('DELETE FROM leanclub_schema_migrations WHERE version=?', (VERSION,))
             db.execute('DROP TABLE campaign_registrations')
             db.execute('DROP TABLE campaign_events')
             db.execute("DELETE FROM campaign_settings WHERE key='events_ticket_secret'")
@@ -253,6 +263,8 @@ class EventsStoreTests(unittest.TestCase):
         upgraded = CampaignStore(self.store.path, clock=lambda: self.now)
         with upgraded.connect() as db:
             after = {table: [tuple(row) for row in db.execute('SELECT * FROM ' + table + ' ORDER BY rowid') if not (table == 'campaign_settings' and row[0] == 'events_ticket_secret')] for table in tables}
+        # Fresh payment coordination adds its migration marker only.
+        after['leanclub_schema_migrations'] = [row for row in after['leanclub_schema_migrations'] if row[0] != VERSION]
         self.assertEqual(before, after)
         self.assertEqual(upgraded.session(token), session)
         self.assertEqual(upgraded.stats()['totalVotes'], 1)
@@ -287,13 +299,15 @@ class EventsHTTPTests(unittest.TestCase):
         self.assertEqual(code, 201)
         event_id = result['event']['id']
         endpoint = '/api/campaign/events/' + event_id + '/register'
-        self.assertEqual(self.request('POST', endpoint, registration_body())[0], 409)
-        self.store.events.payment_adapter = SimpleNamespace(ready=True)
+        self.assertEqual(self.request('POST', endpoint, registration_body())[0], 410)
+        self.store.events.payment_adapter = FakePaymentAdapter(self.store.clock)
         self.assertEqual(self.request('POST', endpoint, registration_body(), {'Origin': 'https://foreign.test'})[0], 403)
         data = registration_body()
-        status, order, _ = self.request('POST', endpoint, data)
-        self.assertEqual(status, 201)
-        self.assertEqual(self.request('POST', endpoint, data)[0], 200)
+        self.assertEqual(self.request('POST', endpoint, data)[0], 410)
+        # Existing anonymous orders remain readable with their original cookie.
+        self.request('GET', '/api/campaign')
+        visitor = self.store.visitor(self.cookies['lean_visitor'])[0]
+        order = self.store.events.register(visitor, event_id, data, self.origin)
         self.assertIsNone(order['qrDataUrl'])
         self.assertEqual(self.request('GET', endpoint)[0], 404)
         self.assertEqual(self.request('GET', '/api/admin/events/check-in')[0], 404)
@@ -316,7 +330,7 @@ class EventsHTTPTests(unittest.TestCase):
         for query in ('page=0', 'page=-1', 'page=1&page=2', 'status=nope', 'status=paid&status=expired', 'extra=1'):
             self.assertEqual(self.request('GET', path + '?' + query)[0], 400)
         self.assertEqual(self.request('GET', path + '?status=paid&page=1')[0], 200)
-        self.assertEqual(self.request('POST', '/api/campaign/events/' + event_id + '/register', registration_body(status='paid'))[0], 400)
+        self.assertEqual(self.request('POST', '/api/campaign/events/' + event_id + '/register', registration_body(status='paid'))[0], 410)
         for endpoint in ('/api/campaign/events/pay', '/api/campaign/events/confirm-payment', '/api/admin/events/confirm-payment'):
             self.assertIn(self.request('POST', endpoint, {'status': 'paid'}, headers)[0], (400, 404))
 

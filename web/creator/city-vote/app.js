@@ -459,6 +459,9 @@
     if (confirmDialog.returnValue !== 'saved') announce(chosen ? `已返回选择，仍保留${names[chosen]}。` : '已返回选择，尚未投票。');
   });
   document.querySelector('#retry-connection').addEventListener('click', loadCampaign);
+  // Both public comments and private feedback share the campaign visitor cookie.
+  // Waiting on the same GET prevents concurrent responses replacing its owner.
+  window.LeanCampaignSession = Object.freeze({ ensureIdentity: ensureCampaignIdentity, randomId });
   document.addEventListener('visibilitychange', recordPageView);
   window.addEventListener('pageshow', event => { if (event.persisted) loadCampaign(); });
   render();

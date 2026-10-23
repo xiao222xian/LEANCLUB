@@ -36,6 +36,7 @@
     return { open() { returnFocus = document.activeElement; element.showModal(); document.body.classList.add('has-dialog'); element.querySelector('[tabindex="-1"]')?.focus(); }, close() { element.close(); } };
   }
   function ticketUrl(token) { return `/ticket#ticket=${encodeURIComponent(token)}`; }
+  function memberOrderUrl(id) { if (!/^[a-f0-9]{32}$/.test(id || '')) throw new Error('订单信息未确认，请刷新“我的报名”。'); return `/ticket?order=${id}`; }
   function text(tag, content, className) { const node = document.createElement(tag); node.textContent = content; if (className) node.className = className; return node; }
-  window.LeanEvents = { api, randomId, date, poster, dialog, ticketUrl, text, cityNames, money };
+  window.LeanEvents = { api, randomId, date, poster, dialog, ticketUrl, memberOrderUrl, text, cityNames, money };
 })();

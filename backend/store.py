@@ -101,12 +101,12 @@ class Store:
             if old:
                 if supplied_key:
                     if not secrets.compare_digest(old['edit_hash'], self.key_hash(supplied_key)):
-                        raise Problem(403, '修改链接已失效，请使用公共填写页重新提交。')
+                        raise Problem(403, '修改链接无效，请联系平台核对负责人身份。')
                     if data.get('revision') != old['revision']:
                         raise Problem(409, '资料已在其他页面更新，请重新打开修改链接。')
                     key = supplied_key
                 else:
-                    key = secrets.token_urlsafe(32)
+                    raise Problem(403, '该学校资料已有负责人，请登录后申请认领，不能匿名覆盖。')
                 qr = data.get('qr') if data.get('qr') is not None else old['qr']
                 revision = old['revision'] + 1
                 db.execute('UPDATE clubs SET contact=?,count=?,qr=?,updated=?,revision=?,edit_hash=? WHERE id=?', (contact.strip(), count, qr, now, revision, self.key_hash(key), old['id']))

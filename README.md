@@ -1,8 +1,16 @@
-# bojizhuye
+# 薄肌学院 · LEAN SCHOOL
+
+2026-10-24 整套发布：[官网、Java与管理后台的发布记录](docs/fullstack-release-20261024.md)。Java/Vue已推私有仓库 `platform/backend` / `platform/admin-ui`；网站双域、公众网关、生产后台和证书/回退工具已完成本机验证。服务器控制连接仍受阻，尚未执行本轮部署。
+
+2026-10-24：[留言区已简化](docs/comments-refine-20261024.md)，保留功能、减少文案与装饰，桌面/手机检查通过；仅本地生效。[新域接入](docs/domain-cutover-20261024.md)：www DNS已生效，网站备案未办理，新证书包已上传 `/data/28042900_www.leanschool.net_nginx.zip`，内容和安装仍待服务器验证；新域HTTPS尚未接通，旧域正常。
+
+2026-10-23 本地新增：首页实时学校搜索直达统一目录详情；投票页公开评论、官方话题弹幕及原芋道隐藏/恢复管理已完成本机联调。原私密意见保持私密，首页滚动内容按用户最新指示保留；本轮尚未上线。见[功能与验证记录](docs/schools-comments-20261023.md)。
+
+2026-10-23 品牌代码已更新：当前本地官网和原芋道后台采用薄肌学院 / LEAN SCHOOL，目标主地址为 `https://www.leanschool.net`。本地 CMS 已另发品牌修订，旧修订可回退。新域尚未上线，本段以下生产版本、仓库地址和上游来源保留真实状态。验证与剩余事项见[本地更名交付](../../02-brand/LEAN-SCHOOL-IMPLEMENTATION-20261023.md)。
 
 2026-10-23：生产4499b01之上已部署[备案号静态补丁](docs/icp-footer-20261023.md)，公开页面展示备案号与工信部链接；微信访问恢复仍待审核。
 
-Lean Club 薄肌社群主页、三城线下活动投票与内容管理。开发代码同步至 [xiao222xian/LEANCLUB](https://github.com/xiao222xian/LEANCLUB) 与 [papaoo/bojizhuye](https://github.com/papaoo/bojizhuye)，保留原始仓库历史与素材来源。
+薄肌学院的社群主页、三城线下活动投票与内容管理。代码仓库沿用 [xiao222xian/LEANCLUB](https://github.com/xiao222xian/LEANCLUB) 与 [papaoo/bojizhuye](https://github.com/papaoo/bojizhuye)，保留原始仓库历史与素材来源；品牌与整合代码按本轮固定提交发布，生产部署状态单独记录。
 
 本项目试运行：[主页](https://boji.tensorbot.xyz/) · [三城投票](https://boji.tensorbot.xyz/city-vote)。当前生产版本为 `4499b018296c26cee6e0b2d728241ba2149835d0`，2026-10-22 22:44从首次部署的 `cb66b6a` 升级，2026-10-23已使用用户证书启用HTTPS，HTTP自动跳转，公网后台登录通过。升级前完成私密SQLite备份，原有账号、统计、海报与机器人配置保留；安装器健康及域名路由检查通过，独立公网检查确认投票与管理的六份HTML/CSS/JS与固定源码包字节一致。公网真实管理登录及飞书设置页面此前已通过，完整业务与真机验收仍待完成。部署状态、验证范围及恢复记录见[部署记录](docs/deployment-152-136-108-87.md)。下方 `leanmuscleclub.com` 为上游参考网站，并非本轮发布地址。
 
@@ -24,7 +32,7 @@ Lean Club 薄肌社群主页、三城线下活动投票与内容管理。开发�
 
 ## 学校不同，一起向上。
 
-**Lean Club** 是连接不同高校薄肌同好的俱乐部网站。
+**薄肌学院 / LEAN SCHOOL** 连接不同高校的薄肌同好，承接内容、社群与线下活动。
 
 搜索自己的学校，找到俱乐部，了解负责人联系方式。也让每个正在组织训练的人，有一个能被同校同好找到的入口。
 

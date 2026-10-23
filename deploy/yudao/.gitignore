@@ -1,0 +1,6 @@
+__pycache__/
+*.private.*
+generated/
+java.env
+release.json
+*.jar

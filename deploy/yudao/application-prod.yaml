@@ -1,0 +1,212 @@
+# Full-module production overlay. Load with spring.profiles.active=prod only.
+# Secrets are supplied by /etc/leanschool/java.env, never by a committed YAML.
+server:
+  address: 127.0.0.1
+  port: 48080
+  forward-headers-strategy: none
+
+spring:
+  application:
+    name: leanschool-admin
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.quartz.autoconfigure.QuartzAutoConfiguration
+      - org.springframework.ai.vectorstore.qdrant.autoconfigure.QdrantVectorStoreAutoConfiguration
+      - org.springframework.ai.vectorstore.redis.autoconfigure.RedisVectorStoreAutoConfiguration
+      - org.springframework.ai.vectorstore.milvus.autoconfigure.MilvusVectorStoreAutoConfiguration
+      - com.alibaba.cloud.ai.autoconfigure.dashscope.DashScopeChatAutoConfiguration
+      - com.alibaba.cloud.ai.autoconfigure.dashscope.DashScopeAgentAutoConfiguration
+      - com.alibaba.cloud.ai.autoconfigure.dashscope.DashScopeImageAutoConfiguration
+      - com.alibaba.cloud.ai.autoconfigure.dashscope.DashScopeVideoAutoConfiguration
+      - com.alibaba.cloud.ai.autoconfigure.dashscope.DashScopeAudioSpeechAutoConfiguration
+      - com.alibaba.cloud.ai.autoconfigure.dashscope.DashScopeAudioTranscriptionAutoConfiguration
+      - com.alibaba.cloud.ai.autoconfigure.dashscope.DashScopeRerankAutoConfiguration
+      - com.alibaba.cloud.ai.autoconfigure.dashscope.DashScopeEmbeddingAutoConfiguration
+      - com.alibaba.cloud.ai.autoconfigure.dashscope.DashScopeMultimodalEmbeddingAutoConfiguration
+      - com.alibaba.cloud.ai.autoconfigure.dashscope.DashScopeAsyncToolCallingManagerAutoConfiguration
+  datasource:
+    druid:
+      web-stat-filter:
+        enabled: false
+      stat-view-servlet:
+        enabled: false
+    dynamic:
+      primary: master
+      strict: true
+      druid:
+        initial-size: 1
+        min-idle: 1
+        max-active: 12
+        max-wait: 60000
+        validation-query: SELECT 1
+        test-while-idle: true
+      datasource:
+        master:
+          name: ${LS_DB_NAME}
+          # Fixed UTC+08 session offset avoids requiring MySQL named-timezone tables.
+          url: jdbc:mysql://127.0.0.1:${LS_DB_PORT:3306}/${LS_DB_NAME}?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=%2B08:00&forceConnectionTimeZoneToSession=true&useSSL=false&allowPublicKeyRetrieval=true
+          username: ${LS_DB_USER}
+          password: ${LS_DB_PASSWORD}
+          driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: 127.0.0.1
+      port: ${LS_REDIS_PORT:6382}
+      database: ${LS_REDIS_DB:0}
+      password: ${LS_REDIS_PASSWORD}
+  sql:
+    init:
+      mode: never
+  quartz:
+    auto-startup: false
+    jdbc:
+      initialize-schema: never
+  boot:
+    admin:
+      context-path: /internal-admin
+      client:
+        enabled: false
+  ai:
+    chat:
+      client:
+        enabled: false
+    mcp:
+      server:
+        enabled: false
+      client:
+        enabled: false
+
+# Initialize matching Flowable tables before service startup, never via a live upgrade.
+flowable:
+  database-schema-update: false
+  check-process-definitions: false
+  async-executor-activate: false
+  async-history-executor-activate: false
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+knife4j:
+  enable: false
+management:
+  server:
+    address: 127.0.0.1
+    port: 48081
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
+mybatis-plus:
+  encryptor:
+    password: ${LS_FIELD_ENCRYPTION_KEY}
+aj:
+  captcha:
+    water-mark: LEAN SCHOOL
+    req-frequency-limit-enable: true
+yudao:
+  web:
+    admin-ui:
+      url: ${LS_ADMIN_URL}
+  security:
+    mock-enable: false
+  captcha:
+    enable: true
+  access-log:
+    enable: false
+  demo: false
+  sms-code:
+    begin-code: 100000
+    end-code: 999999
+  pay:
+    order-notify-url: ${LS_PUBLIC_ORIGIN}/admin-api/pay/notify/order
+    refund-notify-url: ${LS_PUBLIC_ORIGIN}/admin-api/pay/notify/refund
+    transfer-notify-url: ${LS_PUBLIC_ORIGIN}/admin-api/pay/notify/transfer
+  trade:
+    order:
+      status-sync-to-wxa-enable: false
+    express:
+      kd-niao:
+        api-key: DISABLED_NOT_CONFIGURED
+        business-id: DISABLED_NOT_CONFIGURED
+      kd100:
+        key: DISABLED_NOT_CONFIGURED
+        customer: DISABLED_NOT_CONFIGURED
+  tencent-lbs-key: DISABLED_NOT_CONFIGURED
+  ai:
+    doubao: {enable: false}
+    hunyuan: {enable: false}
+    siliconflow: {enable: false}
+    xinghuo: {enable: false}
+    baichuan: {enable: false}
+    yiyan: {enable: false}
+    zhipu: {enable: false}
+    minimax: {enable: false}
+    moonshot: {enable: false}
+    stepfun: {enable: false}
+    grok: {enable: false}
+    midjourney: {enable: false}
+    suno: {enable: false}
+    web-search: {enable: false}
+
+justauth:
+  enabled: false
+wx:
+  # SocialClientService strongly injects both SDK beans. Inert placeholders keep
+  # the full module wired without inheriting an upstream example application.
+  # No real channel row is seeded; replace only when the owned account is ready.
+  mp:
+    app-id: DISABLED_NOT_CONFIGURED
+    secret: DISABLED_NOT_CONFIGURED
+    config-storage:
+      type: RedisTemplate
+      key-prefix: leanschool:wx
+      http-client-type: HttpComponents
+  miniapp:
+    appid: DISABLED_NOT_CONFIGURED
+    secret: DISABLED_NOT_CONFIGURED
+    config-storage:
+      type: RedisTemplate
+      key-prefix: leanschool:wa
+      http-client-type: HttpComponents
+
+leanclub:
+  site:
+    public-tenant-id: ${LS_PUBLIC_TENANT_ID:1}
+    member-login-enabled: false
+  operations:
+    enabled: ${LS_OPERATIONS_ENABLED:false}
+    port: 5381
+    tenant: ${LS_PUBLIC_TENANT_ID:1}
+    secret: ${LS_OPERATIONS_SECRET:}
+  member:
+    orders:
+      enabled: ${LS_MEMBER_ORDERS_ENABLED:false}
+      tenant: ${LS_PUBLIC_TENANT_ID:1}
+      secret: ${LS_MEMBER_ORDERS_SECRET:}
+  payment:
+    binding:
+      enabled: false
+
+logging:
+  file:
+    name: /var/log/leanschool/java.log
+  logback:
+    rollingpolicy:
+      max-file-size: 20MB
+      max-history: 14
+      total-size-cap: 1GB
+  level:
+    root: INFO
+    cn.iocoder.yudao.framework.apilog: WARN
+    cn.iocoder.yudao.framework.web.core.filter: WARN
+
+# No existing channel/model/notification credentials are imported by the seed tool.
+# Module code and internal screens remain packaged; enabling a channel is a separate
+# configuration and acceptance step, including its DB credentials and callback rules.

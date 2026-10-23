@@ -1,0 +1,11 @@
+# Managed by LEAN SCHOOL full-stack deployment.
+proxy_connect_timeout 5s;
+proxy_send_timeout 25s;
+client_body_timeout 20s;
+proxy_request_buffering on;
+proxy_set_header Host $http_host;
+proxy_set_header X-Real-IP $remote_addr;
+proxy_set_header X-Forwarded-For $remote_addr;
+proxy_set_header X-Forwarded-Proto $scheme;
+# Forward the real Origin, Referer and CSRF headers unchanged. Never invent browser identity.
+proxy_cache off;

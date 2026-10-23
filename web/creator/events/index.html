@@ -2,22 +2,33 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#101212"><meta name="description" content="Lean Club 薄肌俱乐部线下活动。在真实的世界，见到同频的人。">
-  <meta name="referrer" content="no-referrer"><title>线下见 — LEAN CLUB</title>
-  <link rel="icon" href="/city-vote/assets/lean-emblem.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/events/style.css?v=20261023-events-v1">
-  <script src="/events/common.js?v=20261023-events-v1" defer></script><script src="/events/app.js?v=20261023-events-v1" defer></script>
+  <meta name="theme-color" content="#101212"><meta name="description" content="LEAN SCHOOL 薄肌学院线下活动。在真实的世界，见到同频的人。">
+  <meta name="referrer" content="no-referrer"><title>线下见 — LEAN SCHOOL</title>
+  <link rel="icon" href="/city-vote/assets/lean-emblem.svg?v=20261023-leanschool" type="image/svg+xml">
+  <link rel="stylesheet" href="/events/style.css?v=20261023-member-orders-v1">
+  <script src="/events/common.js?v=20261023-member-orders-v1" defer></script>
+  <link rel="stylesheet" href="/site-portal.css?v=20261023-v5"><script src="/site-portal.js?v=20261023-member-orders-v1" defer></script>
+  <script src="/events/app.js?v=20261023-payment-states-v1" defer></script>
+  <link rel="canonical" href="https://www.leanschool.net/events">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="薄肌学院 · LEAN SCHOOL">
+  <meta property="og:title" content="线下见 — LEAN SCHOOL">
+  <meta property="og:description" content="LEAN SCHOOL 薄肌学院线下活动。在真实的世界，见到同频的人。">
+  <meta property="og:url" content="https://www.leanschool.net/events">
+  <meta property="og:image" content="https://www.leanschool.net/images/hero-1024-v2.webp">
+  <meta property="og:image:alt" content="薄肌学院薄肌生活概念影像">
+  <meta name="twitter:card" content="summary_large_image">
 </head>
 <body class="events-page">
   <div class="ambient" aria-hidden="true"><img id="empty-shenzhen" src="/city-vote/assets/alan-v1/shenzhen.webp" alt=""><img id="empty-zhuhai" src="/city-vote/assets/alan-v1/zhuhai.webp" alt=""><img id="empty-guangzhou" src="/city-vote/assets/alan-v1/guangzhou.webp" alt=""></div>
   <header class="site-header">
-    <a class="brand" href="/city-vote" aria-label="LEAN CLUB 城市投票"><img src="/city-vote/assets/lean-emblem.svg" alt="" width="42" height="28"><span>LEAN CLUB<small>薄肌俱乐部</small></span></a>
+    <a class="brand" href="/city-vote" aria-label="LEAN SCHOOL 城市投票"><img src="/city-vote/assets/lean-emblem.svg?v=20261023-leanschool" alt="" width="42" height="28"><span>LEAN SCHOOL<small>薄肌学院</small></span></a>
     <p class="header-caption">REAL PEOPLE. REAL CONNECTION.</p>
-    <button class="capsule" id="open-mine" type="button" aria-haspopup="dialog">我的入场券<span class="ticket-count" id="ticket-count" hidden>0</span></button>
-  </header>
+    <button class="capsule" id="open-mine" type="button" aria-haspopup="dialog">我的报名<span class="ticket-count" id="ticket-count" hidden>0</span></button>
+  <button class="capsule" type="button" data-member-open><span data-member-label>登录 / 注册</span></button></header>
   <main id="main-content">
     <section class="waiting-state" id="waiting-state" aria-labelledby="waiting-title">
-      <span class="edition">LEAN CLUB / OFFLINE</span>
+      <span class="edition">LEAN SCHOOL / OFFLINE</span>
       <h1 id="waiting-title">下一次见面，<br><em>正在准备。</em></h1>
       <p id="waiting-copy">把喜欢的生活，过到一起。</p>
       <div class="waiting-actions"><a class="primary-button" href="/city-vote">第一站，你来定</a><button class="text-button" type="button" id="retry-load" hidden>重新连接</button></div>
@@ -44,7 +55,7 @@
     <div class="dialog-art" aria-hidden="true"><img id="register-photo" src="/city-vote/assets/alan-v1/shenzhen.webp" alt=""></div>
     <button class="close-dialog" id="close-register" type="button" aria-label="关闭报名"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
     <div class="dialog-body">
-      <p class="edition">LEAN CLUB / RSVP</p><h2 id="register-title" tabindex="-1">为你，<br><em>留一个位置。</em></h2>
+      <p class="edition">LEAN SCHOOL / RSVP</p><h2 id="register-title" tabindex="-1">为你，<br><em>留一个位置。</em></h2>
       <p class="dialog-event-name" id="register-event-name"></p>
       <form id="register-form" novalidate>
         <div class="field"><label for="register-name">怎么称呼你</label><input id="register-name" name="name" type="text" autocomplete="nickname" maxlength="30" placeholder="称呼或昵称" required></div>
@@ -55,13 +66,13 @@
         <button class="text-button" id="refresh-registration-price" type="button" hidden>查看最新费用</button>
         <div class="registration-total"><span>本次报名 · 1 人</span><strong id="register-price"></strong></div>
         <button class="primary-button" id="register-submit" type="submit">锁定名额，去付款</button>
-        <p class="form-note">付款确认后发放入场券，未付款名额限时保留。</p>
+        <p class="form-note">订单保存在当前登录账号。付款确认后发放入场券。</p>
       </form>
     </div>
   </dialog>
   <dialog class="mine-dialog" id="mine-dialog" aria-labelledby="mine-title">
-    <button class="close-dialog" id="close-mine" type="button" aria-label="关闭我的入场券"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
-    <div class="dialog-body"><p class="edition">YOUR NEXT CONNECTION</p><h2 id="mine-title" tabindex="-1">我的入场券</h2><p class="mine-note">显示在当前浏览器报名的活动。</p><div id="mine-list" class="mine-list" aria-live="polite"></div><button class="text-button" id="retry-mine" type="button" hidden>重新加载</button></div>
+    <button class="close-dialog" id="close-mine" type="button" aria-label="关闭我的报名"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+    <div class="dialog-body"><p class="edition">YOUR NEXT CONNECTION</p><h2 id="mine-title" tabindex="-1">我的报名</h2><nav class="mine-tabs" aria-label="报名记录来源"><button id="mine-member" type="button" aria-pressed="true">账号报名</button><button id="mine-legacy" type="button" aria-pressed="false">浏览器旧记录</button></nav><p class="mine-note" id="mine-note">登录同一账号，可在不同设备查看报名。</p><div id="mine-list" class="mine-list" aria-live="polite"></div><button class="primary-button mine-login" id="mine-sign-in" type="button" hidden>登录 / 注册</button><div class="mine-pagination" id="mine-pagination" hidden><button class="text-button" id="mine-prev" type="button">上一页</button><span id="mine-page-label"></span><button class="text-button" id="mine-next" type="button">下一页</button></div><button class="text-button" id="retry-mine" type="button" hidden>重新加载</button></div>
   </dialog>
   <noscript><p class="no-script">开启 JavaScript 后可查看活动与报名。</p></noscript>
 </body>

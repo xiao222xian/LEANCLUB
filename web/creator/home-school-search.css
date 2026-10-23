@@ -1,0 +1,17 @@
+/* Floating suggestions escape the photographic hero's curved clipping edge. */
+.home-school-popup{position:absolute;z-index:20;display:flex;flex-direction:column;overflow:hidden;border:1px solid #dce8df;border-radius:22px;background:#fff;color:#20392e;box-shadow:0 24px 70px #061b2333;font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif}
+.home-school-popup[hidden]{display:none}
+.home-school-heading{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-shrink:0;padding:15px 19px 12px;border-bottom:1px solid #edf1ed;font-size:11px;font-weight:700;letter-spacing:.8px}
+.home-school-heading:before{content:"";width:6px;height:6px;background:#54ac7b;border-radius:50%}
+.home-school-heading>span:first-child{margin-right:auto}.home-school-total{font-size:10px;font-weight:400;color:#6a7b70;letter-spacing:0;white-space:nowrap}
+.home-school-results{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;min-height:0;padding:4px 7px}
+.home-school-option{display:flex;align-items:center;gap:12px;width:100%;padding:12px;border:0;border-radius:12px;background:white;color:#20392e;text-align:left;font:inherit;cursor:pointer}
+.home-school-option:hover,.home-school-option[aria-selected="true"]{background:#edf8f1}
+.home-school-monogram{display:grid;place-items:center;flex-shrink:0;width:36px;height:36px;border:1px solid #e1ebe3;border-radius:12px;background:#f4f7f3;color:#668071;font-size:15px;font-weight:650}
+.home-school-copy{flex:1;min-width:0}.home-school-copy strong{display:block;overflow-wrap:anywhere;font-size:14px;font-weight:650;line-height:1.45}.home-school-copy small{display:block;font-size:10px;color:#78867b;line-height:1.5;margin-top:5px}
+.home-school-badge{flex-shrink:0;font-size:9px;color:#7a877b;padding:5px 7px;border:1px solid #e9eee8;border-radius:6px;white-space:nowrap}.home-school-badge.is-open{background:#dff6e8;border-color:#d0ecd9;color:#226a42}
+.home-school-message{padding:15px 19px;overflow:auto;font-size:12px;line-height:1.7}.home-school-message[hidden]{display:none}.home-school-message p{margin:0}.home-school-retry{margin-top:10px;padding:7px 10px;border-radius:7px;background:#e4f6e9;color:#266c43;font-size:12px}
+.home-school-all{display:block;flex-shrink:0;padding:13px 19px;background:#f3f8f1;border-top:1px solid #e6eee4;color:#355c41;font-size:12px;font-weight:650;line-height:1.4;text-decoration:none}.home-school-all:hover{background:#e4f3e5}
+.home-school-note{flex-shrink:0;padding:9px 19px;margin:0;font-size:9px;line-height:1.4;color:#829080}
+@media(max-width:760px){.home-school-popup{border-radius:17px}.home-school-heading{padding:12px 14px 10px;font-size:10px}.home-school-option{padding:10px 7px;gap:9px}.home-school-monogram{width:30px;height:30px;border-radius:10px;font-size:13px}.home-school-copy strong{font-size:12px}.home-school-copy small{font-size:9px}.home-school-badge{font-size:8px;padding:4px 5px}.home-school-all{padding:12px 14px;font-size:11px}.home-school-note{padding:8px 14px;font-size:8px}.home-school-message{padding:12px 14px}}
+@media(max-width:360px){.home-school-monogram{display:none}.home-school-badge{font-size:8px}}

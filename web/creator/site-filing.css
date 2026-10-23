@@ -1,4 +1,5 @@
 /* Shared public-site filing footer. Keep the QR/vote controls unobstructed. */
+.site-filing[hidden]{display:none!important}
 .site-filing{box-sizing:border-box;width:100%;padding:20px 16px;text-align:center;background:#f6f7f3;color:#59655d;font:400 11px/1.8 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;letter-spacing:.03em}
 .site-filing a{display:inline-block;padding:5px 8px;color:inherit;text-decoration:none}
 .site-filing a:hover{text-decoration:underline;text-underline-offset:3px}

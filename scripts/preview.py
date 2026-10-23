@@ -2,11 +2,15 @@
 import http.client
 import json
 import os
+import re
 import socket
 import sys
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'backend'))
+from public_app_gateway import route_allowed, proxy_public_api
 
 
 WEB_ROOT = Path(__file__).resolve().parents[1] / "web" / "creator"
@@ -20,6 +24,8 @@ ROUTES = {
     "/city-vote/": "/city-vote/index.html",
     "/admin": "/admin/index.html",
     "/admin/": "/admin/index.html",
+    "/legacy-admin": "/admin/index.html",
+    "/legacy-admin/": "/admin/index.html",
     "/events": "/events/index.html",
     "/events/": "/events/index.html",
     "/ticket": "/ticket/index.html",
@@ -34,6 +40,15 @@ RESPONSE_HEADERS = {
     "cross-origin-resource-policy",
     "access-control-allow-origin", "access-control-allow-credentials",
 }
+
+
+def admin_checkin_url(admin_url):
+    """Keep the configured admin mount (for example /console) when leaving the site."""
+    target = urlsplit(admin_url)
+    base = target.path.rstrip('/')
+    if base.endswith('/login'):
+        base = base[:-len('/login')]
+    return target.scheme + '://' + target.netloc + base + '/leanclub/registrations'
 
 
 class Handler(SimpleHTTPRequestHandler):
@@ -81,8 +96,13 @@ class Handler(SimpleHTTPRequestHandler):
             return None
         return path
 
-    def api(self):
+    def app_route_allowed(self, path):
+        return route_allowed(self.command, self.path, path)
+
+    def api(self, app=False):
         self._static_response = False
+        if app:
+            return proxy_public_api(self)
         if self.headers.get("Transfer-Encoding"):
             return self.error_json(400, "本地预览不支持分块请求，请发送带长度的请求。")
         lengths = self.headers.get_all("Content-Length", [])
@@ -134,6 +154,29 @@ class Handler(SimpleHTTPRequestHandler):
         path = self.safe_path()
         if path is None:
             return self.error_json(400, "请求路径无效。")
+        if path in {"/admin", "/admin/"}:
+            self.send_response(302)
+            self.send_header("Location", self.server.admin_url)
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Referrer-Policy", "no-referrer")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+        if path in {'/check-in', '/check-in/'}:
+            # A browser preserves the original #ticket fragment across this
+            # redirect; the original admin guard consumes it before login.
+            # Nothing from the public query is copied into the Location header.
+            self.send_response(302)
+            self.send_header('Location', admin_checkin_url(self.server.admin_url))
+            self.send_header('Cache-Control', 'no-store')
+            self.send_header('Referrer-Policy', 'no-referrer')
+            self.send_header('Content-Length', '0')
+            self.end_headers()
+            return
+        if path.startswith("/app-api/"):
+            if not self.app_route_allowed(path):
+                return self.error_json(404, "接口不存在。")
+            return self.api(app=True)
         if path.startswith("/api/"):
             return self.api()
         try:
@@ -175,9 +218,21 @@ class Handler(SimpleHTTPRequestHandler):
         path = self.safe_path()
         if path is None:
             return self.error_json(400, "请求路径无效。")
+        if path.startswith("/app-api/"):
+            if not self.app_route_allowed(path):
+                return self.error_json(404, "接口不存在。")
+            return self.api(app=True)
         if not path.startswith("/api/"):
             return self.error_json(404, "接口不存在。")
         return self.api()
+
+    def do_PUT(self):
+        path = self.safe_path()
+        if path is None:
+            return self.error_json(400, "请求路径无效。")
+        if not path.startswith("/app-api/") or not self.app_route_allowed(path):
+            return self.error_json(404, "接口不存在。")
+        return self.api(app=True)
 
 
 def port_from_env(name, default):
@@ -190,9 +245,23 @@ def port_from_env(name, default):
 def main():
     port = port_from_env("PREVIEW_PORT", "4180")
     api_port = port_from_env("CLUB_PORT", "5381")
+    yudao_port = port_from_env("LEANCLUB_YUDAO_PORT", "48080")
+    public_tenant_id = int(os.environ.get("LEANCLUB_PUBLIC_TENANT_ID", "1"))
+    if public_tenant_id <= 0:
+        raise ValueError("LEANCLUB_PUBLIC_TENANT_ID must be positive")
+    admin_url = os.environ.get("LEANCLUB_ADMIN_URL", "http://127.0.0.1:5173/login?redirect=/leanclub/content")
+    admin_target = urlsplit(admin_url)
+    if (admin_target.scheme not in {"http", "https"} or not admin_target.hostname
+            or admin_target.username or admin_target.password
+            or any(c in admin_url for c in "\r\n")
+            or (admin_target.scheme == "http" and admin_target.hostname not in {"localhost", "127.0.0.1", "::1"})):
+        raise ValueError("LEANCLUB_ADMIN_URL must be HTTPS or local loopback HTTP")
     with ThreadingHTTPServer(("127.0.0.1", port), Handler) as server:
         server.daemon_threads = True
         server.api_port = api_port
+        server.yudao_port = yudao_port
+        server.public_tenant_id = public_tenant_id
+        server.admin_url = admin_url
         print("Lean Club: http://127.0.0.1:%s/" % port, flush=True)
         try:
             server.serve_forever()

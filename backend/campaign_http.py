@@ -8,6 +8,7 @@ from urllib.parse import parse_qs, urlsplit
 
 from campaign import IPVoteConflict, MAX_POSTER_BYTES, SESSION_AGE, VISITOR_AGE
 from campaign_feedback import validate as validate_feedback
+from campaign_comments import validate as validate_comment
 from events_http import EventsAPI
 from store import Problem
 
@@ -152,6 +153,19 @@ class CampaignAPI:
     def get(self, handler, path):
         if self.events.matches(path):
             return self.events.get(handler, path)
+        if path == '/api/campaign/comments':
+            self.store.limit(handler.ip(), 'comments-read', 180, 60)
+            try:
+                query = parse_qs(urlsplit(handler.path).query, keep_blank_values=True,
+                                 strict_parsing=True, max_num_fields=2)
+                if set(query) - {'limit', 'cursor'} or any(len(values) != 1 for values in query.values()):
+                    raise ValueError()
+                limit = query.get('limit', ['20'])[0]
+                if not re.fullmatch(r'[1-9][0-9]?', limit):
+                    raise ValueError()
+            except ValueError:
+                raise Problem(400, '评论分页参数无效。')
+            return handler.send_json(200, self.store.comments.public_list(int(limit), query.get('cursor', [None])[0]))
         if path == '/api/campaign':
             self.store.limit(handler.ip(), 'campaign-read', 120, 60)
             visitor = self.visitor(handler)
@@ -200,6 +214,17 @@ class CampaignAPI:
         self.require_origin(handler)
         if self.events.matches(path):
             return self.events.post(handler, path)
+        if path == '/api/campaign/comments':
+            data = self.json_body(handler)
+            self.store.limit(handler.ip(), 'comments-request', 60, 60)
+            validate_comment(data)
+            with self.store.connect() as db:
+                db.execute('BEGIN IMMEDIATE')
+                visitor, fresh = self.store.visitor(self.cookie(handler, VISITOR_COOKIE), db=db)
+                result = self.store.comments.submit(visitor, handler.ip(), data, db=db)
+            if fresh:
+                self.set_cookie(handler, VISITOR_COOKIE, fresh, VISITOR_AGE)
+            return handler.send_json(200 if result['duplicate'] else 201, result)
         if path == '/api/campaign/feedback':
             data = self.json_body(handler)
             self.store.limit(handler.ip(), 'feedback-request', 60, 60)

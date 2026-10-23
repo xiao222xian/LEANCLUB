@@ -1,4 +1,4 @@
-# Lean Club 内容管理前端
+# LEAN SCHOOL 内容管理前端
 
 入口 `/admin`。原生 HTML / CSS / JavaScript，同源请求，无 CDN 或运行时依赖。
 

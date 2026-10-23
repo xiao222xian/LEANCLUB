@@ -14,7 +14,10 @@ from store import Store, Problem
 from metadata import enrich_schools
 from campaign import CampaignStore
 from campaign_http import CampaignAPI
+from campaign_hosts import compatibility_apis, select_api
 from campaign_feishu import FeishuWorker
+from operations_bridge import OperationsBridge, PATH as OPERATIONS_PATH
+from member_orders_bridge import MemberOrdersBridge, PATH as MEMBER_ORDERS_PATH
 
 MAX_BODY = 3 * 1024 * 1024
 MAX_IMAGE = 2 * 1024 * 1024
@@ -22,9 +25,16 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(ROOT, 'schools.json'), encoding='utf-8') as catalog_file:
     CATALOG = json.load(catalog_file)
 STORE = Store(os.environ.get('CLUB_DB', '/var/lib/leanmuscleclub/clubs.sqlite3'), CATALOG)
-ORIGIN = os.environ.get('CLUB_ORIGIN', 'https://leanmuscleclub.com')
+ORIGIN = os.environ.get('CLUB_ORIGIN', 'https://www.leanschool.net')
 CAMPAIGN_STORE = CampaignStore(STORE.path, os.environ.get('CLUB_MEDIA_DIR'))
 CAMPAIGN = CampaignAPI(CAMPAIGN_STORE, ORIGIN, os.environ.get('CLUB_ALLOW_LOCAL_SETUP') == '1')
+if os.environ.get('CLUB_COMPAT_ORIGINS') and 'CLUB_ORIGIN' not in os.environ:
+    raise ValueError('Set an explicit CLUB_ORIGIN when enabling compatibility origins.')
+COMPAT_CAMPAIGNS = compatibility_apis(CAMPAIGN, os.environ.get('CLUB_COMPAT_ORIGINS', ''))
+OPERATIONS = OperationsBridge(CAMPAIGN_STORE, ORIGIN, os.environ.get('LEANCLUB_OPERATIONS_SECRET', ''),
+                              os.environ.get('LEANCLUB_OPERATIONS_TENANT', '1'))
+MEMBER_ORDERS = MemberOrdersBridge(CAMPAIGN_STORE, ORIGIN, os.environ.get('LEANCLUB_MEMBER_ORDERS_SECRET', ''),
+                                  os.environ.get('LEANCLUB_MEMBER_ORDERS_TENANT', '1'))
 TRUSTED_PROXIES = {str(ipaddress.ip_address(value.strip())) for value in os.environ.get('CLUB_TRUSTED_PROXY_IPS', '').split(',') if value.strip()}
 
 
@@ -71,7 +81,7 @@ def validate_qr(value):
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = 'LeanClub'
+    server_version = 'LeanSchool'
     def setup(self):
         super().setup()
         self.response_cookies = []
@@ -103,9 +113,13 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         try:
-            path = urlsplit(self.path).path
-            if CAMPAIGN.matches(path):
-                return CAMPAIGN.get(self, path)
+            target = urlsplit(self.path)
+            if target.scheme or target.netloc:
+                raise Problem(400, '请求路径无效。')
+            path = target.path
+            api = select_api(CAMPAIGN, COMPAT_CAMPAIGNS, self.headers, self.client_address[0])
+            if api.matches(path):
+                return api.get(self, path)
             if path == '/api/club/health':
                 with STORE.connect() as db:
                     db.execute('SELECT 1').fetchone()
@@ -125,10 +139,18 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         try:
-            path = urlsplit(self.path).path
-            if CAMPAIGN.matches(path):
-                return CAMPAIGN.post(self, path)
-            CAMPAIGN.require_origin(self)
+            target = urlsplit(self.path)
+            if target.scheme or target.netloc:
+                raise Problem(400, '请求路径无效。')
+            path = target.path
+            if path == OPERATIONS_PATH:
+                return OPERATIONS.post(self)
+            if path == MEMBER_ORDERS_PATH:
+                return MEMBER_ORDERS.post(self)
+            api = select_api(CAMPAIGN, COMPAT_CAMPAIGNS, self.headers, self.client_address[0])
+            if api.matches(path):
+                return api.post(self, path)
+            api.require_origin(self)
             if self.headers.get('Content-Type', '').split(';')[0] != 'application/json':
                 raise Problem(415, '请求格式不正确。')
             try:
@@ -148,8 +170,9 @@ class Handler(BaseHTTPRequestHandler):
             if path == '/api/club/edit':
                 return self.send_json(200, {'club': STORE.edit_profile(data.get('editKey'))})
             if path == '/api/club/submit':
-                data['qr'] = validate_qr(data.get('qr'))
-                return self.send_json(200, STORE.save(data, self.ip()))
+                # Public directory writes move to the authenticated LeanClub application
+                # workflow in Yudao. Keep existing records readable during migration.
+                raise Problem(410, '学校资料申请已迁移，请从“我的”登录后提交，由平台审核发布。')
             raise Problem(404, '页面不存在。')
         except Problem as exc:
             self.send_json(exc.status, {'error': exc.message})

@@ -184,12 +184,44 @@ def check_owned(path):
         raise ValueError('Existing configuration is not managed by this project: ' + str(path))
 
 
+def prepare_release(archive, revision, digest):
+    """Extract a previously validated archive and prepare its immutable venv.
+
+    Call validate_archive and verify SHA-256 before calling this helper.
+    """
+    release = BASE / 'releases' / revision
+    marker = release / '.deployment-sha256'
+    if release.is_symlink():
+        raise ValueError('Pinned release directory must not be a symlink.')
+    if release.exists():
+        if not marker.is_file() or marker.read_text().strip() != digest:
+            raise ValueError('Existing release is incomplete or differs; inspect it, do not overwrite it.')
+    else:
+        release.mkdir(parents=True, mode=0o755)
+        # All members were validated above; avoid adopting archive ownership/modes.
+        with tarfile.open(archive, 'r:gz') as source:
+            for member in source.getmembers():
+                destination = release / member.name
+                if member.isdir():
+                    destination.mkdir(parents=True, exist_ok=True, mode=0o755)
+                else:
+                    destination.parent.mkdir(parents=True, exist_ok=True, mode=0o755)
+                    with source.extractfile(member) as src, destination.open('wb') as dst:
+                        shutil.copyfileobj(src, dst)
+                    destination.chmod(0o644)
+        run(sys.executable, '-m', 'venv', str(release / '.venv'))
+        run(str(release / '.venv/bin/python'), '-m', 'pip', 'install', '--disable-pip-version-check',
+            '-r', str(release / 'requirements.txt'))
+        marker.write_text(digest + '\n')
+    return release
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--archive', type=Path)
     parser.add_argument('--sha256')
     parser.add_argument('--revision', default=COMMIT, help='Full pinned Git commit for this release.')
-    parser.add_argument('--host', default='boji.tensorbot.xyz', help='Canonical ASCII FQDN or IPv4 address.')
+    parser.add_argument('--host', default='www.leanschool.net', help='Canonical ASCII FQDN or IPv4 address.')
     parser.add_argument('--http-port', type=int, default=80)
     parser.add_argument('--redirect-ip', help='Optional IPv4 host on port 80 to redirect to the canonical domain.')
     parser.add_argument('--render-only', type=Path, help='Render templates locally, without server changes.')
@@ -264,30 +296,7 @@ def main():
         path.mkdir(parents=True, exist_ok=True)
         os.chown(path, account.pw_uid, account.pw_gid)
         os.chmod(path, 0o700)
-    release = BASE / 'releases' / args.revision
-    marker = release / '.deployment-sha256'
-    if release.is_symlink():
-        raise ValueError('Pinned release directory must not be a symlink.')
-    if release.exists():
-        if not marker.is_file() or marker.read_text().strip() != digest:
-            raise ValueError('Existing release is incomplete or differs; inspect it, do not overwrite it.')
-    else:
-        release.mkdir(parents=True, mode=0o755)
-        # All members were validated above; avoid adopting archive ownership/modes.
-        with tarfile.open(args.archive, 'r:gz') as source:
-            for member in source.getmembers():
-                destination = release / member.name
-                if member.isdir():
-                    destination.mkdir(parents=True, exist_ok=True, mode=0o755)
-                else:
-                    destination.parent.mkdir(parents=True, exist_ok=True, mode=0o755)
-                    with source.extractfile(member) as src, destination.open('wb') as dst:
-                        shutil.copyfileobj(src, dst)
-                    destination.chmod(0o644)
-        run(sys.executable, '-m', 'venv', str(release / '.venv'))
-        run(str(release / '.venv/bin/python'), '-m', 'pip', 'install', '--disable-pip-version-check',
-            '-r', str(release / 'requirements.txt'))
-        marker.write_text(digest + '\n')
+    release = prepare_release(args.archive, args.revision, digest)
     run(str(release / '.venv/bin/python'), '-c', 'from PIL import Image; import sqlite3')
     snapshots = {path: (path.read_bytes(), path.stat().st_mode & 0o777) if path.exists() else None
                  for path in (UNIT, ENV, CONF)}
