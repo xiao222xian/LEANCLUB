@@ -1,0 +1,119 @@
+{
+  "checked_at": "2026-10-22T20:58:02.511687+08:00",
+  "method": "GET via direct HTTP; no redirect following; no cookie/session persistence; no JavaScript execution; no POST",
+  "base": "http://boji.tensorbot.xyz",
+  "results": [
+    {
+      "path": "/",
+      "status": 200,
+      "content_type": "text/html",
+      "bytes": 29087,
+      "title": "Lean Club · 薄肌俱乐部"
+    },
+    {
+      "path": "/city-vote",
+      "status": 200,
+      "content_type": "text/html",
+      "bytes": 7123,
+      "title": "第一站，你来定。— Lean Club"
+    },
+    {
+      "path": "/admin",
+      "status": 200,
+      "content_type": "text/html",
+      "bytes": 16483,
+      "title": "内容管理 · Lean Club"
+    },
+    {
+      "path": "/api/club/health",
+      "status": 200,
+      "content_type": "application/json; charset=utf-8",
+      "bytes": 16,
+      "json": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "/api/campaign",
+      "status": 200,
+      "content_type": "application/json; charset=utf-8",
+      "bytes": 737,
+      "json": {
+        "vote": null,
+        "canChange": true,
+        "cities": [
+          {
+            "id": "shenzhen",
+            "name": "深圳",
+            "posterUrl": "/city-vote/assets/alan-v1/shenzhen.webp",
+            "posterMobileUrl": "/city-vote/assets/alan-v1/shenzhen-640.webp",
+            "positionX": 50,
+            "positionY": 45,
+            "isDefault": true,
+            "updatedAt": null
+          },
+          {
+            "id": "zhuhai",
+            "name": "珠海",
+            "posterUrl": "/city-vote/assets/alan-v1/zhuhai.webp",
+            "posterMobileUrl": "/city-vote/assets/alan-v1/zhuhai-640.webp",
+            "positionX": 50,
+            "positionY": 0,
+            "isDefault": true,
+            "updatedAt": null
+          },
+          {
+            "id": "guangzhou",
+            "name": "广州",
+            "posterUrl": "/city-vote/assets/alan-v1/guangzhou.webp",
+            "posterMobileUrl": "/city-vote/assets/alan-v1/guangzhou-640.webp",
+            "positionX": 65,
+            "positionY": 45,
+            "isDefault": true,
+            "updatedAt": null
+          }
+        ]
+      }
+    },
+    {
+      "path": "/api/admin/session",
+      "status": 200,
+      "content_type": "application/json; charset=utf-8",
+      "bytes": 72,
+      "json": {
+        "authenticated": false,
+        "setupRequired": true,
+        "setupAvailable": false
+      }
+    },
+    {
+      "path": "/city-vote/assets/alan-v1/shenzhen.webp",
+      "status": 200,
+      "content_type": "image/webp",
+      "bytes": 254110,
+      "sha256": "2c3e21a3b7620dfe2e085ca487ba958a34bdf943a39df16c49967099e72a3a57",
+      "matches_local_asset": true
+    },
+    {
+      "path": "/city-vote/assets/alan-v1/zhuhai-640.webp",
+      "status": 200,
+      "content_type": "image/webp",
+      "bytes": 166930,
+      "sha256": "67ac2b3d7f34ffd069773a278cdc344e05ffef973a0dc7ac4dff762ea10d8d2f",
+      "matches_local_asset": true
+    },
+    {
+      "path": "/city-vote/assets/alan-v1/guangzhou.webp",
+      "status": 200,
+      "content_type": "image/webp",
+      "bytes": 283964,
+      "sha256": "41bf447a8022c5abc1fdcd4e3f347ce6f84b74434a9a12f1dc23ffbf3a6c98a2",
+      "matches_local_asset": true
+    }
+  ],
+  "ip_redirect": {
+    "status": 301,
+    "location": "http://boji.tensorbot.xyz/city-vote?from=ip-check"
+  },
+  "scope_note": "Only GET requests; no JavaScript, POST, login, vote or notification. GET campaign creates an anonymous visitor and rate-limit state; vote=null is this request only, not a global tally."
+}

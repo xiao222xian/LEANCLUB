@@ -1,0 +1,91 @@
+{
+  "timestamp": "2026-10-22T21:19:58.626441+08:00",
+  "method": "GET; direct no proxy; no redirects; no cookies; no JavaScript; no login/votes/notifications; campaign/session endpoints not requested",
+  "checks": [
+    {
+      "name": "home",
+      "url": "http://boji.tensorbot.xyz/",
+      "status": 200,
+      "content_type": "text/html",
+      "bytes": 29087,
+      "title": "Lean Club · 薄肌俱乐部"
+    },
+    {
+      "name": "city_vote",
+      "url": "http://boji.tensorbot.xyz/city-vote",
+      "status": 200,
+      "content_type": "text/html",
+      "bytes": 7123,
+      "title": "第一站，你来定。— Lean Club"
+    },
+    {
+      "name": "admin_page",
+      "url": "http://boji.tensorbot.xyz/admin",
+      "status": 200,
+      "content_type": "text/html",
+      "bytes": 16483,
+      "title": "内容管理 · Lean Club"
+    },
+    {
+      "name": "health",
+      "url": "http://boji.tensorbot.xyz/api/club/health",
+      "status": 200,
+      "content_type": "application/json; charset=utf-8",
+      "bytes": 16,
+      "body": {
+        "status": "ok"
+      }
+    },
+    {
+      "name": "ip_redirect",
+      "url": "http://152.136.108.87/city-vote?from=retirement-check",
+      "status": 301,
+      "content_type": "text/html",
+      "bytes": 178,
+      "location": "http://boji.tensorbot.xyz/city-vote?from=retirement-check"
+    },
+    {
+      "name": "retired_domain",
+      "url": "http://152.136.108.87/",
+      "status": 404,
+      "content_type": "text/html",
+      "bytes": 146,
+      "host_header": "omniroute.tensorbot.xyz"
+    },
+    {
+      "name": "unknown_host",
+      "url": "http://152.136.108.87/",
+      "status": 404,
+      "content_type": "text/html",
+      "bytes": 146,
+      "host_header": "unconfigured.invalid"
+    },
+    {
+      "name": "shenzhen.webp",
+      "url": "http://boji.tensorbot.xyz/city-vote/assets/alan-v1/shenzhen.webp",
+      "status": 200,
+      "content_type": "image/webp",
+      "bytes": 254110,
+      "sha256": "2c3e21a3b7620dfe2e085ca487ba958a34bdf943a39df16c49967099e72a3a57",
+      "matches_local": true
+    },
+    {
+      "name": "zhuhai-640.webp",
+      "url": "http://boji.tensorbot.xyz/city-vote/assets/alan-v1/zhuhai-640.webp",
+      "status": 200,
+      "content_type": "image/webp",
+      "bytes": 166930,
+      "sha256": "67ac2b3d7f34ffd069773a278cdc344e05ffef973a0dc7ac4dff762ea10d8d2f",
+      "matches_local": true
+    },
+    {
+      "name": "guangzhou.webp",
+      "url": "http://boji.tensorbot.xyz/city-vote/assets/alan-v1/guangzhou.webp",
+      "status": 200,
+      "content_type": "image/webp",
+      "bytes": 283964,
+      "sha256": "41bf447a8022c5abc1fdcd4e3f347ce6f84b74434a9a12f1dc23ffbf3a6c98a2",
+      "matches_local": true
+    }
+  ]
+}

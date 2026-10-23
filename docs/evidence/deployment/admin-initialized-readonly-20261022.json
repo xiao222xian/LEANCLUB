@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-10-22T21:25:02.407529+08:00",
+  "url": "http://boji.tensorbot.xyz/api/admin/session",
+  "method": "single GET; direct no proxy; no login; no cookies retained or recorded; no credentials, votes or notifications",
+  "status": 200,
+  "body": {
+    "authenticated": false,
+    "setupRequired": false,
+    "setupAvailable": false
+  }
+}

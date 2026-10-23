@@ -1,12 +1,14 @@
 # bojizhuye
 
-Lean Club 薄肌社群主页、三城线下活动投票与内容管理。当前开发仓库：[papaoo/bojizhuye](https://github.com/papaoo/bojizhuye)，基于 [xiao222xian/LEANCLUB](https://github.com/xiao222xian/LEANCLUB) 继续开发，保留上游历史与素材来源。
+Lean Club 薄肌社群主页、三城线下活动投票与内容管理。开发代码同步至 [xiao222xian/LEANCLUB](https://github.com/xiao222xian/LEANCLUB) 与 [papaoo/bojizhuye](https://github.com/papaoo/bojizhuye)，保留原始仓库历史与素材来源。
 
 本项目试运行：[主页](http://boji.tensorbot.xyz/) · [三城投票](http://boji.tensorbot.xyz/city-vote)。当前生产版本为 `4499b018296c26cee6e0b2d728241ba2149835d0`，2026-10-22 22:44从首次部署的 `cb66b6a` 升级，仍使用 HTTP，SSL 由用户申请。升级前完成私密SQLite备份，原有账号、统计、海报与机器人配置保留；安装器健康及域名路由检查通过，独立公网检查确认投票与管理的六份HTML/CSS/JS与固定源码包字节一致。公网真实管理登录及飞书设置页面此前已通过，完整业务与真机验收仍待完成。部署状态、验证范围及恢复记录见[部署记录](docs/deployment-152-136-108-87.md)。下方 `leanmuscleclub.com` 为上游参考网站，并非本轮发布地址。
 
 “有个想法”意见入口、后台意见箱及飞书意见提醒已随本轮版本部署，行为、接口与隐私范围见[意见箱说明](docs/feedback.md)。已提交一条明确标注的上线验收意见，实际通知投递正在核对；本地验证及生产核对范围见[意见箱验收记录](docs/feedback-qa-20261022.md)。
 
 2026-10-23 新增付费活动报名开发版：投票页“线下见”入口、活动与票价管理、待支付订单、支付后电子票及现场核销。127项Python测试和前端状态回归通过，本地隔离浏览器完成合成出票与核销；真实收款渠道尚待选择，未配置时禁止下单，未付款不能取得有效入场码。设计和边界见[活动方案](docs/events-plan.md)、[接口契约](docs/events-api-contract.md)、[联调记录](docs/events-qa-20261023.md)。线上仍为上述意见箱版本。
+
+数据库同步按用户指定仅包含本地运行库和上传海报，使用认证加密文件保存；解密密钥留在本机，不进入Git。本次已验证数据与海报恢复一致，见[本地库备份及校验](backups/README.md)与[恢复方法](docs/database-backup.md)。它不代表线上数据或活动QA测试数据。
 
 <a href="https://leanmuscleclub.com/">
   <img src="docs/assets/home-desktop.png" width="100%" alt="Lean Club 真实首页：学校搜索、加入入口与高校标识滚动栏" />
