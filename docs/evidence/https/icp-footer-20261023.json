@@ -1,0 +1,30 @@
+{
+  "/": {
+    "status": 200,
+    "number": true,
+    "link": true,
+    "footerCount": 1
+  },
+  "/city-vote": {
+    "status": 200,
+    "number": true,
+    "link": true,
+    "footerCount": 1
+  },
+  "/schools": {
+    "status": 200,
+    "number": true,
+    "link": true,
+    "footerCount": 1
+  },
+  "/join": {
+    "status": 200,
+    "number": true,
+    "link": true,
+    "footerCount": 1
+  },
+  "/site-filing.css?v=20261023-icp1": {
+    "status": 200,
+    "css": true
+  }
+}

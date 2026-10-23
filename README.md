@@ -1,8 +1,10 @@
 # bojizhuye
 
+2026-10-23：生产4499b01之上已部署[备案号静态补丁](docs/icp-footer-20261023.md)，公开页面展示备案号与工信部链接；微信访问恢复仍待审核。
+
 Lean Club 薄肌社群主页、三城线下活动投票与内容管理。开发代码同步至 [xiao222xian/LEANCLUB](https://github.com/xiao222xian/LEANCLUB) 与 [papaoo/bojizhuye](https://github.com/papaoo/bojizhuye)，保留原始仓库历史与素材来源。
 
-本项目试运行：[主页](http://boji.tensorbot.xyz/) · [三城投票](http://boji.tensorbot.xyz/city-vote)。当前生产版本为 `4499b018296c26cee6e0b2d728241ba2149835d0`，2026-10-22 22:44从首次部署的 `cb66b6a` 升级，仍使用 HTTP，SSL 由用户申请。升级前完成私密SQLite备份，原有账号、统计、海报与机器人配置保留；安装器健康及域名路由检查通过，独立公网检查确认投票与管理的六份HTML/CSS/JS与固定源码包字节一致。公网真实管理登录及飞书设置页面此前已通过，完整业务与真机验收仍待完成。部署状态、验证范围及恢复记录见[部署记录](docs/deployment-152-136-108-87.md)。下方 `leanmuscleclub.com` 为上游参考网站，并非本轮发布地址。
+本项目试运行：[主页](https://boji.tensorbot.xyz/) · [三城投票](https://boji.tensorbot.xyz/city-vote)。当前生产版本为 `4499b018296c26cee6e0b2d728241ba2149835d0`，2026-10-22 22:44从首次部署的 `cb66b6a` 升级，2026-10-23已使用用户证书启用HTTPS，HTTP自动跳转，公网后台登录通过。升级前完成私密SQLite备份，原有账号、统计、海报与机器人配置保留；安装器健康及域名路由检查通过，独立公网检查确认投票与管理的六份HTML/CSS/JS与固定源码包字节一致。公网真实管理登录及飞书设置页面此前已通过，完整业务与真机验收仍待完成。部署状态、验证范围及恢复记录见[部署记录](docs/deployment-152-136-108-87.md)。下方 `leanmuscleclub.com` 为上游参考网站，并非本轮发布地址。
 
 “有个想法”意见入口、后台意见箱及飞书意见提醒已随本轮版本部署，行为、接口与隐私范围见[意见箱说明](docs/feedback.md)。已提交一条明确标注的上线验收意见，实际通知投递正在核对；本地验证及生产核对范围见[意见箱验收记录](docs/feedback-qa-20261022.md)。
 
@@ -88,3 +90,5 @@ python -m unittest discover -s tests -v
   <strong>Lean body. Strong mind.</strong><br />
   <sub>多运动。多思考。做有复利的事。</sub>
 </p>
+
+2026-10-23：已启用HTTPS、HTTP/IP自动跳转和HTTPS后台登录，生产版本仍4499b01；[证书路径、有效期与回退记录](docs/https-20261023.md)。
