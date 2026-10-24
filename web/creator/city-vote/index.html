@@ -9,10 +9,10 @@
   <title>第一站，你来定。— LEAN SCHOOL</title>
   <link rel="icon" type="image/svg+xml" href="/assets/brand/leanschool-icon-v1.svg?v=20261025-size2">
   <link rel="stylesheet" href="/city-vote/style.css?v=20261023-events-v1">
-  <link rel="stylesheet" href="/group-invite.css?v=20261024-group1">
-  <script src="/group-invite.js?v=20261024-group1" defer></script>
-  <script src="/city-vote/group-invite.js?v=20261024-group1" defer></script>
-  <script src="/city-vote/app.js?v=20261024-group1" defer></script>
+  <link rel="stylesheet" href="/group-invite.css?v=20261025-speed2">
+  <script src="/group-invite.js?v=20261025-speed2" defer></script>
+  <script src="/city-vote/group-invite.js?v=20261025-speed2" defer></script>
+  <script src="/city-vote/app.js?v=20261025-speed2" defer></script>
   <script src="/city-vote/comments.js?v=20261024-comments-v3" defer></script>
 <link rel="stylesheet" href="/site-filing.css?v=20261023-icp1">
   <link rel="stylesheet" href="/city-vote/comments.css?v=20261024-comments-v2">
@@ -42,7 +42,7 @@
 
   <div class="stage" id="stage" role="region" aria-label="选择首次线下活动的城市">
     <section class="city is-active" data-city="shenzhen" aria-labelledby="name-shenzhen" id="city-shenzhen">
-      <div class="photo-wrap"><img class="city-photo" src="/city-vote/assets/alan-v1/shenzhen.webp" srcset="/city-vote/assets/alan-v1/shenzhen-640.webp 640w, /city-vote/assets/alan-v1/shenzhen.webp 941w" sizes="(max-width: 800px) 100vw, 34vw" width="941" height="1672" alt="深圳湾与春笋建筑前的薄肌站姿人像，概念摄影" fetchpriority="high" decoding="async"></div>
+      <div class="photo-wrap"><img class="city-photo" data-fallback-src="/city-vote/assets/alan-v1/shenzhen.webp" data-fallback-srcset="/city-vote/assets/alan-v1/shenzhen-640.webp 640w, /city-vote/assets/alan-v1/shenzhen.webp 941w" sizes="(max-width: 800px) 100vw, 34vw" width="941" height="1672" alt="深圳湾与春笋建筑前的薄肌站姿人像，概念摄影" fetchpriority="high" decoding="async"></div>
       <div class="shade" aria-hidden="true"></div>
       <div class="city-content">
         <p class="mobile-theme" aria-hidden="true">第一站，你来定。</p>
@@ -54,7 +54,7 @@
       </div>
     </section>
     <section class="city" data-city="zhuhai" aria-labelledby="name-zhuhai" id="city-zhuhai">
-      <div class="photo-wrap"><img class="city-photo" src="/city-vote/assets/alan-v1/zhuhai.webp" srcset="/city-vote/assets/alan-v1/zhuhai-640.webp 640w, /city-vote/assets/alan-v1/zhuhai.webp 941w" sizes="(max-width: 800px) 100vw, 34vw" width="941" height="1672" alt="珠海日月贝与海面前的薄肌站姿人像，概念摄影" decoding="async"></div>
+      <div class="photo-wrap"><img class="city-photo" data-fallback-src="/city-vote/assets/alan-v1/zhuhai.webp" data-fallback-srcset="/city-vote/assets/alan-v1/zhuhai-640.webp 640w, /city-vote/assets/alan-v1/zhuhai.webp 941w" sizes="(max-width: 800px) 100vw, 34vw" width="941" height="1672" alt="珠海日月贝与海面前的薄肌站姿人像，概念摄影" decoding="async"></div>
       <div class="shade" aria-hidden="true"></div>
       <div class="city-content">
         <p class="mobile-theme" aria-hidden="true">第一站，你来定。</p>
@@ -66,7 +66,7 @@
       </div>
     </section>
     <section class="city" data-city="guangzhou" aria-labelledby="name-guangzhou" id="city-guangzhou">
-      <div class="photo-wrap"><img class="city-photo" src="/city-vote/assets/alan-v1/guangzhou.webp" srcset="/city-vote/assets/alan-v1/guangzhou-640.webp 640w, /city-vote/assets/alan-v1/guangzhou.webp 941w" sizes="(max-width: 800px) 100vw, 34vw" width="941" height="1672" alt="广州塔与珠江夜色前的薄肌站姿人像，概念摄影" decoding="async"></div>
+      <div class="photo-wrap"><img class="city-photo" data-fallback-src="/city-vote/assets/alan-v1/guangzhou.webp" data-fallback-srcset="/city-vote/assets/alan-v1/guangzhou-640.webp 640w, /city-vote/assets/alan-v1/guangzhou.webp 941w" sizes="(max-width: 800px) 100vw, 34vw" width="941" height="1672" alt="广州塔与珠江夜色前的薄肌站姿人像，概念摄影" decoding="async"></div>
       <div class="shade" aria-hidden="true"></div>
       <div class="city-content">
         <p class="mobile-theme" aria-hidden="true">第一站，你来定。</p>
@@ -81,7 +81,7 @@
 
   <div class="danmaku-band" id="danmaku-band" aria-hidden="true"></div>
   <div class="conversation-entry">
-    <button class="group-invite-entry" id="open-group-invite" type="button" aria-haspopup="dialog" hidden>加入活动群 ↗</button>
+    <button class="group-invite-entry" id="open-group-invite" type="button" aria-haspopup="dialog" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h6v6H3zm12 0h6v6h-6zM3 15h6v6H3zm12 0h3v3h-3zm3 3h3v3h-3zM12 3v3m0 6h3m-3 3v6m6-9h3"/></svg><span class="group-entry-label">加入活动微信群</span><span class="group-entry-arrow" aria-hidden="true">↗</span></button>
     <a href="#conversation">一起聊聊 <span aria-hidden="true">↘</span></a>
     <button id="danmaku-toggle" type="button" aria-pressed="true" aria-label="关闭弹幕">弹幕 <span aria-hidden="true">开</span></button>
   </div>
@@ -145,7 +145,7 @@
   <noscript><p class="no-script">开启 JavaScript 后可浏览城市并投票。</p></noscript>
 
   <dialog class="confirm-dialog" id="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-eyebrow">
-    <div class="confirm-art" aria-hidden="true"><img id="confirm-photo" src="/city-vote/assets/alan-v1/shenzhen.webp" alt=""><div class="confirm-shade"></div></div>
+    <div class="confirm-art" aria-hidden="true"><img id="confirm-photo" alt=""><div class="confirm-shade"></div></div>
     <div class="confirm-content">
       <div class="confirm-brand" aria-hidden="true"><img src="/city-vote/assets/lean-emblem.svg?v=20261023-leanschool" alt="" width="36" height="24"><span>LEAN SCHOOL</span></div>
       <p class="confirm-eyebrow" id="confirm-eyebrow">第一站，就在</p>
@@ -160,7 +160,7 @@
   </dialog>
 
   <dialog class="feedback-dialog" id="feedback-dialog" aria-labelledby="feedback-title">
-    <div class="feedback-art" aria-hidden="true"><img id="feedback-photo" src="/city-vote/assets/alan-v1/shenzhen.webp" alt=""></div>
+    <div class="feedback-art" aria-hidden="true"><img id="feedback-photo" alt=""></div>
     <button class="feedback-close" id="close-feedback" type="button" aria-label="关闭意见箱"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
     <div class="feedback-shell">
       <div class="feedback-brand"><img src="/city-vote/assets/lean-emblem.svg?v=20261023-leanschool" alt="" width="36" height="24"><span>LEAN SCHOOL <i>/</i> 意见箱 · 仅团队查看</span></div>

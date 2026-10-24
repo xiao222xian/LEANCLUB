@@ -62,7 +62,7 @@ class CampaignGroups:
 
     def active(self):
         with self.store.connect() as db:
-            row = db.execute('SELECT g.* FROM campaign_groups g JOIN campaign_group_config c ON c.active_id=g.id WHERE g.expires IS NULL OR g.expires>?', (int(self.store.clock()),)).fetchone()
+            row = db.execute('SELECT g.id,g.image_version,g.expires FROM campaign_groups g JOIN campaign_group_config c ON c.active_id=g.id WHERE g.expires IS NULL OR g.expires>?', (int(self.store.clock()),)).fetchone()
         if not row:
             return None
         return {'id': row['id'], 'imageVersion': row['image_version'], 'expiresAt': row['expires'],
@@ -80,13 +80,16 @@ class CampaignGroups:
              'imageUrl': '/api/admin/group-qrs/%s/image?v=%s' % (r['id'], r['image_version']),
              'views': counts.get((r['id'], 'view'), 0), 'saves': counts.get((r['id'], 'save'), 0)} for r in rows]}
 
-    def media(self, group_id, version=None, private=False):
+    def media(self, group_id, version=None, private=False, with_cache=False):
         with self.store.connect() as db:
             row = db.execute('SELECT * FROM campaign_groups WHERE id=?', (group_id,)).fetchone()
             active = db.execute('SELECT active_id FROM campaign_group_config').fetchone()[0]
         if not row or (not private and (active != group_id or str(row['image_version']) != version or row['expires'] is not None and row['expires'] <= self.store.clock())):
             raise Problem(404, '二维码已更新或暂未开放。')
-        return row['image']
+        ttl = 0 if private else 30
+        if row['expires'] is not None:
+            ttl = min(ttl, max(0, int(row['expires'] - self.store.clock())))
+        return (row['image'], ttl) if with_cache else row['image']
 
     def save(self, data, actor):
         action = data.get('action')

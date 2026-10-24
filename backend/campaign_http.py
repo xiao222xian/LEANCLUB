@@ -1,5 +1,6 @@
 """HTTP boundary for the standalone campaign module; no frontend file access."""
 import hmac
+import hashlib
 from http.cookies import SimpleCookie, CookieError
 import json
 import re
@@ -168,16 +169,22 @@ class CampaignAPI:
                 self.admin(handler)
             else:
                 self.store.limit(handler.ip(), 'group-qr-image', 120, 60)
-            raw = self.store.groups.media((private_qr or public_qr)[1], public_qr[2] if public_qr else None, private=bool(private_qr))
-            handler.send_response(200)
+            raw, ttl = self.store.groups.media((private_qr or public_qr)[1], public_qr[2] if public_qr else None, private=bool(private_qr), with_cache=True)
+            etag = '"' + hashlib.sha256(raw).hexdigest() + '"'
+            unchanged = bool(public_qr) and handler.headers.get('If-None-Match') == etag
+            handler.send_response(304 if unchanged else 200)
             handler.send_header('Content-Type', 'image/png')
-            handler.send_header('Content-Length', str(len(raw)))
-            handler.send_header('Cache-Control', 'no-store')
+            if not unchanged:
+                handler.send_header('Content-Length', str(len(raw)))
+            handler.send_header('Cache-Control', 'no-store' if private_qr else f'public, max-age={ttl}, must-revalidate')
+            if public_qr:
+                handler.send_header('ETag', etag)
             handler.send_header('Content-Disposition', 'inline; filename="lean-school-group.png"')
             handler.send_header('X-Content-Type-Options', 'nosniff')
             handler.send_header('Cross-Origin-Resource-Policy', 'same-origin')
             handler.end_headers()
-            handler.wfile.write(raw)
+            if not unchanged:
+                handler.wfile.write(raw)
             return
         if path == '/api/directory':
             self.store.limit(handler.ip(), 'directory-read', 180, 60)
@@ -225,7 +232,7 @@ class CampaignAPI:
         if path == '/api/campaign':
             self.store.limit(handler.ip(), 'campaign-read', 120, 60)
             visitor = self.visitor(handler)
-            return handler.send_json(200, dict(self.store.vote_state(visitor, handler.ip()), cities=self.store.cities()))
+            return handler.send_json(200, dict(self.store.vote_state(visitor, handler.ip()), cities=self.store.cities(), group=self.store.groups.active()))
         if path == '/api/admin/session':
             self.store.limit(handler.ip(), 'session-read', 120, 60)
             session = self.store.session(self.cookie(handler, SESSION_COOKIE)) or {'authenticated': False}
@@ -344,7 +351,7 @@ class CampaignAPI:
             except IPVoteConflict as exc:
                 return handler.send_json(409, {'error': exc.message, 'code': 'IP_ALREADY_VOTED',
                                                'vote': exc.vote, 'canChange': False})
-            return handler.send_json(200, self.store.vote_state(visitor, handler.ip()))
+            return handler.send_json(200, dict(self.store.vote_state(visitor, handler.ip()), group=self.store.groups.active()))
         if path == '/api/analytics/page':
             data = self.json_body(handler)
             self.store.limit(handler.ip(), 'analytics', 180, 60)

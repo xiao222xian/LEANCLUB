@@ -144,6 +144,8 @@ def deploy(record_path, config_dir, skip_data_backup=False):
                     raise ValueError('Legacy database backup invalid')
         shutil.copyfile(config_dir / 'edge-proxy.conf', PROXY)
         shutil.copyfile(config_dir / 'edge.nginx.conf', CONFIG)
+        Path('/var/cache/nginx/lean-public-media').mkdir(parents=True, exist_ok=True)
+        Path('/var/cache/nginx/lean-group-qr').mkdir(parents=True, exist_ok=True)
         run(['nginx', '-t'])
         symlink(stage, BASE / 'current')
         run(['systemctl', 'reload', 'nginx'])

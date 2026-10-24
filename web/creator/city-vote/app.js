@@ -26,6 +26,7 @@
   let active = cities.includes(queryCity) ? queryCity : 'shenzhen';
   let pending = null;
   let chosen = null;
+  let savedGroup;
   let canChange = true;
   let ready = false;
   let initialCampaign = true;
@@ -152,8 +153,11 @@
       const full = safeImagePath(item.posterUrl);
       const small = safeImagePath(item.posterMobileUrl);
       if (full) {
-        image.src = full;
-        image.srcset = small ? `${small} 640w, ${full} 941w` : '';
+        const sources = small ? `${small} 640w, ${full} 941w` : '';
+        image.fetchPriority = item.id === active ? 'high' : 'low';
+        image.loading = item.id === active || !mobile.matches ? 'eager' : 'lazy';
+        if (image.getAttribute('srcset') !== sources) image.setAttribute('srcset', sources);
+        if (image.getAttribute('src') !== full) image.src = full;
       }
       const x = Number(item.positionX), y = Number(item.positionY);
       if (Number.isFinite(x) && x >= 0 && x <= 100) panel.style.setProperty('--poster-x', `${x}%`);
@@ -181,15 +185,20 @@
     campaignLoadPromise = (async () => {
       try {
         const data = await api('/api/campaign');
-        applyPosters(data.cities);
         acceptVoteState(data);
         if (initialCampaign && chosen && !cities.includes(queryCity)) active = chosen;
+        applyPosters(data.cities);
+        window.dispatchEvent(new CustomEvent('lean:campaign-ready', { detail: { group: data.group } }));
         initialCampaign = false;
         ready = true;
         campaignIdentityReady = true;
       } catch (error) {
         ready = false;
         errorMessage = error.message;
+        for (const image of document.querySelectorAll('.city-photo:not([src])')) {
+          image.srcset = image.dataset.fallbackSrcset;
+          image.src = image.dataset.fallbackSrc;
+        }
       } finally {
         loading = false;
         render();
@@ -212,6 +221,8 @@
     const previous = panels.find(panel => panel.dataset.city === active);
     const focusInside = previous.contains(document.activeElement);
     active = city;
+    const image = panels.find(p => p.dataset.city === city).querySelector('.city-photo');
+    image.loading = 'eager'; image.fetchPriority = 'high';
     pending = null;
     render();
     if (mobile.matches && (focusTab || focusInside)) tabs.find(tab => tab.dataset.tab === city).focus({ preventScroll: true });
@@ -248,6 +259,7 @@
       const result = await api('/api/campaign/vote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ city }) });
       if (!cities.includes(result.vote?.city)) throw new Error('暂时无法确认结果，请重试或刷新后查看。');
       acceptVoteState(result);
+      savedGroup = result.group;
       const panel = panels.find(p => p.dataset.city === chosen);
       panel.classList.remove('is-confirmed');
       requestAnimationFrame(() => panel.classList.add('is-confirmed'));
@@ -457,7 +469,7 @@
     else if (mobile.matches) tabs.find(t => t.dataset.tab === active)?.focus({ preventScroll: true });
     else infoButton.focus({ preventScroll: true });
     if (confirmDialog.returnValue !== 'saved') announce(chosen ? `已返回选择，仍保留${names[chosen]}。` : '已返回选择，尚未投票。');
-    else window.dispatchEvent(new Event('lean:vote-saved'));
+    else window.dispatchEvent(new CustomEvent('lean:vote-saved', { detail: { group: savedGroup } }));
   });
   document.querySelector('#retry-connection').addEventListener('click', loadCampaign);
   // Both public comments and private feedback share the campaign visitor cookie.

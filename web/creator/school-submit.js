@@ -4,6 +4,18 @@
   const form = $('#entry-form'), f = form.elements, params = new URLSearchParams(location.search);
   let key = new URLSearchParams(location.hash.slice(1)).get('edit') || '', revision = 0, qr = '', busy = false, current = null, schoolId = null, alias = '', timer, suggestionVersion = 0;
   const initialSchool = params.get('schoolName') || '';
+  // Suggestions assist typing; the submitted country is always free text.
+  if (typeof Intl.DisplayNames === 'function') {
+    const zh = new Intl.DisplayNames(['zh-CN'], { type: 'region' });
+    const en = new Intl.DisplayNames(['en'], { type: 'region' });
+    const common = ['CN', 'GB', 'US', 'CA', 'AU', 'NZ', 'SG', 'HK', 'MO', 'TW', 'JP', 'KR', 'DE', 'FR'];
+    const regions = 'AD AE AF AG AI AL AM AO AQ AR AS AT AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BV BW BY BZ CC CD CF CG CH CI CK CL CM CO CR CU CV CW CX CY CZ DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO GA GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO KE KG KH KI KM KN KP KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NF NG NI NL NO NP NR NU OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TZ UA UG UM UY UZ VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW'.split(' ');
+    const localName = code => ({ HK: '中国香港', MO: '中国澳门', TW: '中国台湾' }[code] || zh.of(code));
+    regions.sort((a, b) => localName(a).localeCompare(localName(b), 'zh-CN'));
+    $('#country-options').replaceChildren(...[...common, ...regions].map(code => {
+      const option = node('option'); option.value = localName(code); option.label = en.of(code) + (code === 'GB' ? ' / UK' : ' / ' + code); return option;
+    }));
+  }
   function message(selector, text = '') { $(selector).textContent = text; $(selector).hidden = !text; }
   function type(update = false) {
     const kind = f.kind.value;
@@ -64,12 +76,14 @@
   $('#entry-reload').addEventListener('click', load);
   f.schoolName.addEventListener('input', () => {
     schoolId = null; clearTimeout(timer); const version = ++suggestionVersion;
+    $('#entry-school-options').replaceChildren();
     if (f.schoolName.value.trim().length < 2) return;
     timer = setTimeout(async () => { try { const data = await window.LeanClubPortal.api('/leanclub/school/list?' + new URLSearchParams({ keyword: f.schoolName.value.trim(), pageNo: 1, pageSize: 8 })); if (version !== suggestionVersion) return; $('#entry-school-options').replaceChildren(...data.list.map(s => { const o = node('option'); o.value = s.name; o.dataset.id = s.id; return o; })); } catch { /* Suggestions never prevent a free-text submission. */ } }, 300);
   });
   f.schoolName.addEventListener('change', () => { const match = [...$('#entry-school-options').options].find(o => o.value === f.schoolName.value); schoolId = match ? Number(match.dataset.id) : null; });
+  f.country.addEventListener('input', () => { schoolId = null; suggestionVersion++; clearTimeout(timer); $('#entry-school-options').replaceChildren(); });
   f.kind.value = ['school', 'group', 'person'].includes(params.get('kind')) ? params.get('kind') : 'group';
-  f.name.value = params.get('name') || ''; f.schoolName.value = initialSchool; f.country.value = params.get('country') || '中国'; f.city.value = params.get('city') || '';
+  f.name.value = params.get('name') || ''; f.schoolName.value = initialSchool; f.country.value = params.get('country') || ''; f.city.value = params.get('city') || '';
   if (/^[1-9][0-9]*$/.test(params.get('schoolId') || '')) schoolId = Number(params.get('schoolId'));
-  type(true); if (initialSchool) $('.entry-more').open = true; if (key) load();
+  type(true); if (key) load();
 })();

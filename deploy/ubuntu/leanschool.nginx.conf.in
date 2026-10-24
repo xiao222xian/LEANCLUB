@@ -98,5 +98,10 @@ server {
         add_header Referrer-Policy strict-origin-when-cross-origin always;
         try_files $uri =404;
     }
+    location ~* \.(?:webp|png|jpe?g|svg|ico|woff2)$ {
+        expires 7d;
+        add_header X-Content-Type-Options nosniff always;
+        try_files $uri =404;
+    }
     location / { try_files $uri =404; }
 }

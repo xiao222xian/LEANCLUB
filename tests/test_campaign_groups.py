@@ -47,9 +47,12 @@ class GroupQRTests(unittest.TestCase):
         self.assertEqual(self.request('GET', '/api/campaign/group-qr/' + a + '/1')[0], 404)
         status, raw, headers = self.request('GET', public['imageUrl'])
         self.assertEqual(status, 200); self.assertTrue(raw.startswith(b'\x89PNG'))
-        self.assertIn(('Cache-Control', 'no-store'), headers)
+        self.assertIn(('Cache-Control', 'public, max-age=30, must-revalidate'), headers)
+        etag = dict(headers)['ETag']
+        self.assertEqual(self.request('GET', public['imageUrl'], headers={'If-None-Match': etag})[0], 304)
         self.assertEqual(self.write(action='disable')[0], 200)
         self.assertIsNone(self.request('GET', '/api/campaign/group-qr')[1]['group'])
+        self.assertEqual(self.request('GET', public['imageUrl'], headers={'If-None-Match': etag})[0], 404)
 
     def test_expiry_and_event_retry_do_not_count_as_group_members(self):
         self.setup_admin(); expires = int(self.store.clock()) + 100
@@ -72,6 +75,30 @@ class GroupQRTests(unittest.TestCase):
         self.assertEqual(self.write(action='save', id=group_id, label='替换图', image='data:image/png;base64,' + base64.b64encode(out.getvalue()).decode())[0], 200)
         self.assertEqual(self.request('GET', old_url)[0], 404)
         self.assertEqual(self.store.groups.active()['imageVersion'], 2)
+
+    def test_vote_response_carries_current_group_without_followup_read(self):
+        self.setup_admin()
+        a = self.add('A'); b = self.add('B')
+        self.write(action='activate', id=a)
+        initial = self.request('GET', '/api/campaign')[1]
+        self.assertEqual(initial['group']['id'], a)
+        self.write(action='activate', id=b)
+        status, voted, _ = self.request('POST', '/api/campaign/vote', {'city': 'shenzhen'})
+        self.assertEqual(status, 200)
+        self.assertEqual(voted['group']['id'], b)
+        self.assertEqual(voted['vote']['city'], 'shenzhen')
+        self.write(action='disable')
+        self.assertIsNone(self.request('POST', '/api/campaign/vote', {'city': 'shenzhen'})[1]['group'])
+
+    def test_public_cache_cannot_outlive_expiry_and_private_preview_never_caches(self):
+        self.setup_admin()
+        now = int(self.store.clock())
+        self.store.clock = lambda: now
+        group_id = self.add(expiresAt=int(self.store.clock()) + 7)
+        self.write(action='activate', id=group_id)
+        public = self.store.groups.active()
+        self.assertIn(('Cache-Control', 'public, max-age=7, must-revalidate'), self.request('GET', public['imageUrl'])[2])
+        self.assertIn(('Cache-Control', 'no-store'), self.request('GET', '/api/admin/group-qrs/' + group_id + '/image')[2])
 
 
 if __name__ == '__main__': unittest.main()

@@ -40,6 +40,18 @@ class DirectoryHTTPTests(unittest.TestCase):
             self.assertEqual(status, 403)
         self.assertEqual(self.directory.listing(private=True), [])
 
+    def test_unlisted_uk_school_group_and_person_can_submit(self):
+        for kind in ('school', 'group', 'person'):
+            with self.subTest(kind=kind):
+                body = dict(self.body, editKey=secrets.token_urlsafe(32), profile=dict(
+                    self.body['profile'], kind=kind, country='United Kingdom', city='Southampton',
+                    name='Synthetic UK ' + kind, schoolName='Unlisted Test University', schoolId=None))
+                status, data, _ = self.request('POST', '/api/directory/submit', body)
+                self.assertEqual(status, 200)
+                self.assertEqual(data['profile']['country'], 'United Kingdom')
+                self.assertEqual(data['status'], 'pending')
+                self.assertIsNone(data['profile']['schoolId'])
+
     def test_bad_key_does_not_return_private_contact(self):
         self.request('POST', '/api/directory/submit', self.body)
         status, data, _ = self.request('POST', '/api/directory/manage', {'editKey': secrets.token_urlsafe(32)})
