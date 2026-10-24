@@ -108,6 +108,53 @@ class ReleaseGateTests(unittest.TestCase):
             self.assertIsNone(client.safe_failure(json.dumps(value)))
         self.assertIsNone(client.safe_failure('ssh: ' + self.request['token']))
 
+    def test_download_error_classification_never_reads_or_forwards_exception_text(self):
+        class DownloadFailure(Exception):
+            def __str__(self):
+                raise AssertionError('Original download exception text must not be read')
+        raw_secret = self.request['token'] + '\n::error::injected https://download.invalid/?signed=hidden'
+        for code in gate.FETCH_ERROR_CODES:
+            with self.subTest(code=code):
+                failure = DownloadFailure(raw_secret)
+                failure.code = code
+                with patch.object(gate, 'deadline', return_value=nullcontext()), \
+                        patch.object(gate, 'fetch_release', side_effect=failure), \
+                        patch.object(gate.subprocess, 'run') as child:
+                    with self.assertRaises(gate.GateError) as caught:
+                        gate.execute(dict(self.request), self.config, SimpleNamespace(FetchError=DownloadFailure))
+                    self.assertEqual(caught.exception.code, code)
+                    self.assertEqual(str(caught.exception), gate.SAFE_ERRORS[code][1])
+                    child.assert_not_called()
+                report = gate.error_report(caught.exception.code)
+                self.assertEqual(client.safe_failure(json.dumps(report)), report)
+                with patch.dict(client.os.environ, {'GITHUB_ACTIONS': 'true'}, clear=True), \
+                        patch('sys.stdout', new_callable=io.StringIO) as output:
+                    client.annotate_failure(report['errorCode'])
+                    self.assertIn(code + ': ' + client.SAFE_ERRORS[code][1], output.getvalue())
+                    self.assertNotIn(self.request['token'], output.getvalue())
+                    self.assertNotIn('download.invalid', output.getvalue())
+                    self.assertNotIn('injected', output.getvalue())
+
+    def test_download_unknown_or_forged_codes_fall_back_to_fetch_failure(self):
+        class DownloadFailure(Exception):
+            pass
+        sentinel = object()
+        for code in (sentinel, None, [], {'unsafe': True}, 403, True,
+                     self.request['token'] + '\n::error::injected', 'UNKNOWN_DOWNLOAD_FAILURE',
+                     'PUBLISH_FAILED_ROLLED_BACK', 'PREFLIGHT_FAILED', 'PLAN_REQUIRED'):
+            failure = DownloadFailure(self.request['token'])
+            if code is not sentinel:
+                failure.code = code
+            with patch.object(gate, 'deadline', return_value=nullcontext()), \
+                    patch.object(gate, 'fetch_release', side_effect=failure), \
+                    patch.object(gate.subprocess, 'run') as child:
+                with self.assertRaises(gate.GateError) as caught:
+                    gate.execute(dict(self.request), self.config, SimpleNamespace(FetchError=DownloadFailure))
+                self.assertEqual(caught.exception.code, 'BUILD_FETCH_FAILED')
+                self.assertEqual(str(caught.exception), gate.SAFE_ERRORS['BUILD_FETCH_FAILED'][1])
+                self.assertNotIn(self.request['token'], json.dumps(gate.error_report(caught.exception.code)))
+                child.assert_not_called()
+
     def test_child_error_uses_only_code_and_no_killing_timeout_or_token(self):
         manifest = {'commits': {'website': 'a' * 40}}
         fetcher = SimpleNamespace(FetchError=RuntimeError)
@@ -327,6 +374,58 @@ class ReleaseGateTests(unittest.TestCase):
                 self.assertEqual(client.main(), 1)
                 self.assertIn(expected, output.getvalue())
                 self.assertNotIn(self.request['token'], output.getvalue())
+
+    def test_actions_annotation_contains_only_fixed_failure_text(self):
+        environment = {'BUILD_RUN_ID': '12', 'RELEASE_MODE': 'plan', 'GH_TOKEN': self.request['token'],
+                       'DEPLOY_SSH_KEY': 'synthetic private key', 'DEPLOY_KNOWN_HOSTS': 'synthetic pinned host',
+                       'GITHUB_ACTIONS': 'true'}
+        forged = gate.error_report('PREFLIGHT_FAILED') | {'error': self.request['token'] + '\n::error::injected'}
+        cases = ((json.dumps(gate.error_report('PREFLIGHT_FAILED')), 'PREFLIGHT_FAILED'),
+                 (json.dumps(forged), 'SSH_CONNECTION_OR_PROTOCOL_FAILED'),
+                 ('ssh failed: ' + self.request['token'] + '\n::error::injected', 'SSH_CONNECTION_OR_PROTOCOL_FAILED'))
+        for stderr, code in cases:
+            with self.subTest(code=code), patch.dict(client.os.environ, environment, clear=True), \
+                    patch.object(client.subprocess, 'run', return_value=SimpleNamespace(returncode=1, stdout='', stderr=stderr)), \
+                    patch('sys.stdout', new_callable=io.StringIO) as output, \
+                    patch('sys.stderr', new_callable=io.StringIO) as error:
+                self.assertEqual(client.main(), 1)
+                message = client.SAFE_ERRORS[code][1] if code in client.SAFE_ERRORS else client.CLIENT_ERRORS[code]
+                self.assertEqual(output.getvalue(), '::error title=LEAN SCHOOL release::' + code + ': ' + message + '\n')
+                self.assertNotIn(self.request['token'], output.getvalue() + error.getvalue())
+                self.assertNotIn('injected', output.getvalue() + error.getvalue())
+
+    def test_annotations_are_actions_only_and_unknown_codes_are_not_echoed(self):
+        for value in (None, 'false', 'TRUE'):
+            env = {} if value is None else {'GITHUB_ACTIONS': value}
+            with patch.dict(client.os.environ, env, clear=True), patch('sys.stdout', new_callable=io.StringIO) as output:
+                client.annotate_failure('PREFLIGHT_FAILED')
+                self.assertEqual(output.getvalue(), '')
+        for code in (self.request['token'] + '\r\n::error::injected', [], None):
+            with patch.dict(client.os.environ, {'GITHUB_ACTIONS': 'true'}, clear=True), \
+                    patch('sys.stdout', new_callable=io.StringIO) as output:
+                client.annotate_failure(code)
+                self.assertEqual(output.getvalue(), '::error title=LEAN SCHOOL release::RELEASE_CLIENT_FAILED: '
+                                 + client.CLIENT_ERRORS['RELEASE_CLIENT_FAILED'] + '\n')
+
+    def test_workflow_command_escaping_handles_control_and_property_characters(self):
+        value = '%\r\n:title,body'
+        self.assertEqual(client.workflow_escape(value), '%25%0D%0A:title,body')
+        self.assertEqual(client.workflow_escape(value, property_value=True), '%25%0D%0A%3Atitle%2Cbody')
+
+    def test_client_exception_annotations_do_not_expose_exception_or_timeout_output(self):
+        secret = self.request['token']
+        cases = ((ValueError(secret + '\n::error::injected'), 'RELEASE_CLIENT_FAILED'),
+                 (client.subprocess.TimeoutExpired(['ssh', secret], 4800, output=secret, stderr=secret), 'RELEASE_STATUS_UNKNOWN'))
+        for exception, code in cases:
+            with self.subTest(code=code), patch.dict(client.os.environ, {'GITHUB_ACTIONS': 'true'}, clear=True), \
+                    patch.object(client, 'main', side_effect=exception), \
+                    patch('sys.stdout', new_callable=io.StringIO) as output, \
+                    patch('sys.stderr', new_callable=io.StringIO) as error:
+                self.assertEqual(client.cli(), 1)
+                self.assertEqual(output.getvalue(), '::error title=LEAN SCHOOL release::' + code + ': '
+                                 + client.CLIENT_ERRORS[code] + '\n')
+                self.assertNotIn(secret, output.getvalue() + error.getvalue())
+                self.assertNotIn('injected', output.getvalue() + error.getvalue())
 
 
 if __name__ == '__main__':

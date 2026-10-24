@@ -1,6 +1,8 @@
 # 全量平台安装与回退
 
-2026-10-24。入口为 `platform-install.py`，配套文件必须来自同一发布包。本机完成Python语法和17项隔离检查；完整JAR已在Windows独立新库/Redis以prod配置、仅DML权限数据库账号冷启动通过，health UP、学校2952、表集合645未变。实测Redis为Windows5.0.14.1，**Linux安装/systemd、生产Redis6.2+ ACL和目录权限尚未执行验证**。这些步骤仍需要目标服务器验证，不能将本文件视为已部署记录。
+2026-10-24。本文用于首次安装和独立运维升级，入口为 `platform-install.py`，配套文件必须来自同一受信发布包。目标服务器的 Linux/systemd、Redis7 ACL、目录权限及完整平台启动已通过本轮[首次部署验收](../../docs/fullstack-release-20261024.md)。此前Windows隔离冷启动仅为开发验证，不替代该生产记录。
+
+**日常代码更新使用[日常开发与发布流程](../../docs/daily-release.md)，先 plan、再 publish；不要重复执行本文的 init-db。** 首次部署已建立645表和2952学校，实际业务配置、真实支付/短信及首次管理员交互登录仍独立验收。
 
 ## 安装边界与前提
 

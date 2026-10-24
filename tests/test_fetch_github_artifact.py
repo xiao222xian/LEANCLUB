@@ -576,8 +576,9 @@ class FetchTests(unittest.TestCase):
         for index, change in enumerate(changes):
             client = RangeClient(payload)
             client.fault = lambda req, start, end, n: client.result(start, end, **change) if req.get_header('If-match') else None
-            with self.subTest(change=change), patch.object(fetcher, 'opener', return_value=client), self.assertRaises(fetcher.FetchError):
+            with self.subTest(change=change), patch.object(fetcher, 'opener', return_value=client), self.assertRaises(fetcher.FetchError) as error:
                 fetcher.download_parallel(SIGNED, self.root / ('bad%d.zip' % index), '0' * 64, len(payload), 8)
+            self.assertEqual(error.exception.code, 'RANGE_PROTOCOL_INVALID')
         self.assertEqual(list(self.root.iterdir()), [])
 
     def test_parallel_range_transient_and_truncated_response_retry_is_bounded(self):
@@ -598,8 +599,9 @@ class FetchTests(unittest.TestCase):
         self.assertEqual(set(client.attempts.values()), {1, 2})
         # A permanently failing probe has exactly three attempts, without creating output.
         client = RangeClient(payload, lambda *_: Response(503))
-        with patch.object(fetcher, 'opener', return_value=client), self.assertRaisesRegex(fetcher.FetchError, 'three attempts'):
+        with patch.object(fetcher, 'opener', return_value=client), self.assertRaisesRegex(fetcher.FetchError, 'three attempts') as error:
             fetcher.download_parallel(SIGNED, self.root / 'failed.zip', digest, len(payload), 8)
+        self.assertEqual(error.exception.code, 'DOWNLOAD_RETRY_EXHAUSTED')
         self.assertEqual(len(client.requests), 3)
         self.assertFalse((self.root / 'failed.zip').exists())
 
@@ -623,9 +625,119 @@ class FetchTests(unittest.TestCase):
         ranged = RangeClient(payload)
         self.args.download_workers = 8
         clients = iter([api])
-        with patch.object(fetcher, 'opener', side_effect=lambda: next(clients, ranged)), self.assertRaisesRegex(fetcher.FetchError, 'ZIP size or SHA-256'):
+        with patch.object(fetcher, 'opener', side_effect=lambda: next(clients, ranged)), self.assertRaisesRegex(fetcher.FetchError, 'ZIP size or SHA-256') as error:
             fetcher.fetch(self.args, TOKEN)
+        self.assertEqual(error.exception.code, 'ARTIFACT_DIGEST_MISMATCH')
         self.assertEqual(list(self.root.iterdir()), [])
+
+    def test_download_errors_expose_only_fixed_codes_and_messages(self):
+        self.assertEqual(fetcher.FetchError('synthetic').code, 'BUILD_FETCH_FAILED')
+        for code in (*fetcher.FETCH_ERROR_MESSAGES, 'UNTRUSTED_' + TOKEN, None, []):
+            stderr = io.StringIO()
+            error = fetcher.FetchError(SIGNED + TOKEN, code)
+            with patch.object(fetcher, 'main', side_effect=error), contextlib.redirect_stderr(stderr):
+                self.assertEqual(fetcher.cli(), 1)
+            report = json.loads(stderr.getvalue())
+            expected = code if isinstance(code, str) and code in fetcher.FETCH_ERROR_MESSAGES else 'BUILD_FETCH_FAILED'
+            self.assertEqual(report['errorCode'], expected)
+            self.assertEqual(report['error'], fetcher.FETCH_ERROR_MESSAGES[expected])
+            self.assertNotIn(TOKEN, stderr.getvalue())
+            self.assertNotIn('signature=', stderr.getvalue())
+
+    def test_parallel_transport_retry_exhaustion_is_classified_and_redacted(self):
+        client = RangeClient(b'0123456789', lambda *_: (_ for _ in ()).throw(urllib.error.URLError(SIGNED + TOKEN)))
+        with patch.object(fetcher, 'opener', return_value=client), self.assertRaises(fetcher.FetchError) as error:
+            fetcher.download_parallel(SIGNED, self.root / 'network.zip', '0' * 64, 10, 2)
+        self.assertEqual(error.exception.code, 'DOWNLOAD_RETRY_EXHAUSTED')
+        self.assertEqual(len(client.requests), 3)
+        self.assertNotIn(TOKEN, str(error.exception))
+        self.assertNotIn('signature=', str(error.exception))
+
+    def test_periodic_signed_url_refresh_uses_same_artifact_api_and_no_download_credentials(self):
+        payload = zip_bytes(bundle())
+        api, _ = self.clients(payload)
+        renewed = SIGNED + '-renewed'
+        api.responses.append(Response(302, headers=[('Location', renewed)]))
+        clock = {'now': 0.0}
+        def advance_after_probe(request, start, end, attempt):
+            if not request.get_header('If-match'):
+                clock['now'] = 301.0
+        ranged = RangeClient(payload, advance_after_probe)
+        clients = iter([api])
+        self.args.download_workers = 4
+        with patch.object(fetcher, 'opener', side_effect=lambda: next(clients, ranged)), \
+                patch.object(fetcher.time, 'monotonic', side_effect=lambda: clock['now']):
+            report = fetcher.fetch(self.args, TOKEN)
+        locations = [r for r in api.requests if r.full_url.endswith('/zip')]
+        self.assertEqual(len(locations), 2)
+        self.assertEqual({r.full_url for r in locations}, {fetcher.API + '/actions/artifacts/456/zip'})
+        self.assertTrue(all(r.get_header('Authorization') == 'Bearer ' + TOKEN for r in locations))
+        self.assertEqual({r.full_url for r in ranged.requests if r.get_header('If-match')}, {renewed})
+        self.assertTrue(all(r.get_header('Authorization') is None and r.get_header('Cookie') is None for r in ranged.requests))
+        self.assertEqual(report['zipSha256'], hashlib.sha256(payload).hexdigest())
+        self.assertNotIn('signature=', json.dumps(report))
+
+    def test_simultaneous_rejection_of_one_url_generation_refreshes_once(self):
+        payload = b'0123456789abcdefghij'
+        renewed = SIGNED + '-new'
+        simultaneous = threading.Barrier(2)
+        refreshes = []
+        def fault(request, start, end, attempt):
+            if request.get_header('If-match') and request.full_url == SIGNED:
+                simultaneous.wait(5)
+                return Response(403)
+        def refresh():
+            refreshes.append(True)
+            return renewed
+        ranged = RangeClient(payload, fault)
+        with patch.object(fetcher, 'opener', return_value=ranged), patch.object(fetcher, 'RANGE_BLOCK_BYTES', 10):
+            result = fetcher.download_parallel(SIGNED, self.root / 'renewed.zip', hashlib.sha256(payload).hexdigest(),
+                                               len(payload), 2, refresh_url=refresh)
+        self.assertEqual(len(refreshes), 1)
+        self.assertEqual(result[1], len(payload))
+        self.assertEqual((self.root / 'renewed.zip').read_bytes(), payload)
+        self.assertEqual(sum(r.full_url == renewed for r in ranged.requests), 2)
+        self.assertTrue(all(r.get_header('Authorization') is None for r in ranged.requests))
+
+    def test_auth_rejection_refreshes_once_and_persistent_rejection_is_terminal(self):
+        payload = b'0123456789'
+        renewed = SIGNED + '-new'
+        for status in (401, 403):
+            client = RangeClient(payload, lambda request, *_: Response(status) if request.full_url == SIGNED else None)
+            refreshes = []
+            with patch.object(fetcher, 'opener', return_value=client):
+                fetcher.download_parallel(SIGNED, self.root / ('retry%d.zip' % status), hashlib.sha256(payload).hexdigest(),
+                    len(payload), 2, refresh_url=lambda: (refreshes.append(True) or renewed))
+            self.assertEqual(len(refreshes), 1)
+            failing = RangeClient(payload, lambda *_: Response(status))
+            refreshes.clear()
+            with patch.object(fetcher, 'opener', return_value=failing), self.assertRaises(fetcher.FetchError) as error:
+                fetcher.download_parallel(SIGNED, self.root / ('fail%d.zip' % status), '0' * 64, len(payload), 2,
+                    refresh_url=lambda: (refreshes.append(True) or renewed))
+            self.assertEqual(error.exception.code, 'DOWNLOAD_AUTH_REJECTED')
+            self.assertEqual(len(failing.requests), 2)
+            self.assertEqual(len(refreshes), 1)
+            self.assertFalse((self.root / ('fail%d.zip' % status)).exists())
+
+    def test_refreshed_url_cannot_change_etag_or_use_http(self):
+        payload = b'0123456789'
+        renewed = SIGNED + '-new'
+        for unsafe in (False, True):
+            clock = {'now': 0.0}
+            client = RangeClient(payload)
+            def fault(request, start, end, attempt):
+                if not request.get_header('If-match'):
+                    clock['now'] = 301.0
+                elif request.full_url == renewed:
+                    return client.result(start, end, ETag='"changed-object"')
+            client.fault = fault
+            with patch.object(fetcher, 'opener', return_value=client), \
+                    patch.object(fetcher.time, 'monotonic', side_effect=lambda: clock['now']), \
+                    self.assertRaises(fetcher.FetchError) as error:
+                fetcher.download_parallel(SIGNED, self.root / ('unsafe%d.zip' % unsafe), '0' * 64, len(payload), 2,
+                    refresh_url=lambda: 'http://download.example.invalid/file' if unsafe else renewed)
+            self.assertEqual(error.exception.code, 'BUILD_FETCH_FAILED' if unsafe else 'RANGE_PROTOCOL_INVALID')
+            self.assertFalse((self.root / ('unsafe%d.zip' % unsafe)).exists())
 
 
 if __name__ == '__main__':

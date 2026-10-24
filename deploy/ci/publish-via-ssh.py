@@ -15,6 +15,10 @@ SAFE_ERRORS = {
     'PLAN_REQUIRED': ('preflight', 'Run a successful plan for this build and current server tools before publishing.'),
     'GATE_REJECTED': ('validation', 'Release validation was rejected. Check the selected build and trusted server configuration.'),
     'BUILD_FETCH_FAILED': ('download', 'Build metadata or artifact download failed. Check the successful build and retry.'),
+    'DOWNLOAD_AUTH_REJECTED': ('download', 'GitHub or artifact access was rejected with HTTP 401 or 403. Check access and download availability.'),
+    'DOWNLOAD_RETRY_EXHAUSTED': ('download', 'Artifact transfer failed after bounded retries. Check server network access and retry.'),
+    'RANGE_PROTOCOL_INVALID': ('download', 'Artifact range, length, encoding or ETag validation failed. Check the download service before retrying.'),
+    'ARTIFACT_DIGEST_MISMATCH': ('download', 'Artifact size or SHA-256 differs from GitHub metadata. Retry from a verified build before publishing.'),
     'BUILD_FETCH_TIMEOUT': ('download', 'Build download exceeded 60 minutes. Production was not changed.'),
     'PREFLIGHT_FAILED': ('preflight', 'Release preflight failed. Check schema, dependencies and the production baseline before publishing.'),
     'PUBLISH_FAILED_ROLLED_BACK': ('publish', 'Publication failed. Previous code and configuration recovered; business data was not restored.'),
@@ -22,6 +26,29 @@ SAFE_ERRORS = {
     'COORDINATOR_FAILED': ('release', 'The server release operation failed without a recognized receipt. Inspect server service status.'),
     'INTERNAL_ERROR': ('internal', 'Release failed unexpectedly. Inspect the server; sensitive details withheld.'),
 }
+CLIENT_ERRORS = {
+    'SSH_CONNECTION_OR_PROTOCOL_FAILED': 'No recognized server receipt. Check SSH connectivity and server status; raw output withheld.',
+    'RELEASE_STATUS_UNKNOWN': 'SSH exceeded 80 minutes. Inspect server status before retrying; publication may still be running.',
+    'RELEASE_CLIENT_FAILED': 'Release client failed; sensitive details withheld.',
+}
+
+
+def workflow_escape(value, *, property_value=False):
+    # Match actions/toolkit command escaping; percent must be escaped first.
+    escaped = value.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+    return escaped.replace(':', '%3A').replace(',', '%2C') if property_value else escaped
+
+
+def annotate_failure(code):
+    """Emit only fixed allowlisted messages, never server/exception text."""
+    if os.environ.get('GITHUB_ACTIONS') != 'true':
+        return
+    if not isinstance(code, str) or code not in {*SAFE_ERRORS, *CLIENT_ERRORS}:
+        code = 'RELEASE_CLIENT_FAILED'
+    message = SAFE_ERRORS[code][1] if code in SAFE_ERRORS else CLIENT_ERRORS[code]
+    title = workflow_escape('LEAN SCHOOL release', property_value=True)
+    body = workflow_escape(code + ': ' + message)
+    print('::error title=' + title + '::' + body, flush=True)
 
 
 def safe_failure(stderr):
@@ -76,9 +103,12 @@ def main():
         if result.returncode:
             failure = safe_failure(result.stderr)
             if failure is None:
-                print('SSH_CONNECTION_OR_PROTOCOL_FAILED: No recognized server receipt. Check SSH connectivity and server status; raw output withheld.', file=sys.stderr)
+                code = 'SSH_CONNECTION_OR_PROTOCOL_FAILED'
+                print(code + ': ' + CLIENT_ERRORS[code], file=sys.stderr)
+                annotate_failure(code)
             else:
                 print(json.dumps(failure, ensure_ascii=False), file=sys.stderr)
+                annotate_failure(failure['errorCode'])
                 write_summary(failure | {'buildRunId': int(run), 'mode': mode})
             return 1
         report = json.loads(result.stdout)
@@ -89,12 +119,19 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+def cli():
     try:
-        sys.exit(main())
+        return main()
     except subprocess.TimeoutExpired:
-        print('RELEASE_STATUS_UNKNOWN: SSH exceeded 80 minutes. Inspect server status before retrying; publication may still be running.', file=sys.stderr)
-        sys.exit(1)
+        code = 'RELEASE_STATUS_UNKNOWN'
+        print(code + ': ' + CLIENT_ERRORS[code], file=sys.stderr)
+        annotate_failure(code)
+        return 1
     except Exception:
-        print('Release client failed; sensitive details withheld.', file=sys.stderr)
-        sys.exit(1)
+        print(CLIENT_ERRORS['RELEASE_CLIENT_FAILED'], file=sys.stderr)
+        annotate_failure('RELEASE_CLIENT_FAILED')
+        return 1
+
+
+if __name__ == '__main__':
+    sys.exit(cli())

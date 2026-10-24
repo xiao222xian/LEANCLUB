@@ -26,6 +26,10 @@ SAFE_ERRORS = {
     'PLAN_REQUIRED': ('preflight', 'Run a successful plan for this build and current server tools before publishing.'),
     'GATE_REJECTED': ('validation', 'Release validation was rejected. Check the selected build and trusted server configuration.'),
     'BUILD_FETCH_FAILED': ('download', 'Build metadata or artifact download failed. Check the successful build and retry.'),
+    'DOWNLOAD_AUTH_REJECTED': ('download', 'GitHub or artifact access was rejected with HTTP 401 or 403. Check access and download availability.'),
+    'DOWNLOAD_RETRY_EXHAUSTED': ('download', 'Artifact transfer failed after bounded retries. Check server network access and retry.'),
+    'RANGE_PROTOCOL_INVALID': ('download', 'Artifact range, length, encoding or ETag validation failed. Check the download service before retrying.'),
+    'ARTIFACT_DIGEST_MISMATCH': ('download', 'Artifact size or SHA-256 differs from GitHub metadata. Retry from a verified build before publishing.'),
     'BUILD_FETCH_TIMEOUT': ('download', 'Build download exceeded 60 minutes. Production was not changed.'),
     'PREFLIGHT_FAILED': ('preflight', 'Release preflight failed. Check schema, dependencies and the production baseline before publishing.'),
     'PUBLISH_FAILED_ROLLED_BACK': ('publish', 'Publication failed. Previous code and configuration recovered; business data was not restored.'),
@@ -34,6 +38,8 @@ SAFE_ERRORS = {
     'INTERNAL_ERROR': ('internal', 'Release failed unexpectedly. Inspect the server; sensitive details withheld.'),
 }
 COORDINATOR_CODES = {'PREFLIGHT_FAILED', 'PUBLISH_FAILED_ROLLED_BACK', 'ROLLBACK_FAILED', 'INTERNAL_ERROR'}
+FETCH_ERROR_CODES = {'BUILD_FETCH_FAILED', 'DOWNLOAD_AUTH_REJECTED', 'DOWNLOAD_RETRY_EXHAUSTED',
+                     'RANGE_PROTOCOL_INVALID', 'ARTIFACT_DIGEST_MISMATCH'}
 
 
 class GateError(Exception):
@@ -215,8 +221,12 @@ def execute(request, config, fetcher, root=ROOT):
     with deadline(3600, 'BUILD_FETCH_TIMEOUT'):
         try:
             folder, manifest, attempt, identity = fetch_release(request, config, fetcher, root)
-        except fetcher.FetchError:
-            raise GateError('Build retrieval failed.', 'BUILD_FETCH_FAILED') from None
+        except fetcher.FetchError as error:
+            code = getattr(error, 'code', None)
+            if not isinstance(code, str) or code not in FETCH_ERROR_CODES:
+                code = 'BUILD_FETCH_FAILED'
+            # Do not forward exception text or accept unrelated gate/publication codes.
+            raise GateError(SAFE_ERRORS[code][1], code) from None
     tools = protected(Path(config['toolsRoot']), directory=True)
     coordinator = protected(tools / 'deploy/ubuntu/deploy-daily-release.py')
     planned_path = root / (folder.name + '.planned.json')

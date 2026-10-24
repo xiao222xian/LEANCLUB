@@ -1,12 +1,14 @@
 # 薄肌学院全量 Java 生产发布准备
 
-2026-10-24。这是生产模板、发布工具和实际安装入口。**完整JAR已在Windows隔离环境以prod配置、仅DML权限的新库账号冷启动通过；Linux安装/systemd及生产Redis ACL尚未验证。** 不读取/复制本地运行库，不替换当前公网SQLite。执行方式见 [全量平台安装与回退](PLATFORM-RUNBOOK.md)：`plan`只读，`prepare`准备文件，`init-db`初始化全新独立库，`activate`健康检查后切换，`rollback`回退代码。
+2026-10-24。这是首次安装所用的生产模板与工具。**完整Java平台已在目标Ubuntu服务器启动，systemd、Redis7 ACL及生产目录权限通过验收**，详见[首次部署记录](../../docs/fullstack-release-20261024.md)。既有MySQL/SQLite业务数据保留；真实业务配置、支付/短信和首次管理员交互另行验收。
+
+日常开发更新改用[日常发布流程](../../docs/daily-release.md)：push自动检查与构建，成功plan后显式publish。下文的[全量平台安装与回退](PLATFORM-RUNBOOK.md)用于首次安装或单独升级；`init-db`只初始化全新独立库，不能用于日常更新。
 
 ## 本次保留范围
 
 当前 server POM 的全部业务模块保留：system、infra、member、leanclub、report、bpm、pay、mp、商城 product/promotion/trade/statistics、crm、erp、ai、mes、wms、hrm、fms、pms、oa、im。IoT 与 ai1 原本未启用，不在本轮擅自启用。它们打在**一个单体 JAR**内；不要求 Kubernetes 或另建微服务集群。
 
-上游基线 `e4977f6ccaff29ded7024462d4778e4ccc025a61`；本次定制源码已锁定私有 `platform/backend` 提交 `d5ff0bb3af7683fb4fd1565aed1c58956aca3e6c`，独立git archive完整重构建成功。新JAR为611179571字节，SHA256 `6800780ea3a1585a676114598bd9c034754d3c5ef267d5f9c3d1bc267cb4fd53`。根POM要求Java25、Spring Boot4.1.0；构建成功不代表生产冷启动已通过。
+上游基线 `e4977f6ccaff29ded7024462d4778e4ccc025a61`。首次Windows隔离构建固定私有 `platform/backend` 提交 `d5ff0bb3af7683fb4fd1565aed1c58956aca3e6c`，产物611179571字节、SHA256 `6800780ea3a1585a676114598bd9c034754d3c5ef267d5f9c3d1bc267cb4fd53`，保留为历史记录；它不是当前Linux云包的摘要。当前运行版本以服务器 `/etc/leanschool/daily-current.json` 和对应云构建清单为准。根POM要求Java25、Spring Boot4.1.0。
 
 ## 发布物和路径
 

@@ -1,6 +1,6 @@
 # 薄肌学院日常开发与发布
 
-更新：2026-10-24（Asia/Shanghai）。本文说明新日常发布流程；此前的[首次全栈部署记录](fullstack-release-20261024.md)保留为历史证据。**本轮实际云构建与生产发布结果见文末验收表；未填写的项目不代表已通过。**
+更新：2026-10-24（Asia/Shanghai）。本文说明新日常发布流程；此前的[首次全栈部署记录](fullstack-release-20261024.md)保留为历史证据。**流程仍在实施中：自动构建、受限 SSH 安装和旧版本本机 plan 已通过；云端 plan 两次停在下载阶段，publish 与重复发布尚未验收，生产应用版本未更新。** 本轮证据见文末验收表。
 
 日常操作是：**本地开发 → 推送私有 Git → 自动检查和构建 → 选择成功构建 → 手动发布。** 推送不会直接更新生产；构建成功也不表示已经上线。
 
@@ -112,6 +112,8 @@ Publish 只在私有仓库 `main` 手动运行，使用 `contents: read` 与 `ac
 
 Actions 只展示固定安全错误码和固定说明，不展示原始子进程错误、令牌或私密配置。
 
+下载器修复已加入源码，尚待安装到服务器：GitHub 下载链接本次实测有效期为 600 秒，分块下载每隔约 300 秒在下一个请求前获取新链接，401/403 时最多刷新并重试一次；各分块仍必须满足相同 ETag、Range 和最终 ZIP 摘要。链接只保留在内存中。传输失败仍会清理临时分块，当前没有跨运行断点续传。
+
 | 错误码 | 处理方式 |
 | --- | --- |
 | `REQUEST_REJECTED` / `REQUEST_TIMEOUT` | 检查 run ID、模式和请求连接；没有进入生产更新 |
@@ -119,6 +121,9 @@ Actions 只展示固定安全错误码和固定说明，不展示原始子进程
 | `PLAN_REQUIRED` | 使用该 build 的当前 attempt 和服务器当前工具版本重新运行 plan；成功后再 publish |
 | `GATE_REJECTED` | 检查所选构建的仓库、workflow、分支、状态及可信服务器配置 |
 | `BUILD_FETCH_FAILED` / `BUILD_FETCH_TIMEOUT` | 检查构建是否成功、artifact 是否过期及服务器到 GitHub 的网络；生产尚未修改 |
+| `DOWNLOAD_AUTH_REJECTED` | 下载返回 401/403，刷新后仍失败；检查访问权限与下载服务，不能仅凭此码断定链接过期 |
+| `DOWNLOAD_RETRY_EXHAUSTED` | 传输重试次数耗尽；检查服务器网络，再运行 plan |
+| `RANGE_PROTOCOL_INVALID` / `ARTIFACT_DIGEST_MISMATCH` | 分块协议或最终摘要不匹配；拒绝安装，不可跳过校验 |
 | `PREFLIGHT_FAILED` | 检查数据库契约、依赖及当前生产基线；不要绕过校验发布 |
 | `PUBLISH_FAILED_ROLLED_BACK` | 代码和配置已经恢复，业务数据未回档；检查旧版本并修正候选代码 |
 | `ROLLBACK_FAILED` | 需要维护者检查服务和私有恢复记录，先恢复可用状态 |
@@ -128,16 +133,33 @@ Actions 只展示固定安全错误码和固定说明，不展示原始子进程
 
 ## 本轮实际验收
 
-以下由执行上线的维护者填写；单元测试、代码审查与服务器端到端验收分别记录。
+以下为 2026-10-24 实际结果；云构建、工具测试、服务器预检与生产发布分别记录。
 
 | 项目 | 实测结果 |
 | --- | --- |
-| GitHub `production` 环境及受限 SSH 安装 | 待核验 |
-| 自动 Build run ID / attempt / 三组件 SHA | 待核验 |
-| 手动 Publish `plan` run ID 与结果 | 待核验 |
-| 手动 Publish `publish` run ID 与结果 | 待核验 |
-| 相同版本重复发布与未变化组件跳过 | 待核验 |
-| 旧域官网、后台、API 与新域服务器端检查 | 待核验 |
-| SSL 摘要、数据库保留、备份与恢复路径 | 待核验 |
-| 外网新域访问及实际业务交互 | 独立验收，不由云构建成功推定 |
+| GitHub `production` 环境及受限 SSH 安装 | 已配置环境、`main` 分支限制及两项环境 secret；真实受限 SSH 登录、强制命令和禁止转发验证通过。未据此宣称已启用额外人工审批 |
+| 自动 Build run ID / attempt / 三组件 SHA | [40056397838](https://github.com/papaoo/bojizhuye/actions/runs/40056397838)，attempt 1，全部 5 个 job 成功；候选源码见下表，尚未发布 |
+| 服务器受信工具及 Linux 测试 | 工具固定提交 `580d417e912310f9762bc4c6d341b2f26a649dad`；76 项工具测试通过，不等于生产更新与恢复已经实测 |
+| 下载修复与客户端回归 | 本机共 88 项：87 通过，1 项仅限 Linux/root 的权限检查跳过；修复尚未安装服务器，未完成真实大包下载复验 |
+| 旧版本服务器本机 plan | 已通过，`changed.website/backend/adminUi` 均为 `false`；基线包在 root 保护的 `/var/lib/leanschool/releases/bootstrap-40049018447` |
+| 手动 Publish `plan` 第一次 | [40057651101](https://github.com/papaoo/bojizhuye/actions/runs/40057651101)：为调整下载时限主动终止在下载阶段，Actions 结果 failed；未进入生产发布 |
+| 手动 Publish `plan` 第二次 | [40058666408](https://github.com/papaoo/bojizhuye/actions/runs/40058666408)：下载阶段 `BUILD_FETCH_FAILED`；新包的云端 plan 尚未通过，未发布新版本 |
+| 手动 Publish `publish` 与相同版本重复发布 | 待端到端验收。单元测试覆盖组件跳过及恢复路径，不能代替实际 publish/no-op 验收 |
+| 当前生产版本及旧域访问 | 仍为官网 `1a4ba54`、Java `d5ff0bb`、Vue `8554101`；[旧域首页](https://boji.tensorbot.xyz/)和[管理后台](https://boji.tensorbot.xyz/console/)外部 HTTP 200 |
+| 本轮 SSL、数据备份与恢复验证 | 本轮未发布新业务版本；新发布的备份、SSL 前后摘要核对与失败恢复仍待生产验证，不能沿用首次部署结果充当本轮结果 |
+| 外网新域访问及实际业务交互 | 新域当前公网可用性未确认，备案仍是独立待办；不由服务器本机检查或云构建成功推定 |
+
+本次成功构建锁定的候选源码：
+
+| 组件 | 完整提交 |
+| --- | --- |
+| 官网 | `c5d3a4bd5f84bf8eadc9bf3c914bdee2bd826d46` |
+| Java | `e278c8747575d047721d3ee622c6015abf16d8a8` |
+| Vue | `77b400e7fd755a4d96016338822f5ef052d1af16` |
+
+最终 artifact ID 为 `12545742030`，ZIP 为 `624810844` 字节，GitHub 记录的 SHA-256 为 `05e3e4a4d3d110f6b1ab6a9e2ab90faa110b4143d9e383d298fd7da12cae80e9`。这是成功云构建的产物身份；下载失败后尚未取得该新包完整服务器预检与发布成功回执。
+
+下载故障补充证据：仅请求该 artifact 的 API 重定向，未下载包、未记录签名 URL；本次响应的有效期相对服务端 Date 为 600 秒。此前失败发生在 11 分 19 秒后，旧下载器从不刷新链接，因此到期是有证据支持的原因推断；失败日志没有保留原始 HTTP 状态，不能声称已直接捕获过期 403。新代码同时增加四类固定错误及 Actions annotation，便于后续定位，未经新服务器预检的修复不视为部署成功。
+
+发布工具主干已推送至 `580d417e912310f9762bc4c6d341b2f26a649dad`；本地同时进行的设计改动未纳入本次发布。当前有线内网 SSH 再次在认证前重置，已请用户切换可连接网络；恢复维护连接并解决下载问题后，继续执行新包 plan、显式 publish、相同版本重复发布及业务验收。
 
