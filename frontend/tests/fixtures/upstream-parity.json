@@ -1,0 +1,2494 @@
+{
+  "schemaVersion": 1,
+  "upstream": {
+    "repository": "https://github.com/auenger/SiliRootLogoDesign",
+    "commit": "677e8f8f1a3d7128d8ab831cae99d7e00ac567ce",
+    "sourceSha256": {
+      "public/monogram-mvp/boundary-geometry.js": "88faa3df706cad47454c87a39381f600fcf0da345c57fa5250a0d06f4baea409",
+      "public/logo-geometry.js": "54fbe56011b44209e9c6a6a55189bf60119adbe3e40a3dc72f16bfda46e48668"
+    }
+  },
+  "serialization": {
+    "algorithm": "SHA-256 of UTF-8 JSON.stringify(value), with no whitespace, sorting, rounding, or line-ending normalization",
+    "paths": "geometry.paths.join(\" \")",
+    "circles": "geometry.circles",
+    "lines": "geometry.lines.map(edge => [...edge.from, ...edge.to])",
+    "joints": "geometry.joints.map(joint => ({ point: joint.point, tangent: joint.tangent }))"
+  },
+  "profiles": {
+    "original": {
+      "weight": 24,
+      "overlap": 44,
+      "tension": 52,
+      "seed": 0
+    },
+    "lightSpread": {
+      "weight": 14,
+      "overlap": 24,
+      "tension": 0,
+      "seed": 1
+    },
+    "heavyOverlap": {
+      "weight": 38,
+      "overlap": 68,
+      "tension": 100,
+      "seed": 17
+    },
+    "intermediate": {
+      "weight": 25,
+      "overlap": 51,
+      "tension": 37,
+      "seed": 317
+    }
+  },
+  "cases": [
+    {
+      "text": "SR",
+      "profile": "original",
+      "strategy": "weave",
+      "counts": {
+        "paths": 3,
+        "circles": 34,
+        "lines": 10,
+        "joints": 33
+      },
+      "sha256": {
+        "paths": "a441f3cd3818d716f8046d7ccc3051232fc050db79b15e5c97056958db4a2f05",
+        "circles": "b2a9f88e0a4f0c7520c7e71c2a10f3df8952de75a916ec6d78ec6b1f162c7784",
+        "lines": "b7e11e080b27332bb7593d8990e1770e549247bccdc69e189a71952c17828ff0",
+        "joints": "f9c11e32f3f17405bd1ddc9aafc401b57a8cf5ee16d37cca5945255e0f709313"
+      }
+    },
+    {
+      "text": "SR",
+      "profile": "original",
+      "strategy": "fusion",
+      "counts": {
+        "paths": 3,
+        "circles": 34,
+        "lines": 10,
+        "joints": 33
+      },
+      "sha256": {
+        "paths": "19fddf9d44e3f9d25344626f041e2d79f213e48cf2ef764b41815f498badd6bf",
+        "circles": "70944555ecdb843b84718ba51bcc7e1c4c9f9b1ea9f8f60f4a66b653278362c2",
+        "lines": "254ea268654ccb576726c5e44574f0af2476db09f128d28126d202a6a8a81462",
+        "joints": "0ce977517ecc15ddda7d47a191f350e1aa6470f0c8b53009fceb7dd0ba4152f1"
+      }
+    },
+    {
+      "text": "SR",
+      "profile": "original",
+      "strategy": "counter",
+      "counts": {
+        "paths": 2,
+        "circles": 34,
+        "lines": 11,
+        "joints": 33
+      },
+      "sha256": {
+        "paths": "c95b338b2fe7cec3b40216d172315caafc2f586c3b4325106920facf7f7029ec",
+        "circles": "ee5d287b48836a000b6409324213cbcd6fedd3640ecde002d3c3f2d9a146023c",
+        "lines": "82f0e6b433d7516d7543e9f532750f9360f153c30e045377f0249112bad0a067",
+        "joints": "35c56aad32ab4b604aa885ebcdd973aa6ba7822286341573a7b8f6c651a6a2da"
+      }
+    },
+    {
+      "text": "SR",
+      "profile": "original",
+      "strategy": "axis",
+      "counts": {
+        "paths": 2,
+        "circles": 34,
+        "lines": 11,
+        "joints": 30
+      },
+      "sha256": {
+        "paths": "686763269f8fbcd9affb423f7e9001fc5effa57cc6b4f3216cc8b64b79137844",
+        "circles": "65aba3dcc392e50f8ac918a89f1d0bdf5c6fd1e403bfbc079cc79bb2e4f0cbb6",
+        "lines": "fe622186bf6327550fda4a7a8aa75a77f5006241fffe63811dc37dc762be6d49",
+        "joints": "2e3d57dc60f387618137f310507d5c8b3e728e9f072fac5cebac0e328b2e5260"
+      }
+    },
+    {
+      "text": "SR",
+      "profile": "original",
+      "strategy": "embrace",
+      "counts": {
+        "paths": 3,
+        "circles": 36,
+        "lines": 11,
+        "joints": 34
+      },
+      "sha256": {
+        "paths": "ada1f9fae8aacf875636aeb3cf6c2abac56ce022bfa69679b544b2f6ee439e74",
+        "circles": "385e4abe79130f96455a4f31d24d4ba5380f17c860a6f1bb733fee4deda0aaf9",
+        "lines": "4162fb3c8ee62494f4aacefbf8d3e4816879be349791819e64648d88f2291611",
+        "joints": "0cf56124a2535e9a137a2f8bf6d10d672c782908b5a36515a3b1e1c9fcbff414"
+      }
+    },
+    {
+      "text": "SR",
+      "profile": "original",
+      "strategy": "tension",
+      "counts": {
+        "paths": 3,
+        "circles": 35,
+        "lines": 10,
+        "joints": 33
+      },
+      "sha256": {
+        "paths": "becd020762ccb50bc8a149384cf6ac02f9a8e525c6328f8bd94497eb8d879cac",
+        "circles": "d613d837fa35a074d9c39219d7ea37fc15ed6474a319f0da80897384cbd4c0c9",
+        "lines": "874afd3579734fa65c2134ce8abc9f202a9a9d401faeff8501d193e0b064bc9d",
+        "joints": "dfceed676fa368ca06e2f7aee92ecb9122cea902ab0824ac15d04fd200278757"
+      }
+    },
+    {
+      "text": "SR",
+      "profile": "lightSpread",
+      "strategy": "weave",
+      "counts": {
+        "paths": 4,
+        "circles": 47,
+        "lines": 10,
+        "joints": 46
+      },
+      "sha256": {
+        "paths": "63052dafcfb7ef8c82519335d0f7c35b0b78f9ee3334b8088cf524d94fae6f6c",
+        "circles": "802bd8acb6d0ebf39db72d0de49e2ed0e15de347e39bfe6585cd2f846da3943f",
+        "lines": "74d3bf55aebe566ba6baf65557bb8d95a4fd9bc923f6ed33b908824bbe8482cb",
+        "joints": "49d39150d7f3d6fbe9085ba5434e3d8554fa073dd92bcbd5342ab061dcd9c247"
+      }
+    },
+    {
+      "text": "SR",
+      "profile": "lightSpread",
+      "strategy": "fusion",
+      "counts": {
+        "paths": 4,
+        "circles": 47,
+        "lines": 10,
+        "joints": 46
+      },
+      "sha256": {
+        "paths": "23b30ad0ba168df6321f5b9eb24f2f29ddea4e58936448a9c91d6917529566c0",
+        "circles": "5cc85d5a44e892d25c66356fcd4def027a6fba17c8382620bfa72ef716648aa7",
+        "lines": "9fd240fde9610238d66a52a2c9635adc6cdb5df1ee48a3e49a8cbbbbb737c87e",
+        "joints": "184cc4bd87a7b2a927a4ee532f5ad737900033ab4f8014e722468780bb51afa8"
+      }
+    },
+    {
+      "text": "SR",
+      "profile": "lightSpread",
+      "strategy": "counter",
+      "counts": {
+        "paths": 4,
+        "circles": 47,
+        "lines": 10,
+        "joints": 46
+      },
+      "sha256": {
+        "paths": "8efed962cad0926d74b2d5328e05a27bca9a3af047ec12bea31b41bb308973ec",
+        "circles": "91bab7d8a665af58b74e2ae123a1209dd5bf6b20ec496cb7a1d9ea5d78407a6a",
+        "lines": "9ed24003ef18bfddb32d42b382ba29e6f505a7392c260941984aab958dc4efa1",
+        "joints": "5086ac36a0bbf5cc76bece9e4d22bec2ccaa25e9dfe709332c0b1bdcf6cc5455"
+      }
+    },
+    {
+      "text": "SR",
+      "profile": "lightSpread",
+      "strategy": "axis",
+      "counts": {
+        "paths": 4,
+        "circles": 47,
+        "lines": 10,
+        "joints": 46
+      },
+      "sha256": {
+        "paths": "2c3c5516904478caabc2a6bee330b5e0a62ef9a2f21034693ba8c993024d205c",
+        "circles": "743afa35943e94bf283cf866d5ac7ab5752e2222e8283eb184607a1f85352967",
+        "lines": "dcdecd9699392c8548bf05a785085fe5b414dc0cb3c157c18d1d19a3f44de4bb",
+        "joints": "202449e3193e5f60423691fdd836859d30bfc50a062603ed867627b81c731bfd"
+      }
+    },
+    {
+      "text": "SR",
+      "profile": "lightSpread",
+      "strategy": "embrace",
+      "counts": {
+        "paths": 4,
+        "circles": 46,
+        "lines": 10,
+        "joints": 45
+      },
+      "sha256": {
+        "paths": "2089d59558a69495e0fc340c9880d7c776a9048f46aa33808480ed7ad0a693ee",
+        "circles": "60ee922e4d1341aa9388289f7f7f10c0726aa3664bb9ddebc3211c2ae6cc8d24",
+        "lines": "27cf09133f545b5d67886f6214c40fbfd507c0e657f8de1b3e9e49431995fa1a",
+        "joints": "afb1b9bfd9ad198bf081084c3808757617f012af2a8832aab8b60df911f51c55"
+      }
+    },
+    {
+      "text": "SR",
+      "profile": "lightSpread",
+      "strategy": "tension",
+      "counts": {
+        "paths": 4,
+        "circles": 47,
+        "lines": 10,
+        "joints": 46
+      },
+      "sha256": {
+        "paths": "a519b2087af5f4e1704134006dc311107c2031307351d62cd160c125a505e3c6",
+        "circles": "2cfc8c1876a402a2d93d2cd6e0fb215c9ec3f780059a73119bb80471ea55a6dd",
+        "lines": "f363fe05722562582848b2524f9d9277737083812abac1b017db95b52f31c956",
+        "joints": "c61da43e48b3b7846ad5b2ffd7cbcd6567b42878737629f8c0cc85021aa82be1"
+      }
+    },
+    {
+      "text": "SR",
+      "profile": "heavyOverlap",
+      "strategy": "weave",
+      "counts": {
+        "paths": 6,
+        "circles": 66,
+        "lines": 11,
+        "joints": 74
+      },
+      "sha256": {
+        "paths": "dbfa26564bf3f2125289af921462561270a36629bb9b10648d2e3e52d2101c06",
+        "circles": "71ff4bb8cc5f59de6b990d6e394789115dbf777ebf710547be191270869e4d3b",
+        "lines": "433b30544b5e2b3d96ac91cb01dd6a4571393be9cc895e672747cc7538d41b87",
+        "joints": "2ae7d74f1c407aa3ffb5f2b5bb24ca830ea2fae0583f89d728c9379cd2e82205"
+      }
+    },
+    {
+      "text": "SR",
+      "profile": "heavyOverlap",
+      "strategy": "fusion",
+      "counts": {
+        "paths": 3,
+        "circles": 60,
+        "lines": 12,
+        "joints": 66
+      },
+      "sha256": {
+        "paths": "7b09e5d73bb42a96acde5760d6b902c176cff148886ceed4d81ee512c67b0b7f",
+        "circles": "4b1e074567e541c4677a72c7fa62b7a95a8f684a764cadbae01d3caa302fc258",
+        "lines": "c6cbef18267ed2220c983f9c27b20ddf157864560e4a81c40fe2de2ab8d970f5",
+        "joints": "5899ae5333b26fb118ad33a6db8b87fce8320c6798445250e447c412c3d2ed9d"
+      }
+    },
+    {
+      "text": "SR",
+      "profile": "heavyOverlap",
+      "strategy": "counter",
+      "counts": {
+        "paths": 7,
+        "circles": 63,
+        "lines": 13,
+        "joints": 72
+      },
+      "sha256": {
+        "paths": "138799f8771057bb7654cb480623788cdfff6cf5ad798ead299cf65d0e94ed49",
+        "circles": "2a646d1a0057b5b5d37f673e7b46a056b42f4975d1e11abd809e0061e7590a00",
+        "lines": "a5fc39cc5e4864c51d1fcad37831ab85418bfdb51f36a08c84b9b2752bdd4be2",
+        "joints": "4bb429d7bf2a2eefbcdafd98b7465ad67439d4bd31438f1ded7b1fe0de5d86bc"
+      }
+    },
+    {
+      "text": "SR",
+      "profile": "heavyOverlap",
+      "strategy": "axis",
+      "counts": {
+        "paths": 3,
+        "circles": 44,
+        "lines": 12,
+        "joints": 50
+      },
+      "sha256": {
+        "paths": "e3ceee9335d3132087ef5c893a50fef9f79e41843e812f2d293ef17ee89b0c05",
+        "circles": "86f142069f885b944247bd6a43300a3df17d39f8cdfaf9c51962c96ea6aacaaa",
+        "lines": "977463b7038fed01e0f55056566f3d037270d490a33ab1b8a03c3f061dbd1e69",
+        "joints": "4de08551324c25dbe99ee22254ce7d41e52f7c36f7e2b75641aacbfe23de1de6"
+      }
+    },
+    {
+      "text": "SR",
+      "profile": "heavyOverlap",
+      "strategy": "embrace",
+      "counts": {
+        "paths": 9,
+        "circles": 65,
+        "lines": 12,
+        "joints": 72
+      },
+      "sha256": {
+        "paths": "fe35b37173d329576d5b8e86b53cbdcbc04323fa8b0bffffc00f4729c7eadf0c",
+        "circles": "223409582e05328a8c3a33073d7fec42ab5b75df74f0a2794d7ea6cbfb0f0d51",
+        "lines": "66e6befba6371dd67ee1bc1e02af384c13f3972493091b48c94f2108b6f7a250",
+        "joints": "4cb4e65bbbeb39e3273237afa11ddae366b54e56f2c747aad9c4e8e338878310"
+      }
+    },
+    {
+      "text": "SR",
+      "profile": "heavyOverlap",
+      "strategy": "tension",
+      "counts": {
+        "paths": 10,
+        "circles": 63,
+        "lines": 12,
+        "joints": 70
+      },
+      "sha256": {
+        "paths": "6ed2d49f376c91c0952056cc916ad7ffb16202810396ce8c4833ecbf87b57c64",
+        "circles": "f2cc55b3d94c7a2d2e1de737e5f4bf9a48e346aa57cfe564041dcea9f42b019b",
+        "lines": "59edcc61b4b320de3b09bfd58a23a76752e7a0f57535147991db5d92886555d8",
+        "joints": "f77513be18e9e63a47a9d2260937aa48d3c4d8f4837c5cab0585fb78980c6108"
+      }
+    },
+    {
+      "text": "SR",
+      "profile": "intermediate",
+      "strategy": "weave",
+      "counts": {
+        "paths": 5,
+        "circles": 48,
+        "lines": 12,
+        "joints": 58
+      },
+      "sha256": {
+        "paths": "e2868d9640ce4b4893da78516fc3a5cd0758fae710b2655745c3cf02fad06783",
+        "circles": "727bf4256312408565e6242f430e9ed92a31a8e49df775120b748550b7f863bd",
+        "lines": "d37c55752a553e37ddcf22e02e678d2b33fa187808115937630c76b3e546c055",
+        "joints": "eb2fd89c49deaf22a32ef01aaaa20af815c8f0d5e85d1011725810c0ed84bf50"
+      }
+    },
+    {
+      "text": "SR",
+      "profile": "intermediate",
+      "strategy": "fusion",
+      "counts": {
+        "paths": 4,
+        "circles": 47,
+        "lines": 12,
+        "joints": 56
+      },
+      "sha256": {
+        "paths": "a2a716bc2a2b203bc212e71f89d8ba902e4324e1bb1bbc7744e617e4e9d1f811",
+        "circles": "95e1de141d0d1b77f52ee6cddca49eee647686bf7e430f2f130839b4514a7b27",
+        "lines": "7606d4e9fc99bc7a74a3d5190e2634621109b8eff92555c2792e865373aaf0b6",
+        "joints": "3f19d8c23d20ca69e6742c902dfdc55cd9c302f4e93fa84d14bda18393e7e879"
+      }
+    },
+    {
+      "text": "SR",
+      "profile": "intermediate",
+      "strategy": "counter",
+      "counts": {
+        "paths": 4,
+        "circles": 48,
+        "lines": 13,
+        "joints": 58
+      },
+      "sha256": {
+        "paths": "c264d62ee3aac6f68e3eba3f113a785743626873ec1f7fc8113636ac4d61f820",
+        "circles": "b6115c7766845aeaf3fd66d6f5cee9437b8830cc63ce4b142ee46ad0ecfa87d8",
+        "lines": "6c523e0ca580f1d6a7300da3eda0ae88f3e7be74d09b4e90c579b9409115ca40",
+        "joints": "732a6a867d7880668ea3c4e03929a2187ebf25d6dbe186b4a4cc975916ec8d50"
+      }
+    },
+    {
+      "text": "SR",
+      "profile": "intermediate",
+      "strategy": "axis",
+      "counts": {
+        "paths": 4,
+        "circles": 48,
+        "lines": 13,
+        "joints": 55
+      },
+      "sha256": {
+        "paths": "8d8744168bb1bf0b5969d0f4aa3069eeb2f4afbc80cc2725bd1d315b8bbe7e92",
+        "circles": "f4ecdaac81cfc490d2c6b11be9ac75652ea459c737bf5d56f502429d06e33fad",
+        "lines": "99d52973183c7f4d5c2c1ca4b8fa3aa839486e4c5592d5ef8146bf0a1781c2f0",
+        "joints": "1623f953ffe91507e9c27e4815a476616371baef810b92fbf58bf29fc5f64d8a"
+      }
+    },
+    {
+      "text": "SR",
+      "profile": "intermediate",
+      "strategy": "embrace",
+      "counts": {
+        "paths": 6,
+        "circles": 51,
+        "lines": 13,
+        "joints": 60
+      },
+      "sha256": {
+        "paths": "7acc5317efa0e4152175d19f36ae9e9471c7ca78cd03b2eeaf77c1ddad8b88e9",
+        "circles": "7876ae0090a915dd16bb28f08a6ca68e1a60a671f4027479a7a725915faea990",
+        "lines": "7d928054fe50f847b8f7b5bc130242181bbc825fae5f537ceb194fa7f301d487",
+        "joints": "64efd160a9fa38d6b2bcf5e924bfbbdd2b5c7fc90082eac435bbf9907f20420b"
+      }
+    },
+    {
+      "text": "SR",
+      "profile": "intermediate",
+      "strategy": "tension",
+      "counts": {
+        "paths": 5,
+        "circles": 48,
+        "lines": 12,
+        "joints": 58
+      },
+      "sha256": {
+        "paths": "66d5212d7160b21b63d08faa414718a7c540563025a5916b9500e7de9529066c",
+        "circles": "02c6125c6068484b6f6d1c69d1e0e09ea3ea2935e2e874e966dd69c2558c6010",
+        "lines": "8f38234b6b08e6d3d10794f5efa6f8c017cf66bf1aa7cb9f67d5bf70304fa5d0",
+        "joints": "12c966adba23b52fa513fc1d7932ec342d1352c412cb2933385bd81f8ba6f216"
+      }
+    },
+    {
+      "text": "RS",
+      "profile": "original",
+      "strategy": "weave",
+      "counts": {
+        "paths": 3,
+        "circles": 34,
+        "lines": 10,
+        "joints": 33
+      },
+      "sha256": {
+        "paths": "30e700bfb60c45b6e001c455a789cf874b1d1d4dac803eeda978d8a5dd757878",
+        "circles": "436962ed1351eb738541c1706bfcd6974ddec530c15f8d53538d77ef587e64c8",
+        "lines": "cc2dc82c29d2240bd2a9df4dcd963c679e7fe2d428217513c2e067c3b323b668",
+        "joints": "b40960fc0c06f5015c1f8abfc38670e25d7cc3c32311f2d53b76e1350600f503"
+      }
+    },
+    {
+      "text": "RS",
+      "profile": "original",
+      "strategy": "fusion",
+      "counts": {
+        "paths": 1,
+        "circles": 34,
+        "lines": 10,
+        "joints": 32
+      },
+      "sha256": {
+        "paths": "beff8fab2a46f1e295537b10d8b07f8d82b064481c4cb64962ba3a9bcc655c71",
+        "circles": "b529f28d246b9b508ed213aeaa41a76ab6e8b2d5975a8f1331faa07e48d64ad3",
+        "lines": "f600513355f8dea39c9a50959127aca6d2c36c5bd49e5c4d7d338b5eebcbda82",
+        "joints": "2a659149eac5d5d5a056a4fdd463a1455ccebda47184d980540c897b07db4bad"
+      }
+    },
+    {
+      "text": "RS",
+      "profile": "original",
+      "strategy": "counter",
+      "counts": {
+        "paths": 3,
+        "circles": 34,
+        "lines": 13,
+        "joints": 33
+      },
+      "sha256": {
+        "paths": "15f95e0398bc7b3fd1d15ca2b82761b62d50f49f3656ec4fb2773f68782c5a3d",
+        "circles": "0b71830b00406fba6865020f48eff5f3c98c4ac0e7b4ec8a8a8a3d56bf463183",
+        "lines": "67b234da68036b85b22a6f56e623e9ea1c8649399867949e620881ea36dc7be7",
+        "joints": "2634e25ca8febb2264b6bb07ed9dbff15808ae9303304017f886f84a1005d162"
+      }
+    },
+    {
+      "text": "RS",
+      "profile": "original",
+      "strategy": "axis",
+      "counts": {
+        "paths": 1,
+        "circles": 29,
+        "lines": 10,
+        "joints": 25
+      },
+      "sha256": {
+        "paths": "1dad269cf08b69f532e1b6f218934ce2cf439f909e5f219178197e9d1d24c4e8",
+        "circles": "8dba2064ed9f378b0330c548262135ad94ebbb2c55644ffaa69fffce5efaf56a",
+        "lines": "b0713e46c4ae451ac71f729103dd2ea14aa2d17c7b25b08d999199fd101475c9",
+        "joints": "c47eba438d9124bd6fe0eea3ab4210cb299c9f236cc4d78c6d84cfa6f2742315"
+      }
+    },
+    {
+      "text": "RS",
+      "profile": "original",
+      "strategy": "embrace",
+      "counts": {
+        "paths": 7,
+        "circles": 41,
+        "lines": 12,
+        "joints": 41
+      },
+      "sha256": {
+        "paths": "e467f24c22efb8b6a703d06a941e5a1f101008b10eab30270d41ebc17174c816",
+        "circles": "e016251d04bfce0c63e8a4519c93b0002dff3f07ef2de11730854843974c09ed",
+        "lines": "6dfe4124420dca28d7ff2bad5a11a4cfb8702916035a5e2ff3cfef483f496b56",
+        "joints": "20a7791a3deedf689daaafe03c0b0806dc874cd14237190556e70c81dec19c5f"
+      }
+    },
+    {
+      "text": "RS",
+      "profile": "original",
+      "strategy": "tension",
+      "counts": {
+        "paths": 8,
+        "circles": 44,
+        "lines": 12,
+        "joints": 42
+      },
+      "sha256": {
+        "paths": "fd0274c931fd67555b2a00a178f8f94849a01f4d90ad2b38ef4266f324b84c17",
+        "circles": "f6df054f7e453ba4aec10e3ef2089545cc6d370189b51de707ee1cc1796ecffa",
+        "lines": "eab3b831827969fe42c904d025b57dcb0ebe5cc53c6caf4333732ce788ec56b0",
+        "joints": "473e42f851f8f2d80dc3f6d639cea0d4a0d00bea1f641ce2403646f3b8d5092e"
+      }
+    },
+    {
+      "text": "RS",
+      "profile": "lightSpread",
+      "strategy": "weave",
+      "counts": {
+        "paths": 4,
+        "circles": 47,
+        "lines": 10,
+        "joints": 46
+      },
+      "sha256": {
+        "paths": "9074bb914e218ed10d047e638264d48ac1ddc7f0f129d6d6fe2418156c472f07",
+        "circles": "e215ecf1cdf68b110b97786185f6ebd4aad5bde1e178e305dbe7332f95bee68f",
+        "lines": "358c0e95c7e4ba9930f35fe80a96d7548ef65b052fd3d648f58c4bba3b1967e6",
+        "joints": "7931b4ae02c805a32cf5892a04a078cbd88b6b4e110c8fd829b9595e34a4ae99"
+      }
+    },
+    {
+      "text": "RS",
+      "profile": "lightSpread",
+      "strategy": "fusion",
+      "counts": {
+        "paths": 4,
+        "circles": 47,
+        "lines": 10,
+        "joints": 46
+      },
+      "sha256": {
+        "paths": "ac26a0f76bbb8532b19db3e1a493f9ccffec1885ec68f8e893f4a3bc26190bed",
+        "circles": "43b6411141aa08548cae16384203f1dfa4d218102ea9ba9d0366733f6233a039",
+        "lines": "aa681ad0aa0bc060f13b920ee38e8285e829ba26b99e2c9120316d0bd8bfba45",
+        "joints": "cca47a257f9d34ba6a595cf6a5762b3d9839e5df1f5f49b13573248640428686"
+      }
+    },
+    {
+      "text": "RS",
+      "profile": "lightSpread",
+      "strategy": "counter",
+      "counts": {
+        "paths": 3,
+        "circles": 47,
+        "lines": 13,
+        "joints": 46
+      },
+      "sha256": {
+        "paths": "0aed1a4537f967f7bfa4b8806809b6ad8bc2e6e18b4f71ac095e9f8fddeb8c6b",
+        "circles": "c02f9b969ca2423de21fc4e5e08a82b524cba407c98daccc3d7ded86ad973636",
+        "lines": "e9890b5c3a09c40e66f36fa35ce4897fc8ee88a7f560bb8b265ffb2253503e5b",
+        "joints": "9726ed68c4944a8729849fa9a606c64414887e5f8b5725df5788c9e26de75a05"
+      }
+    },
+    {
+      "text": "RS",
+      "profile": "lightSpread",
+      "strategy": "axis",
+      "counts": {
+        "paths": 3,
+        "circles": 47,
+        "lines": 10,
+        "joints": 46
+      },
+      "sha256": {
+        "paths": "63da357c0ef976600c5dc85d442bc5a8952c9068c54e4cb181325bc935d13581",
+        "circles": "311cbada22f9116bc853874853f0ac6558cbc983d0f14a1d6bab868cecc51231",
+        "lines": "f1a4837688a41d58d30780528baf41ffda1710a8965c37f85e70bb6fb1cfdee1",
+        "joints": "53170d52ed1f880aea835602057dd1e2fec83f28ebcf69570203daefc5b98f72"
+      }
+    },
+    {
+      "text": "RS",
+      "profile": "lightSpread",
+      "strategy": "embrace",
+      "counts": {
+        "paths": 4,
+        "circles": 47,
+        "lines": 10,
+        "joints": 46
+      },
+      "sha256": {
+        "paths": "4b8bdd0a4072f8b9a69d695a15d77ff7e9facf4ca81882fa98e9494b096a610b",
+        "circles": "0e500f5e9bcf6a0c2be7bae9a80b171316ecc630f130292de943dc0cf87a38aa",
+        "lines": "8d8ed5b21db279099a7fafbea234cba2cfb8e180def175451d73386e51f408fc",
+        "joints": "b0408805895e9561ff81410c4dcb8f6a1ead1b756622813cadfc44c9a2e8e37b"
+      }
+    },
+    {
+      "text": "RS",
+      "profile": "lightSpread",
+      "strategy": "tension",
+      "counts": {
+        "paths": 4,
+        "circles": 47,
+        "lines": 10,
+        "joints": 46
+      },
+      "sha256": {
+        "paths": "60f15e6db3935a1bcb47bddd2da4968a32ef5141264de4b3ade5a09113f5944c",
+        "circles": "83970dd44087355893848317732efc72c78467119c95d457e430535b35ea9d96",
+        "lines": "416fd08ac2afd3d2640ba34d500c30a635821068e1ceff868ac9add577df8c79",
+        "joints": "76a27e0479ce67a47f4fbc81c2c1e4691a549d01a7ca01ffeced6d6e109b6630"
+      }
+    },
+    {
+      "text": "RS",
+      "profile": "heavyOverlap",
+      "strategy": "weave",
+      "counts": {
+        "paths": 7,
+        "circles": 61,
+        "lines": 11,
+        "joints": 66
+      },
+      "sha256": {
+        "paths": "316354b601ad1358b1d7b7457e22afadd7680d63eb6c1b229b90a045aee4f4b8",
+        "circles": "875ba1b7bad4c422cfff05e4447523f93b3281940340f3b6ce14e94deb2081f8",
+        "lines": "b53ac7803096b03b293aa047fa0f2eb70b4b6d48207aaa93eae9dae8195e362b",
+        "joints": "c52fa11255018ef8cdf466283f9716e010375964c059dcc0c4f5dab75c88e3c9"
+      }
+    },
+    {
+      "text": "RS",
+      "profile": "heavyOverlap",
+      "strategy": "fusion",
+      "counts": {
+        "paths": 5,
+        "circles": 49,
+        "lines": 11,
+        "joints": 54
+      },
+      "sha256": {
+        "paths": "7af3e151c40a6b4015150d7360b41ec0926321cb311973f9715399b57e65f6cc",
+        "circles": "df34cd7254cf5fac63c47787230d3bad3a3fc02bc847bead28bc550cf199a31c",
+        "lines": "e0e1be70bb8a4f3ecf2713921b331e90eafa2ec02cfcafc7a4fdca153e5eaced",
+        "joints": "191743fb0249ee2c620b4098a986672099e68b3cefb3f5794556ee706b365832"
+      }
+    },
+    {
+      "text": "RS",
+      "profile": "heavyOverlap",
+      "strategy": "counter",
+      "counts": {
+        "paths": 12,
+        "circles": 63,
+        "lines": 17,
+        "joints": 73
+      },
+      "sha256": {
+        "paths": "6cf24b37084976f0fb155cb15ab72f18ce1e132dc2c48f3b1c100f59cb209014",
+        "circles": "a66af83481e5884b803a5238ed97d2675bc79759ff2517e900f0c7ed03ed43e2",
+        "lines": "bc42aaadb995af1effcd6247a4bbdde77649534c2357a32d49ea21fd5eefdc6b",
+        "joints": "002df2e1dff03df57564ad64d6ef1a7cf532b3fc51f3874b78e6c0ed3ec4e291"
+      }
+    },
+    {
+      "text": "RS",
+      "profile": "heavyOverlap",
+      "strategy": "axis",
+      "counts": {
+        "paths": 5,
+        "circles": 51,
+        "lines": 13,
+        "joints": 56
+      },
+      "sha256": {
+        "paths": "9c833651d34d19d1c15cd90d3e8f08355d039e315c657dc947a4663df489c031",
+        "circles": "58a7625676bdd5994f9e218c1d1261e4c46901e4196d57c9383bedbd436c259a",
+        "lines": "ccea3a872232fb3572e93a310974a3df01942ca87e1ac118db856d72e70ede67",
+        "joints": "49fa10330013c267842f457e468a121d03e9faa0f37109fce8fc84a942224be0"
+      }
+    },
+    {
+      "text": "RS",
+      "profile": "heavyOverlap",
+      "strategy": "embrace",
+      "counts": {
+        "paths": 15,
+        "circles": 82,
+        "lines": 14,
+        "joints": 90
+      },
+      "sha256": {
+        "paths": "9659986c4a88c09ac0919f3f2d180babd566d930eb3ad30f9ef76c217331aa97",
+        "circles": "55a63ac297dc601c83d83954514f90bc32c2dc0966d992b93f5c80bcb8250ce3",
+        "lines": "8d3deca9bc58e62669d18497bfba20d2a47dd77f34a86d3f82955cc452ad5a15",
+        "joints": "863428695856716677ecca8b7e715b8f4763a9fc9a6d5def3a23efa22610a052"
+      }
+    },
+    {
+      "text": "RS",
+      "profile": "heavyOverlap",
+      "strategy": "tension",
+      "counts": {
+        "paths": 12,
+        "circles": 75,
+        "lines": 14,
+        "joints": 82
+      },
+      "sha256": {
+        "paths": "aa5cb04a8ec2b71d8d95d657354e7de01fc98ec97e02240627366e154f886ff0",
+        "circles": "6876990b5a93916f42a73e3562ab7ddbe0f76c20341ff2935bc4327514089930",
+        "lines": "d61452c3f928c9485599271b240e8229bda63e1a08a83fad7d2034ed99c08b09",
+        "joints": "c2ea95ced21d74f77fe9f7153166d0bcc1f7a8526fbd5c0aebfc5209f94d6bf0"
+      }
+    },
+    {
+      "text": "RS",
+      "profile": "intermediate",
+      "strategy": "weave",
+      "counts": {
+        "paths": 5,
+        "circles": 46,
+        "lines": 12,
+        "joints": 54
+      },
+      "sha256": {
+        "paths": "4fe8b51812e4804fa56e6844746a24ceb7b3c7e6dd60e60da6bb6cd5b3ac5720",
+        "circles": "f2e816066506975a1dde855ac09abc6849c6805433f829ac776eae7c12089b72",
+        "lines": "3937ead9bdefc4325374f4072a4c2b76dcb2f6dfd93f60ce48419f17de0601bb",
+        "joints": "4cabda2baa5bc0ac4b31ef5186bb0f8a9ce570e6cbce3f05d5b31594c9ee4406"
+      }
+    },
+    {
+      "text": "RS",
+      "profile": "intermediate",
+      "strategy": "fusion",
+      "counts": {
+        "paths": 3,
+        "circles": 44,
+        "lines": 12,
+        "joints": 50
+      },
+      "sha256": {
+        "paths": "0c804bc8862fbc2aafa7320d6bdc8728cc6128ac34c48134e77d32f567d111d2",
+        "circles": "fb5731348b38fa4ea82f6c9e9ebb2ac50276e0874ffd2c0aa0b224bebbcbe745",
+        "lines": "d3fe51514fb1acd976c879683c609c361efcec424bbb6821edcbd627cb632039",
+        "joints": "a8078f0b5d6dbbb4b8f0aee4f8ca14cefa19050b92a7b9c4c890f7d65a38a0e2"
+      }
+    },
+    {
+      "text": "RS",
+      "profile": "intermediate",
+      "strategy": "counter",
+      "counts": {
+        "paths": 6,
+        "circles": 48,
+        "lines": 15,
+        "joints": 58
+      },
+      "sha256": {
+        "paths": "29ec6183be12eae10f0c9f9828af5571aaaaf0a0c2eb4868c1bad5f785d20cf6",
+        "circles": "22a0076ce014c4357fa874a37cf82ba191c6628906ac980966ca8b099f9cdd8a",
+        "lines": "551c846ba069f0a39ea9d40061e01d0c73823d5af380552bd1b191aee231ecb8",
+        "joints": "33d8e189afccf232ccbcc3e69ce1358fd4bc1da30bf5128222a2d26289e469fd"
+      }
+    },
+    {
+      "text": "RS",
+      "profile": "intermediate",
+      "strategy": "axis",
+      "counts": {
+        "paths": 3,
+        "circles": 39,
+        "lines": 12,
+        "joints": 44
+      },
+      "sha256": {
+        "paths": "cec283d007d6cf59e60bbb1168f9254ea78d68d7c275505f30a892b5d890b397",
+        "circles": "59ec338bf0500444b0d7b0ec122dbd7f1f58313acb8f6515157d925944b9b5bd",
+        "lines": "cf2b19b1b75eaa0200231f85e5d9d015286c17edaea66b288a2792ae4a81eb2b",
+        "joints": "95af3ac89b5cb8d8c162896b7fc2d2b72b54735cc9749dc53025337c3fce8815"
+      }
+    },
+    {
+      "text": "RS",
+      "profile": "intermediate",
+      "strategy": "embrace",
+      "counts": {
+        "paths": 9,
+        "circles": 58,
+        "lines": 15,
+        "joints": 67
+      },
+      "sha256": {
+        "paths": "90ba1212c831508c670d36ca68c2bacfdc1ae380ae3bafd84f299830c48bf065",
+        "circles": "e280617b39c8cb1efe5d96b9fca87a3caec26a76ed6e125f5a7090e288fb513d",
+        "lines": "48ad6bb8f3a2a7661d8e57f9f51723766f78d597e9fd43de35e22756e12f439f",
+        "joints": "5870b7d0b433e6d002dccb45a28b0d0fc0bc1a6a8321cb1c0c02dca1a25bece6"
+      }
+    },
+    {
+      "text": "RS",
+      "profile": "intermediate",
+      "strategy": "tension",
+      "counts": {
+        "paths": 10,
+        "circles": 58,
+        "lines": 15,
+        "joints": 66
+      },
+      "sha256": {
+        "paths": "252aec1d367e1d8cc7a9b86bb0e9c5b12768ac06a6577693610ea09623102ff6",
+        "circles": "96c2fb5ba22f9a8ebea1910c893f71f22ee519b1ba8075fce4202a606b00112c",
+        "lines": "66b714da26e748cf2aedbc95e96fbfeb9b27cf98fdc9678ee7d2359abbaeae23",
+        "joints": "8422d84962ed19e1e716b4fa671d52bc09c7916e4ef85818c87ef07fbb7b5864"
+      }
+    },
+    {
+      "text": "BJ",
+      "profile": "original",
+      "strategy": "weave",
+      "counts": {
+        "paths": 5,
+        "circles": 7,
+        "lines": 12,
+        "joints": 2
+      },
+      "sha256": {
+        "paths": "1e8e66020b287013fa31020ad005b745607cfa15491330bed9e0d752b1fecf7c",
+        "circles": "cb87ea4ef6696404c047421741fb1ba7f93992a8eea84de2444741c0f832d4cc",
+        "lines": "8034b24b826773b3bbfad434e0ab9400f4610194ee44c6274d74cc512b67f83a",
+        "joints": "f5951c61a1f38cbf772f793a075ad33789d321d8fb615fbde37a20533fc758ca"
+      }
+    },
+    {
+      "text": "BJ",
+      "profile": "original",
+      "strategy": "fusion",
+      "counts": {
+        "paths": 3,
+        "circles": 6,
+        "lines": 11,
+        "joints": 2
+      },
+      "sha256": {
+        "paths": "ea586ae42e1c72fd69920e2b79a33ca86d3d6884604c6cff908aa4be62898254",
+        "circles": "797eb6d42ea19f2c9d416ec3f02bb08b706d200cb9e5a937f910824fd2e3733f",
+        "lines": "cb75b4c07fb23408bc4ef29c619e4ccbf0e14b4759a51b5e222877299b1539fa",
+        "joints": "fb8ead47f5e0d23049c723c818553e1351769ab10ea0fcdb89c1f7c2d1b12084"
+      }
+    },
+    {
+      "text": "BJ",
+      "profile": "original",
+      "strategy": "counter",
+      "counts": {
+        "paths": 3,
+        "circles": 6,
+        "lines": 12,
+        "joints": 2
+      },
+      "sha256": {
+        "paths": "68eb1b6e6a755e3eeea8e80f586d38dc5026571256a211cb1fb197dc9299299e",
+        "circles": "31906bf4e3addafc8c0bc77fc1e31063a5f05ec512310105f773dedd9876eee8",
+        "lines": "88f5d9d95688e584d750c0e2d72f76783faa505254d5053c4c24c10ce6f18b74",
+        "joints": "c9f2b3850b84bbca0d30bd1da87307cb823be877ca448ce2df7a0f2eb52d8232"
+      }
+    },
+    {
+      "text": "BJ",
+      "profile": "original",
+      "strategy": "axis",
+      "counts": {
+        "paths": 3,
+        "circles": 6,
+        "lines": 11,
+        "joints": 2
+      },
+      "sha256": {
+        "paths": "ca5672c9b142f87df0993ee4b23b6424d538a7698266ed325d5248e5ee68f3ce",
+        "circles": "56a5a9d0980eea58c6ea68df1ec1b59695494f4684b2e58b25631e7acaa75dd1",
+        "lines": "ab1ab384e01afa34653aa0469695a07f5900b543c79e68195ef81c70ae76830c",
+        "joints": "d2e84008e20814cd2e01ebf8c8d3354003fc278e8ccec3f62200ca98e45fd64f"
+      }
+    },
+    {
+      "text": "BJ",
+      "profile": "original",
+      "strategy": "embrace",
+      "counts": {
+        "paths": 3,
+        "circles": 9,
+        "lines": 12,
+        "joints": 4
+      },
+      "sha256": {
+        "paths": "89530b951a6957269197986aa54a4d535ac22281fd72ad90ac7d88bb6226c5b1",
+        "circles": "a1bc6aa7f6b319cf2be766ce7659c14bca77e1f3e21060b96ceea54317becc37",
+        "lines": "174346df324b4eea8e26bbd82be025f48288ca45caf5a9d5f861f83333d64636",
+        "joints": "165e288619f62b6f160fa99140cfba9dcec27d6c1f5f3e3e49520d758c6c7728"
+      }
+    },
+    {
+      "text": "BJ",
+      "profile": "original",
+      "strategy": "tension",
+      "counts": {
+        "paths": 3,
+        "circles": 9,
+        "lines": 12,
+        "joints": 4
+      },
+      "sha256": {
+        "paths": "c7cac5b698b2bca24c0fa91ff44947e2d648faeb738115d4eb025c5cae635c74",
+        "circles": "d7d15fcf2409da2bbf4df7afe1318694b39cde707e28d94f41a8dacc0ed065de",
+        "lines": "75cdd259e023922f81d3f7abbbf8fc5084e75880f01f3d6ae360ff1577a82563",
+        "joints": "815b4b14c02c7b45e629ead4c6236af904a69d70ea1029b98a66e59309570831"
+      }
+    },
+    {
+      "text": "BJ",
+      "profile": "lightSpread",
+      "strategy": "weave",
+      "counts": {
+        "paths": 5,
+        "circles": 6,
+        "lines": 13,
+        "joints": 2
+      },
+      "sha256": {
+        "paths": "bea1b4577f4e2479134f924676d358e5e7bc89fa9a92ac758a66581a6c7b36bf",
+        "circles": "28d44a627fb8d34052f424878b8c4919d851777462996e5a89290d86cb1abe31",
+        "lines": "cf4708a88d825a19488f250de3b4f533738a698b90b29d3775cefb111bdfd760",
+        "joints": "08c5d8cbe3669b4ddd9eb792463e913b4d06d027ce9262bbc2c231d7d7e7a9ad"
+      }
+    },
+    {
+      "text": "BJ",
+      "profile": "lightSpread",
+      "strategy": "fusion",
+      "counts": {
+        "paths": 2,
+        "circles": 6,
+        "lines": 11,
+        "joints": 2
+      },
+      "sha256": {
+        "paths": "c534f400e87a05e2edb36d403e59e10259a84715ad2b7de28fd2d3c50be52e68",
+        "circles": "09de2b1382a07a6c427ccbe98fb4d9090324b4cdd8a821dfdd4c00d7dab7fc5e",
+        "lines": "464c1275326f9d8ec6798ecb9f0caed98360506bbdea6681b6860c1b9b89bc2a",
+        "joints": "1ec8279b18442facc6385dac75005ee397336c597b5994736403554e8e21d33b"
+      }
+    },
+    {
+      "text": "BJ",
+      "profile": "lightSpread",
+      "strategy": "counter",
+      "counts": {
+        "paths": 2,
+        "circles": 6,
+        "lines": 12,
+        "joints": 2
+      },
+      "sha256": {
+        "paths": "c46b48f602e0389f33b9ff5c9d4ebff495d821ed349105bfa89e4ae1f7bd80a0",
+        "circles": "fdf922132b731be538dc479f4411fb347824610855a46f13b7b673abeb2b7438",
+        "lines": "81231bd9d5c827e2712769686f3f63d1dcdad586d05f4f838c970eddabec6bfb",
+        "joints": "7569112d625c2d7f19b519e483567a4b956080c4f90f47c2fe336dd261d298e7"
+      }
+    },
+    {
+      "text": "BJ",
+      "profile": "lightSpread",
+      "strategy": "axis",
+      "counts": {
+        "paths": 2,
+        "circles": 6,
+        "lines": 11,
+        "joints": 2
+      },
+      "sha256": {
+        "paths": "ae81f5af62f33261521b71f881b5e1edb856566cac95404841257749e93b0299",
+        "circles": "a8dbfad2251935662cb5e2ca3e2cd553a945406bbdba9fd88476cf7c11116c97",
+        "lines": "173022130811ccbb959739c77bde750ae339acbd47a209678d0e3a375d80af11",
+        "joints": "c80af199cd07c5ddfa2624b0bec307d6e9813ac0348374f7922c781807f1bcbd"
+      }
+    },
+    {
+      "text": "BJ",
+      "profile": "lightSpread",
+      "strategy": "embrace",
+      "counts": {
+        "paths": 4,
+        "circles": 8,
+        "lines": 12,
+        "joints": 5
+      },
+      "sha256": {
+        "paths": "bfd2dd2fdfb13e21bcae081c17689c34bc83a501b946559c1e6421efa14da2fa",
+        "circles": "3758a30d9e549af219e440136e5eb83bf3e51ef5b83d1a98662e7fe59caf8d47",
+        "lines": "4002a942c991d1acfd83d524c7b7dcbe92ec7e090bf1b92202c286611c77426f",
+        "joints": "ad2f81c520925c988e1d321d8600a00444d3439f7e41ed8b7aba7a21e836ac64"
+      }
+    },
+    {
+      "text": "BJ",
+      "profile": "lightSpread",
+      "strategy": "tension",
+      "counts": {
+        "paths": 4,
+        "circles": 6,
+        "lines": 12,
+        "joints": 2
+      },
+      "sha256": {
+        "paths": "37fa7ecf30b606a305d4a7e6870a18e92032eed944cbd381b120b32d049ccf3c",
+        "circles": "923ebdf51bcca0cf4c338d0e80943bcab1f7f09d93507647419b55850222ecc8",
+        "lines": "3cc5321507e8fbb675e466c3a81e35abd340dcb66d96d150a9b0d8a58ff0bbb3",
+        "joints": "a14ba999af5de0fde98ca6345564ce094b06d1b23ba1d7302a57dc8b48b38cb7"
+      }
+    },
+    {
+      "text": "BJ",
+      "profile": "heavyOverlap",
+      "strategy": "weave",
+      "counts": {
+        "paths": 4,
+        "circles": 6,
+        "lines": 11,
+        "joints": 2
+      },
+      "sha256": {
+        "paths": "0bfda986e26e99dfb3498d21859f7f76716dd013093ad2d8690bfa86a9cfea49",
+        "circles": "615047d8a62b93cf371f0c31ba5eaf1002de2c66b9a25d1c2700961d0d9155f9",
+        "lines": "0440f380f08f7de19da29ac3841e4ebdcf8dda5a290e273d1cabc84ebc968301",
+        "joints": "75c93a4d8f154ff749fc4121583dc2bba93dd962aea4ef796efff212a7f57d7d"
+      }
+    },
+    {
+      "text": "BJ",
+      "profile": "heavyOverlap",
+      "strategy": "fusion",
+      "counts": {
+        "paths": 2,
+        "circles": 5,
+        "lines": 10,
+        "joints": 2
+      },
+      "sha256": {
+        "paths": "0889006121c5d0360f4628c3c69f66d837e817d4826577c68ebab26d4c7460f7",
+        "circles": "0e10a767d781c30ae59caca48f3b0110e3c2618e6f9f51e3b71d81d6bed97803",
+        "lines": "2d5e742b9b694f83aa09cdcf3c2c7124ccadbc77853633062f285e9927ce3d0a",
+        "joints": "5909cccd60ebe1401fec7253947659911e8638f46cf5029f017dab2a67811da7"
+      }
+    },
+    {
+      "text": "BJ",
+      "profile": "heavyOverlap",
+      "strategy": "counter",
+      "counts": {
+        "paths": 2,
+        "circles": 5,
+        "lines": 14,
+        "joints": 2
+      },
+      "sha256": {
+        "paths": "5b1d5025b3a059450c95e5b6239d037f465a1426bba58c96a742b07a70a7d45a",
+        "circles": "22b12dd9f0bb0cc3934d14ae9ec527c164261b748d6d82b1cba7abe65246c6bc",
+        "lines": "f43a50653884238caa8b7c99f5364ce9e8903a9aa5fd765cbed6653a8f837c60",
+        "joints": "c3bc3dfdd868ae631f757ef810ce9417d1cd1f0d16a477f75e38349b5712faf4"
+      }
+    },
+    {
+      "text": "BJ",
+      "profile": "heavyOverlap",
+      "strategy": "axis",
+      "counts": {
+        "paths": 3,
+        "circles": 4,
+        "lines": 11,
+        "joints": 1
+      },
+      "sha256": {
+        "paths": "a47a0fb14243f0019cefc3f39f38f8820e3fbf6c146be8a363439c96f634ea2f",
+        "circles": "1dba5d8fb34e77343e2eaa24615201f6a407d1f6e204306f961fe327a0b9cd8d",
+        "lines": "39ac112145991017683b49489d73574c4fdfb7a4a996444af064807842ee41d4",
+        "joints": "a092c668c892ff930d3692f1b2f0c3b8c41fa56bacbaeb992c48bd329d76ce63"
+      }
+    },
+    {
+      "text": "BJ",
+      "profile": "heavyOverlap",
+      "strategy": "embrace",
+      "counts": {
+        "paths": 5,
+        "circles": 9,
+        "lines": 14,
+        "joints": 9
+      },
+      "sha256": {
+        "paths": "679c1a5462156e6a61e36e5b92ba356e4e9919cf979f42b4f985a81dfb7b0821",
+        "circles": "b32a103dd7bfdefbf15c3f6e6a48827db3daef14e8d5021b40c93ac70f59404e",
+        "lines": "2ce834d628c4975fe351b02a7b29011bd05ac0d25c5a8979ddd5458a11eeb3e8",
+        "joints": "76c65c86c678e8b39e298e7cbfe414fc0a985099b6b9a0e0cf71e0f3c9b43ff2"
+      }
+    },
+    {
+      "text": "BJ",
+      "profile": "heavyOverlap",
+      "strategy": "tension",
+      "counts": {
+        "paths": 6,
+        "circles": 9,
+        "lines": 12,
+        "joints": 9
+      },
+      "sha256": {
+        "paths": "2e44987a2a2062995f9abf208021c8339f2388043d3e8d269164e874da634af7",
+        "circles": "4d80c5d09a13425243fb87371d14a1471fcfb5059ac014b8f4abe5616ebb77fe",
+        "lines": "1ed2fb8e268259d453e89804573bc79ad7a87547f3bc906fb43d854ffe67b976",
+        "joints": "c80588feb75f8063f365f05357473b3d036f5c4b053c4b0b9193c973da5e9cbe"
+      }
+    },
+    {
+      "text": "BJ",
+      "profile": "intermediate",
+      "strategy": "weave",
+      "counts": {
+        "paths": 5,
+        "circles": 7,
+        "lines": 12,
+        "joints": 2
+      },
+      "sha256": {
+        "paths": "0b1a25dc55eb8fcd7f2c9e367b5bee84b7ce97e426d2d1fb046a6be5af9cffce",
+        "circles": "8fdb2f10e504b52ea99c0d26f30539a048a813562a2687317a05726a686a9aba",
+        "lines": "f9e61a8eecc7029d4c8990a4693305559c585429da3900c4b7596a1dc8a9cb3a",
+        "joints": "a050da9a8518918106325cd6a0f5ad811090f99a04c22429b505eb79da8e9d93"
+      }
+    },
+    {
+      "text": "BJ",
+      "profile": "intermediate",
+      "strategy": "fusion",
+      "counts": {
+        "paths": 3,
+        "circles": 6,
+        "lines": 11,
+        "joints": 2
+      },
+      "sha256": {
+        "paths": "7a46727af07a23bc7be12b97d96f9c9c24a43a97ed77b731f7903e67e38dd5b7",
+        "circles": "abb713690df7972087cd5250f012ba2668d36cefa64d6c7fc5689641c422a1d4",
+        "lines": "1214cba27c9b5991c8bc6a9f97e8678e5e13da0f85abbd40dc86440fe3dd6319",
+        "joints": "752133fb4659d1ddef9cc0c5a8c5b23301e9b1f6c98a8a9bdab1f8b3e385db2e"
+      }
+    },
+    {
+      "text": "BJ",
+      "profile": "intermediate",
+      "strategy": "counter",
+      "counts": {
+        "paths": 3,
+        "circles": 6,
+        "lines": 12,
+        "joints": 2
+      },
+      "sha256": {
+        "paths": "dce64d64516d89884c7f3a1ad7768a71227c7f3fc97f6ab04584b033e863f511",
+        "circles": "3e82e6370ad3ce94b6f888ea4d024fbcdd1f3c5a7be07d2a797473cf52e02ecf",
+        "lines": "9416753c1cb0803d44fe014890b7ca63d1b534de084ec72a9e22f62177eff4fe",
+        "joints": "2d53367fe67b3c6cc07273a40a13dbc661d16846094b09322d4ef462ab60fc18"
+      }
+    },
+    {
+      "text": "BJ",
+      "profile": "intermediate",
+      "strategy": "axis",
+      "counts": {
+        "paths": 3,
+        "circles": 6,
+        "lines": 11,
+        "joints": 2
+      },
+      "sha256": {
+        "paths": "c625b5ad86309d95577325a8bb26be8d9c93dd0bdb68b978913be547dcab3049",
+        "circles": "f90abb39cf18efb827471f4dadb7b42c307cea4a4539de785c8b68dfcf14c673",
+        "lines": "2147246c7eb58d56bb569559ac7c9e33831c53eb07b3bb55a8457c3b379ce72b",
+        "joints": "4927c10fcf9b92bcb5b9e70422fb49c45f0f39a7a31de7cfe71dd675d5984c2b"
+      }
+    },
+    {
+      "text": "BJ",
+      "profile": "intermediate",
+      "strategy": "embrace",
+      "counts": {
+        "paths": 4,
+        "circles": 9,
+        "lines": 12,
+        "joints": 5
+      },
+      "sha256": {
+        "paths": "e009e554a2f7b6a14c532f9efbbf3303e6e17cb69b2c63ecaea440b99ef55468",
+        "circles": "2e34295be26901a0275f43d9272ec393b618273b195a935129ca59b022027eab",
+        "lines": "31937587c153ff6daee72a09798e100318c8bbf5e4b6254f0a46944bf0843feb",
+        "joints": "ab2cebc74b229facfb045b7a78a1bc469f57d0ed8ce00b9db94d8da822d42604"
+      }
+    },
+    {
+      "text": "BJ",
+      "profile": "intermediate",
+      "strategy": "tension",
+      "counts": {
+        "paths": 3,
+        "circles": 9,
+        "lines": 12,
+        "joints": 4
+      },
+      "sha256": {
+        "paths": "f2de9de4567166ebefe0dd7a4bc3132200b23ca5cf11362672a652b1e37b9008",
+        "circles": "ec257fb40ee93dabd9b1039a4d35806c3f78b523d8f0700c174c4f7f06250a17",
+        "lines": "5848e991bcd01e029e887cd78319d8a473f90d1a8686ac86f8ee690a555555f4",
+        "joints": "543cf6bfb4149ba12558423e57c10ea3836a6a3758483a09cb68cb1a76c66ee9"
+      }
+    },
+    {
+      "text": "OG",
+      "profile": "original",
+      "strategy": "weave",
+      "counts": {
+        "paths": 3,
+        "circles": 9,
+        "lines": 12,
+        "joints": 2
+      },
+      "sha256": {
+        "paths": "9a5214ce4822df8859b139144bd0ca9f11c032dbc4a9ac818967340904baacd9",
+        "circles": "672660f0e1856a5a721cf5da3e1902c8942a3b11772bfd53931dbb9b99c8969c",
+        "lines": "33396edbaacf9939ee6f24750b5a7965b59f341fc73760cc68a60db5247b1864",
+        "joints": "b4a77525071fc2554df9d2ec6916cf8999ba976484c7a1c2759f378fc290781d"
+      }
+    },
+    {
+      "text": "OG",
+      "profile": "original",
+      "strategy": "fusion",
+      "counts": {
+        "paths": 4,
+        "circles": 4,
+        "lines": 6,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "7fe54223fb128bad98a3aa363f392efb39b78e8f70bb8ce34f936514b90f4ed4",
+        "circles": "27361e4fa083515a3f44b9415f87e8d25f3dd79a9102734e770fab9393be91b7",
+        "lines": "3e0bba24ed3084d28392dbda8cc7f037fb378298b3924d3a7911a67670f8d1de",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "OG",
+      "profile": "original",
+      "strategy": "counter",
+      "counts": {
+        "paths": 4,
+        "circles": 4,
+        "lines": 9,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "1d5f1d4812e8301b4a705cdf71bae14cfc02210c21e0463d508ae6030df24d48",
+        "circles": "7de5d39d7f9b9a0e0ec9b7de31cf2de8edb9868c03ef07d7c38895916c268e42",
+        "lines": "c37bfaabdaf05bc30d46b2db811ebea9697e770b544a2d451d14ad16eb19abcd",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "OG",
+      "profile": "original",
+      "strategy": "axis",
+      "counts": {
+        "paths": 4,
+        "circles": 4,
+        "lines": 9,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "db8ef621528195888bcd8677bd4050c979981ef6156018c93fbaa26885815e04",
+        "circles": "f16a3929d1a46ceaa495c1971f93568058e5fd81fc3ddd9ed30f99f7f8895fd6",
+        "lines": "e812e11ab11e56a2d9e6af0b4d42c89d89696d94dff9e398fb01b44a42c98c71",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "OG",
+      "profile": "original",
+      "strategy": "embrace",
+      "counts": {
+        "paths": 6,
+        "circles": 6,
+        "lines": 11,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "c0b3e1450c84ec1ca813663366960ce84cf0087d40b21166fd526b60b8ea8ad2",
+        "circles": "07398a3394c6b37f8af9b69474af11765ba77c643b383dace04553777fec5f40",
+        "lines": "9a9093c579f5f2fd31e8452bf0975e363ab1478ebb9929a0b18308353f7f87d9",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "OG",
+      "profile": "original",
+      "strategy": "tension",
+      "counts": {
+        "paths": 6,
+        "circles": 8,
+        "lines": 13,
+        "joints": 4
+      },
+      "sha256": {
+        "paths": "c0f981df82e1762ee94c1b15bfa6512ab0e780bc13a5fa9992b54a462e7e27f2",
+        "circles": "b386c360cfb99d49319facce6939b0062efae68a98c31e58b5b6b8328d41c931",
+        "lines": "f2cd3304ff738a8fd467310defc8e4007b5cddb41e35f57cf02daaa93f5e61a9",
+        "joints": "16700144be3de0a1a4702e252ec754a392fa0c522198404ea4888f46e2787c4a"
+      }
+    },
+    {
+      "text": "OG",
+      "profile": "lightSpread",
+      "strategy": "weave",
+      "counts": {
+        "paths": 6,
+        "circles": 8,
+        "lines": 8,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "ced4326bea1ffd8e55a770bc5859d9e9a61fbcb8dd485cdf3ed6bf2ae51110b9",
+        "circles": "af0aa85e306855e0fae811c91ab29aa391cf980f0d4e50095c9964276e0e50d4",
+        "lines": "ecfc5997ee03bb71ba3949fe0c3efce897d710db90bbeec1c607b6fc2b4bdb2d",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "OG",
+      "profile": "lightSpread",
+      "strategy": "fusion",
+      "counts": {
+        "paths": 4,
+        "circles": 4,
+        "lines": 6,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "10de6430d80465c5af5f01ff2d702a755563a3811ed2997ec8ce26b82f9bb0ae",
+        "circles": "e5e085074e4a18054fea06b7e19041821ecb3e00236178512059cce5a331c523",
+        "lines": "83f06b36b8ac147874732b68288bd2bf2ea808f8c9898635a5b0e8067526340a",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "OG",
+      "profile": "lightSpread",
+      "strategy": "counter",
+      "counts": {
+        "paths": 3,
+        "circles": 4,
+        "lines": 8,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "c6f9635b5fa16a3c4619034688083f50ca1bec1bc45457b41702c4fcc7748c94",
+        "circles": "e23179fd52211ad09388928d6ab70e6bcd27646fddb3542be8d7a366b6d50a5e",
+        "lines": "b6549ac509175188d8ed53a3e3ca111a42b9bcbf946666e50e3c2df11ee4d1bf",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "OG",
+      "profile": "lightSpread",
+      "strategy": "axis",
+      "counts": {
+        "paths": 3,
+        "circles": 4,
+        "lines": 7,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "b099bee780747c7654e3952a7d7bb113e02b37553e86921ae2bd79fb4924ffe9",
+        "circles": "afd021cf103861c6afaff1b6dc74c5347c5be224196cb9b9e0a0287ce394a31f",
+        "lines": "bf475840b069083d8bcd896bbc37aac93122e254f46cad7f37754363373516fe",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "OG",
+      "profile": "lightSpread",
+      "strategy": "embrace",
+      "counts": {
+        "paths": 8,
+        "circles": 6,
+        "lines": 11,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "930d93a5779aa89162a884dd16e96c8cac356a1697bf84dbd5bce6d500b7dd5f",
+        "circles": "338ce8bd3256746a52bdf59d409fdc6287e9a0cfb4c60d5ada5f429ee2fe93ad",
+        "lines": "52542f70eb3d37a738414b920d1480ef35e98a46d4eda92242318cc85467ff70",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "OG",
+      "profile": "lightSpread",
+      "strategy": "tension",
+      "counts": {
+        "paths": 5,
+        "circles": 6,
+        "lines": 7,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "46b50cc612df1f3e955c8944cb5920221568fc88f7744189cf78299d5d157a98",
+        "circles": "1fa4f23a46f4d941ce5f57a85b0e8766cdc1be3cb01d98284e052070b7f3724c",
+        "lines": "7d5344df0134ffe9978fd2352015bb48ea6c9f55441a79025ac73dd68ad3e3e4",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "OG",
+      "profile": "heavyOverlap",
+      "strategy": "weave",
+      "counts": {
+        "paths": 3,
+        "circles": 9,
+        "lines": 11,
+        "joints": 2
+      },
+      "sha256": {
+        "paths": "8abcfab631ce33d2aca393afaeea05a27538c2126e617875b286aecba2e4ca8b",
+        "circles": "49ed23c7607237d8cb5e0c251f21b92e6db520687e5cb3be6b79139de7abda18",
+        "lines": "723a825d14678aff50bb0d80e88aa6e77901f50039c0940ec2db0937b6b5a975",
+        "joints": "43018849e27dec0c6f6a5c093033c415f45f14b31ede8d0cd25b5d66c74edfef"
+      }
+    },
+    {
+      "text": "OG",
+      "profile": "heavyOverlap",
+      "strategy": "fusion",
+      "counts": {
+        "paths": 4,
+        "circles": 4,
+        "lines": 5,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "acceb37c721d5030c5692667a693b823b65402606dcec1060a03bf5ed9706452",
+        "circles": "4ba30fd6af1f3bf43849087a3da1daee8866b10fde7601ab741ce4cd626f9763",
+        "lines": "01dd02c506bc74a7393861a7240bd85ec4ad83db5ddf2962b1c671867fdcc489",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "OG",
+      "profile": "heavyOverlap",
+      "strategy": "counter",
+      "counts": {
+        "paths": 3,
+        "circles": 4,
+        "lines": 9,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "54e89f192a47db3f9e95e92e81bef949f82dc46e19383ab3d0b605385229a8a1",
+        "circles": "9a62dbd1531bd59d3e43df250aaa487f033392c5a0a1e1ef1575579ac1db1876",
+        "lines": "d19d67d7150734750bf5bf6dfc580a153a1c4f93e52ed7c2e213331d3812f9f0",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "OG",
+      "profile": "heavyOverlap",
+      "strategy": "axis",
+      "counts": {
+        "paths": 2,
+        "circles": 4,
+        "lines": 6,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "5c7b966eb4d5fa0c6d4949d010ebcfc06a2c6650061f1fb4040b0a026c2bf9dc",
+        "circles": "ff5938f47d1a9ab9e6e0cad99982b4694c439031f1ba6649f415329463cd2161",
+        "lines": "dcdf4bf6c280a3ae2b2903d48fb82a0b3bff053292dd9ed15414d9ebcad40f46",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "OG",
+      "profile": "heavyOverlap",
+      "strategy": "embrace",
+      "counts": {
+        "paths": 5,
+        "circles": 8,
+        "lines": 10,
+        "joints": 3
+      },
+      "sha256": {
+        "paths": "05331dbdd94bcdd197d7d13f21503bee052759efba390f096c4cbf8ea8059f64",
+        "circles": "731ff1255139ca01dd651857c2afa112597e591c56d6869787eb94595fc9f2cd",
+        "lines": "85493cefd427e07a489bc7b6e95a7344720bb4a8b7ff4fea7d97f0b5c7bd25d5",
+        "joints": "5165e06a6f8bc58173a7f26124eb9c5d254e5e2d7eb325cb936412a7218ce177"
+      }
+    },
+    {
+      "text": "OG",
+      "profile": "heavyOverlap",
+      "strategy": "tension",
+      "counts": {
+        "paths": 6,
+        "circles": 9,
+        "lines": 11,
+        "joints": 4
+      },
+      "sha256": {
+        "paths": "b9b7905501052b87272da0dd7db22544e8eb08d257b10f432770afb5e50977a1",
+        "circles": "ae3d7e68b58be2f43cc900f66f41b696a8ea539e165b9872fbb5394813ba4ab1",
+        "lines": "620428a56119dddfebe160c973f0872c73d5ec44ccf98858183a8a0e9f8eaf21",
+        "joints": "ae6e23f79654f4ce1475d2ca1b64ac506d39908a4d19e8a85c6d480f90d3d1dd"
+      }
+    },
+    {
+      "text": "OG",
+      "profile": "intermediate",
+      "strategy": "weave",
+      "counts": {
+        "paths": 4,
+        "circles": 9,
+        "lines": 12,
+        "joints": 2
+      },
+      "sha256": {
+        "paths": "2c46fbcabfdfb2b7bd289b50ec981d5413888819128dfe424376a18a486f00d9",
+        "circles": "d8b79b04af61f2702eae4e877a01c11ff298ce6eafce4127f2b1a775803b71bc",
+        "lines": "e7f13f2ef739f3d17c0dda4e684845bef779c5ae5af166a5e710894c12ad170b",
+        "joints": "212c4c8fd72956ddc5693f2cc395f2fc885486bab8f5e600c412f5cced5013b1"
+      }
+    },
+    {
+      "text": "OG",
+      "profile": "intermediate",
+      "strategy": "fusion",
+      "counts": {
+        "paths": 4,
+        "circles": 4,
+        "lines": 5,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "4b688990d29613a054915d5b68dfae071fd57479ffd5014d1ebd0e591da3e901",
+        "circles": "42be1cb4d06b36f7c8c93fa2c896a7b1c0ea8439e71b6bf8fc8e5401de7ae67a",
+        "lines": "533faa1fed5acd16d40a534b5f54480d634803b896f86fb6bd6fa848d4bfda8a",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "OG",
+      "profile": "intermediate",
+      "strategy": "counter",
+      "counts": {
+        "paths": 4,
+        "circles": 4,
+        "lines": 10,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "e95fccf2463fff69e897cb110bd78d0c40a1cc2f5dd07f342876846dc25e9c24",
+        "circles": "0d2ea8c6fbf590d5079fb1f9dd76b07653535e00bcc019c39f0140306e40d51f",
+        "lines": "c73a9e6c39d4a53f4601e758a5d980b81986b9c05d56cf64c375577070f04bc6",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "OG",
+      "profile": "intermediate",
+      "strategy": "axis",
+      "counts": {
+        "paths": 4,
+        "circles": 4,
+        "lines": 8,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "7706b5b5d8f222db771366f9990b1a15245827efac38a2612672aa10656d0fb7",
+        "circles": "fd61cec958a4b7c5987569d851c83136365130c616c8f65998d741ac4525707d",
+        "lines": "a77d4a7840c3150d71f32098966a4102da86a5738284c4607e1f49e4ad0d858d",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "OG",
+      "profile": "intermediate",
+      "strategy": "embrace",
+      "counts": {
+        "paths": 6,
+        "circles": 6,
+        "lines": 10,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "5aa5a8be380851ef9018eaec8211542ae72749f338255a4a166f94e36867734f",
+        "circles": "84746bbd39e362ec75611eeac94be3836812ff4796e986c9af7d3b4732332042",
+        "lines": "32c4be8daead8bf629f3121fc7ef7dcfb19dad4d1ad12225b3357e9df74b3edc",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "OG",
+      "profile": "intermediate",
+      "strategy": "tension",
+      "counts": {
+        "paths": 6,
+        "circles": 8,
+        "lines": 10,
+        "joints": 6
+      },
+      "sha256": {
+        "paths": "cee7021d7b50c16747a81f6cfc92c81b4f56cb4f4f59a72657c383dd59b7fddb",
+        "circles": "3c7b297613e8917ab0f2345f9e569d2480d6b52ce2eba4bae3f6096aa18c3b04",
+        "lines": "26566c6a1bc303eb12a9d0cf34c19f9263011259422e41432d6db828acf9c865",
+        "joints": "9d76aaa7b51d4b45d594aed77d6b183639c25ff7b696b7d603d68e96c68a923d"
+      }
+    },
+    {
+      "text": "AA",
+      "profile": "original",
+      "strategy": "weave",
+      "counts": {
+        "paths": 4,
+        "circles": 0,
+        "lines": 37,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "83c38e6ae2749c5bd2851b2d0d3bc660cc335a2010432e08e21c269650bdf15f",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "72fec747bde3aa64220f7cf3d7745a9099cd0928b1cea158caf1e4f45fc0f2c0",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "AA",
+      "profile": "original",
+      "strategy": "fusion",
+      "counts": {
+        "paths": 3,
+        "circles": 0,
+        "lines": 32,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "a097fcabf35e5f6c4115507b6c2818acd70588f532c4b57739be3f012cf0c9bd",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "9d093a42b35c1e2d46a0528c81620b3ae4e9d022fe2bcd2c054f2a6da0df006a",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "AA",
+      "profile": "original",
+      "strategy": "counter",
+      "counts": {
+        "paths": 3,
+        "circles": 0,
+        "lines": 46,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "1777041ec248d1f05538b5f2b61f21c7ba8cdcc038171edfb82825fa327f16cd",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "0b627cf0c21d54a078bfdc61edd6c47fcb889d94488b9b2df6016f0449c3ed40",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "AA",
+      "profile": "original",
+      "strategy": "axis",
+      "counts": {
+        "paths": 3,
+        "circles": 0,
+        "lines": 35,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "7f4e86080d28a186c6a0fb832eac904d20e705875d6550527186c537147ceebb",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "6b3c366fdfa272242553e96dbbd3ef20675464eb40dcfdf127e79fa8f7d35c60",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "AA",
+      "profile": "original",
+      "strategy": "embrace",
+      "counts": {
+        "paths": 5,
+        "circles": 0,
+        "lines": 38,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "d2d2223e602c22c1bf4f6195db86d6a58b31619daf842d0f0693fd1e00b241e4",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "625051e9ec44ade640e684f7a15a25955cecb57411059b068ad65b7b39e56a07",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "AA",
+      "profile": "original",
+      "strategy": "tension",
+      "counts": {
+        "paths": 6,
+        "circles": 0,
+        "lines": 37,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "7971bc8180cf3b1efe35613106670af3dbdfc9d22797528351d185a8cbbae60e",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "9a9d00f2cf6d38c8338583a588132c313a78ebc9975281558bde2a0222eb6255",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "AA",
+      "profile": "lightSpread",
+      "strategy": "weave",
+      "counts": {
+        "paths": 5,
+        "circles": 0,
+        "lines": 33,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "808719dcae6fd371dc7b63eb42aadb0c4e42321759d6ea9c4cfec74c91adb3d7",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "3a9162d7a6588fdebbd33631fbd7624cfb80478112cca4a1040af07f45ad7a25",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "AA",
+      "profile": "lightSpread",
+      "strategy": "fusion",
+      "counts": {
+        "paths": 3,
+        "circles": 0,
+        "lines": 34,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "e0f4b29b3dc7a73a3aeeed1a87e6ed2a65d8565b8894d27f8765d2c7c18d3c2f",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "5f407dace87ac5da3021a71d6613de9344a76086db1ec2bb6c5e35ed40247990",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "AA",
+      "profile": "lightSpread",
+      "strategy": "counter",
+      "counts": {
+        "paths": 3,
+        "circles": 0,
+        "lines": 38,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "0acbb615597ce8a893c0d030008420b50403a9f38f70956d441ad0165091c32d",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "c005aacf0918f9126f89d233a19a3c64ae5370aadb43d3aff861ea82714ef286",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "AA",
+      "profile": "lightSpread",
+      "strategy": "axis",
+      "counts": {
+        "paths": 3,
+        "circles": 0,
+        "lines": 32,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "b2cce8a89e1047c56d28ad42dd340a8e3eff9078c97c36ae2e14dedd31b0efdc",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "7de581c980af5bd2210235d2d1cfb50746bc3e78ab5ece22d81670becf6462db",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "AA",
+      "profile": "lightSpread",
+      "strategy": "embrace",
+      "counts": {
+        "paths": 5,
+        "circles": 0,
+        "lines": 34,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "d0b8633a35be54662ebbd9a67a17b9a6485e2deb80cd08845426515973f3e38a",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "a994f7354d190f08d415590ab2a12cb8e6cfa28ae9a1554cca9734d21964e6ac",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "AA",
+      "profile": "lightSpread",
+      "strategy": "tension",
+      "counts": {
+        "paths": 5,
+        "circles": 0,
+        "lines": 33,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "1a34d0ae7982bf5962424ca1a4168c5bb907e91114ab852fc01c97ea72fab4d0",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "c249d8cbb6f4b7ce1ba92d1377f84e108e3e4252731baa5e13991486dfe8e4d6",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "AA",
+      "profile": "heavyOverlap",
+      "strategy": "weave",
+      "counts": {
+        "paths": 2,
+        "circles": 0,
+        "lines": 33,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "aa0b23670d7c846bb3bbbb7cbe2791d482c720496622ed97b22b0e21cf0ab867",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "1c35a328316724ddadd207edc24bc8a5cc18989c6a490b4e7247571dee4a91e1",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "AA",
+      "profile": "heavyOverlap",
+      "strategy": "fusion",
+      "counts": {
+        "paths": 3,
+        "circles": 0,
+        "lines": 28,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "89d078d716b6e376a54de66bcb8f5671d8f786fdb2a15d33f1cc28987af1d06f",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "d87293dd54b855c2cd7a6a921a29313a0f3b48f08ffec30d6cc585726c1fd0d8",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "AA",
+      "profile": "heavyOverlap",
+      "strategy": "counter",
+      "counts": {
+        "paths": 5,
+        "circles": 0,
+        "lines": 38,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "325183944f207f751fa4fecf791aae9c4dfa2d050fb11118b75b19022b54a338",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "34892f560e9d12a6fa6592ba08c764d2630ce7b064133d9c9b465e3973f8d12d",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "AA",
+      "profile": "heavyOverlap",
+      "strategy": "axis",
+      "counts": {
+        "paths": 1,
+        "circles": 0,
+        "lines": 19,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "6ada81c63f258739432a491b298000b1e91a7e2ebfd28864e2df9ca0642697cc",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "7193af392adab2cd90b9802cb7199df85dce4186317e915fba1e9b69b99e7e68",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "AA",
+      "profile": "heavyOverlap",
+      "strategy": "embrace",
+      "counts": {
+        "paths": 6,
+        "circles": 2,
+        "lines": 36,
+        "joints": 5
+      },
+      "sha256": {
+        "paths": "32ef9538ed928259f709eb1e7a157784bb60d9fa87dfa0be95cc0e8a5a64b641",
+        "circles": "d182c95e669ac26d33a0b5f69b8d1e35a8517ea583c9521087b22973dae2fe9a",
+        "lines": "01ad6d9745b66b979b638328c8d2c3ce1772c9a680a978d99db779b6cfcb1820",
+        "joints": "8e8223a19eb96aec78e78701af4b658887be9f6165a6676298030b00c525125f"
+      }
+    },
+    {
+      "text": "AA",
+      "profile": "heavyOverlap",
+      "strategy": "tension",
+      "counts": {
+        "paths": 5,
+        "circles": 1,
+        "lines": 28,
+        "joints": 1
+      },
+      "sha256": {
+        "paths": "24dcbd05e10a4dc8c3c3379eedeaeca00d2696f11d796c5f97b18b36253cdd18",
+        "circles": "d39cce46b679509f1715a82113e40cc046bc16bdcfc08131438eca3e546e1230",
+        "lines": "b599cdf0290192615705ab07325be74b84f4e42d6c1e92d8c46675314bea5c0d",
+        "joints": "1cbc2fc62392433a5ebd33e6eb6b28314dd5f38791cc6f30f54ada9143058742"
+      }
+    },
+    {
+      "text": "AA",
+      "profile": "intermediate",
+      "strategy": "weave",
+      "counts": {
+        "paths": 4,
+        "circles": 0,
+        "lines": 37,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "9d1065db573445620241396b6fa6ccf318824a68024349feb129909274eda251",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "3646e2e0ff94cafc2fc2f6f36c502e6ccb9c04488e1b24b0833715ce503bcab9",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "AA",
+      "profile": "intermediate",
+      "strategy": "fusion",
+      "counts": {
+        "paths": 3,
+        "circles": 0,
+        "lines": 34,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "990e2719398360b19b19f9316eb4156a248eb4a6560d2de40fe1443cf9f60d96",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "427acdb0bf839e72a473a6130fdbe9cfe2ddb82aa8552ec231b7a0e3ad7ea04b",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "AA",
+      "profile": "intermediate",
+      "strategy": "counter",
+      "counts": {
+        "paths": 3,
+        "circles": 0,
+        "lines": 46,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "6ccb535df730df514df718ed001dc3dc2507b464f9413dced5719d21ccbfa6ae",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "e389d98248ad2b877ff6280263a177508c35b333f6b093ca9b6897cb399782a3",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "AA",
+      "profile": "intermediate",
+      "strategy": "axis",
+      "counts": {
+        "paths": 3,
+        "circles": 0,
+        "lines": 35,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "4e4291cb20a5413ff25f883033625b98fb1dbcf41651737d41a1f7c750bcc3bb",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "7406028609dad4f1351aeb8d767d566d559783aef7f3a0bdfc5bdae6d671e10a",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "AA",
+      "profile": "intermediate",
+      "strategy": "embrace",
+      "counts": {
+        "paths": 5,
+        "circles": 0,
+        "lines": 39,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "ce9311863f0957485fcfcff83ee361bf672f258517b36cc5985f708aa1df5e6a",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "5f5f5d40b1676ff12daeae0cb1a7a35b8d91a00c61a05c5765728ecd27a56a9c",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "AA",
+      "profile": "intermediate",
+      "strategy": "tension",
+      "counts": {
+        "paths": 6,
+        "circles": 0,
+        "lines": 37,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "a6501e807f7b4b94451fdb39ff2d19e740d33e362621d8fdf9a0cc99459f2678",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "16a0d4c41afcf0c8d3bfffb8b63e41ae0cf414c542f983995f02af35f61cbbe5",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "NX",
+      "profile": "original",
+      "strategy": "weave",
+      "counts": {
+        "paths": 5,
+        "circles": 0,
+        "lines": 37,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "749ddf7c03d60d7712f0d19cf16b11ed32736c96c34c1c4c088a35114bbe0eac",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "13270a215518e28cf783862843a9d0ecac5b9bbc1da7e0e1327656f0f7d77f16",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "NX",
+      "profile": "original",
+      "strategy": "fusion",
+      "counts": {
+        "paths": 2,
+        "circles": 0,
+        "lines": 35,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "cc6a7868d5e2de8e2becbfd64be1114d5f4e8e190e1a938ae68827bbd0903a3a",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "950dfcde41bef33d40610a8ec846d90aba211b7cf024dabd46e0eac6e8e815bb",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "NX",
+      "profile": "original",
+      "strategy": "counter",
+      "counts": {
+        "paths": 2,
+        "circles": 0,
+        "lines": 43,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "5137de597b9443dea18f657b64d83c08f8e81dea74eb45d578ad500c8a5b4092",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "ea7a6bd6d27aeebebfb98d8b0c24263ff1156d03f89936e5a094229c696562f7",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "NX",
+      "profile": "original",
+      "strategy": "axis",
+      "counts": {
+        "paths": 1,
+        "circles": 0,
+        "lines": 32,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "a725ec8c4885f8904f0f56da4255343f693356a983173446d85980aa4f5240a7",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "77c36c19cdf0d93b409df66647e47e740021612c84fac36b6a237329076f8ba2",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "NX",
+      "profile": "original",
+      "strategy": "embrace",
+      "counts": {
+        "paths": 4,
+        "circles": 1,
+        "lines": 35,
+        "joints": 2
+      },
+      "sha256": {
+        "paths": "8459c3a911499cafd44fa08299397415cb7ad253e95eb1b6906d09330cf41981",
+        "circles": "23e31f9e13e547355ecc7501b6d1779150f36a0a61bb57eec087d70c1335cf66",
+        "lines": "30dcbd67850e1233f032d63773d1830b1735cc59a54dab973d273ff9f10d85bc",
+        "joints": "586b4a9c853e4f056aec82f3e06e8b2083f05d65df7ec5caff2a4f92b4abf074"
+      }
+    },
+    {
+      "text": "NX",
+      "profile": "original",
+      "strategy": "tension",
+      "counts": {
+        "paths": 5,
+        "circles": 2,
+        "lines": 33,
+        "joints": 5
+      },
+      "sha256": {
+        "paths": "951e7741a26744d62208053e8ed20092aea57ad3c3e29e818bdf858c4261fc1c",
+        "circles": "ad059db8393eabb9752da98e2b27f53cd45213bedb0fa6373be76cea26b8b323",
+        "lines": "5a0d29b3eb3bda7ed426ad9a51205c88c59f05049f94adcc4fea740171a5931d",
+        "joints": "338dddf5b4ba7b8678b61e5351c4529d63170f00aaf65443aa1b053a414b4829"
+      }
+    },
+    {
+      "text": "NX",
+      "profile": "lightSpread",
+      "strategy": "weave",
+      "counts": {
+        "paths": 3,
+        "circles": 2,
+        "lines": 27,
+        "joints": 4
+      },
+      "sha256": {
+        "paths": "84429f8c6a2c2112ee4f0d644f8e9a2c066b0caf5d15a3e5416fdc4d5632a59b",
+        "circles": "52ee58a6be8b954cad454bb422108e9f4b4b69c98b9f9734becf6af132adb6e8",
+        "lines": "0b298dc9c293685ee77694870bba0fdd5181c52b92636472ccec07f0c042f445",
+        "joints": "beeba4192ae22678c1947edfca972340370e1a8d91a471ca827587dda697fe09"
+      }
+    },
+    {
+      "text": "NX",
+      "profile": "lightSpread",
+      "strategy": "fusion",
+      "counts": {
+        "paths": 2,
+        "circles": 0,
+        "lines": 33,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "f5e71827486577c45f15ac5eb79a04df8817b6033fbbe01c4673c107342da75e",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "2685d963622bce9186fbe1fb4787d252df53117d506f63045143f1c73ae7f25d",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "NX",
+      "profile": "lightSpread",
+      "strategy": "counter",
+      "counts": {
+        "paths": 2,
+        "circles": 0,
+        "lines": 48,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "329ffd3a78df79815d5b578a0a89c4e06f0fcb3ed9751a71c7ba06f20cbad430",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "cade6d6c727fef432cb23f1886120192ab9e7cee7dc5c5af02d6363a520d7869",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "NX",
+      "profile": "lightSpread",
+      "strategy": "axis",
+      "counts": {
+        "paths": 2,
+        "circles": 0,
+        "lines": 33,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "a83fcb254833c017881a61f98f6c3c5d2b2ac4f5a7bf9c10a7decf1d5fada7e6",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "84eac4e25fa18823eee94065850105c83c35f3bd914b3aea6b6d1b3d4b130f63",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "NX",
+      "profile": "lightSpread",
+      "strategy": "embrace",
+      "counts": {
+        "paths": 6,
+        "circles": 3,
+        "lines": 33,
+        "joints": 7
+      },
+      "sha256": {
+        "paths": "da99b684434f45df2f4d7ab0c2f6a7f03891c17d7b079621c99d20857cc5925b",
+        "circles": "3dcdc0cc49c1b3a174d05aac334af3ba2c9ee2c5d3f1183b2945d0f6963bd795",
+        "lines": "ed8cf97d44ea56c964431adf4c09b758af523a7ed4a08c7814ff4d102d836d1b",
+        "joints": "4fb63d48a844e4008dc8066ffbb91a600f0e864ea95b8319311d5e3f5c71a4cb"
+      }
+    },
+    {
+      "text": "NX",
+      "profile": "lightSpread",
+      "strategy": "tension",
+      "counts": {
+        "paths": 3,
+        "circles": 2,
+        "lines": 28,
+        "joints": 4
+      },
+      "sha256": {
+        "paths": "e57c67af36f6ecbcda4c4f19a2dcc5b99d1462f0bbb905243f5943ef5868082d",
+        "circles": "9eea7fbdc0371a53811cec9d11c2fda900f7769f2d9361b9828e89df351db779",
+        "lines": "bff46656aca8b220e92b8a2494b280f03be860a41799fdd34d82563de4cf53e0",
+        "joints": "56ea2bbca463e082ca98da694f4ff66c88a817837804c52155ba436fcd2b3338"
+      }
+    },
+    {
+      "text": "NX",
+      "profile": "heavyOverlap",
+      "strategy": "weave",
+      "counts": {
+        "paths": 4,
+        "circles": 0,
+        "lines": 49,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "141c86e4932b8bf7b1c3b8cfc3df186423f914fb1625c9960e18d954ccd503b3",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "5b00906e10c014ccaf229d3774afcc3859a1c61bd63625aa68ed3b02987bef12",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "NX",
+      "profile": "heavyOverlap",
+      "strategy": "fusion",
+      "counts": {
+        "paths": 2,
+        "circles": 0,
+        "lines": 37,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "c859675a2ff10cf6bf766a62e5e8bce08305a7d81ee6e2b30acd6d936add8e53",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "dbfb759c5cb497cb2d0d329339995a8ee124fd589fafb62635e60220b1e3cd46",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "NX",
+      "profile": "heavyOverlap",
+      "strategy": "counter",
+      "counts": {
+        "paths": 3,
+        "circles": 0,
+        "lines": 56,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "fa942a3026bd4f50f513ec86259d0ffc42664796fe9634af66a4b7e507f0aca3",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "ff2f3307a3a2aab053306c8337f28882391c9e041aa07e734209bcc7e2f49d94",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "NX",
+      "profile": "heavyOverlap",
+      "strategy": "axis",
+      "counts": {
+        "paths": 2,
+        "circles": 0,
+        "lines": 34,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "afaca5661a09d4fe03068e196797f44ad1257bbfb5cd032f74c1b5677f94d9fb",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "4c1795dd9c31bdade0e190c5ae14b021bbe107a54c91d6dfcb7bded30444f605",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "NX",
+      "profile": "heavyOverlap",
+      "strategy": "embrace",
+      "counts": {
+        "paths": 6,
+        "circles": 4,
+        "lines": 47,
+        "joints": 8
+      },
+      "sha256": {
+        "paths": "b4877b51595596d195cdff49bf5e2f029907cbb9bf826490b3426e59d75d581a",
+        "circles": "e139b6bb8ceea91befcb09eeeebe0628219690e9b5e19deef4c2083c3a777893",
+        "lines": "127f0f516080ef3b6ef33c480a13dde674515b95a5023678d1ec4d4debae251d",
+        "joints": "d114fbd9a01d2ab147776971ad90427d2df387a135f06163dda961e88fe7d20c"
+      }
+    },
+    {
+      "text": "NX",
+      "profile": "heavyOverlap",
+      "strategy": "tension",
+      "counts": {
+        "paths": 5,
+        "circles": 1,
+        "lines": 42,
+        "joints": 2
+      },
+      "sha256": {
+        "paths": "f5a25807d86b161457e4e5f2fce7284abc2006e3cb2152f8201860402b2d8da2",
+        "circles": "e81caae9ef10682378ef70e9922a63117aa28f55d31a9bf5828047f4b54f3d86",
+        "lines": "8ea2d27c0af55f00fe7ec664352e90dae834ec11414eb4632e794c9ae3a401dc",
+        "joints": "94856916ad2c8c215670a35712510e796bef8e3705cfa974f7d82d8d199cc980"
+      }
+    },
+    {
+      "text": "NX",
+      "profile": "intermediate",
+      "strategy": "weave",
+      "counts": {
+        "paths": 5,
+        "circles": 0,
+        "lines": 37,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "4f75631a0ffbbc34c97513c161a5a1aa0e7d93b014f74157e6a9034bfe9505c2",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "c9c175a3493db8ed35f1299c1fd93eda8e21cff14cd13118cc5ac1e0034c294b",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "NX",
+      "profile": "intermediate",
+      "strategy": "fusion",
+      "counts": {
+        "paths": 2,
+        "circles": 0,
+        "lines": 36,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "0b0da6131cf8ad5e66aeddf2e2f0a0782dda77f36ad4086e3678f6399760d48e",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "ce97e282eaf8e1902ac9d09f54f122c024cc9f1968902a93bb659b36da975c98",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "NX",
+      "profile": "intermediate",
+      "strategy": "counter",
+      "counts": {
+        "paths": 2,
+        "circles": 0,
+        "lines": 43,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "2c264c570751fc4b56349832ac201203a1c50c806cfa159e8d073f19888899ee",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "8c2e6f799ac086b2f2c7994b9e6cf73f6b32d60cbed4d0649e1b81b8952beb73",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "NX",
+      "profile": "intermediate",
+      "strategy": "axis",
+      "counts": {
+        "paths": 1,
+        "circles": 0,
+        "lines": 32,
+        "joints": 0
+      },
+      "sha256": {
+        "paths": "07223ba23bfdcf193fb3191196571653c180cfb11e1b913f30230b8aca9dc74d",
+        "circles": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "lines": "988b9deaff8b95375308802cef3e3b7b71a639eac47ebab5049a3b302b5a90f7",
+        "joints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "text": "NX",
+      "profile": "intermediate",
+      "strategy": "embrace",
+      "counts": {
+        "paths": 6,
+        "circles": 1,
+        "lines": 35,
+        "joints": 4
+      },
+      "sha256": {
+        "paths": "b9e8aa16ca256e417e9c19ce5abd9c348480236e8b0f6c71374f795275f2e6cc",
+        "circles": "01c00ad15981d2cc44b8908cce14e254f620f98a0a44e5de77ab525be6ae2804",
+        "lines": "629ee8a5d4b2d0f8d7825027e6121dd674fc1ad53809aa7db29334b2526212f3",
+        "joints": "0aea7aa98910ad07694e4236edbecd7c3082829e53991ea1a455ce4959eb0cca"
+      }
+    },
+    {
+      "text": "NX",
+      "profile": "intermediate",
+      "strategy": "tension",
+      "counts": {
+        "paths": 3,
+        "circles": 2,
+        "lines": 34,
+        "joints": 4
+      },
+      "sha256": {
+        "paths": "b738f713e54ae05f4035ae9bc784aedf31420d551b674f416f6e6c03bee740e0",
+        "circles": "73abe4cf9f5bfb7fe0f62e1f9e6ab670e008b276fd4d7de1c7a0365062d30836",
+        "lines": "3337e78d534a618162370ffbe5f34794992bb2b261faba18add6e93504e9f56b",
+        "joints": "2a255ee1905338c0773c6851ea197c3a808b9bf93c04969a392b2cecbbca39ad"
+      }
+    }
+  ]
+}

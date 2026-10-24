@@ -2,6 +2,7 @@
 """Package fixed, clean source commits and already-verified artifacts; no runtime data."""
 import argparse
 import hashlib
+import importlib.util
 import json
 from pathlib import Path
 import shutil
@@ -32,6 +33,10 @@ def main():
     p.add_argument('--output', required=True, type=Path)
     a = p.parse_args()
     website = Path(__file__).resolve().parents[1]
+    spec = importlib.util.spec_from_file_location('design_build', website / 'scripts/check-design-build.py')
+    design_build = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(design_build)
+    design_build.validate(website)
     roots = {'website': website, 'backend': a.java_source.resolve(), 'adminUi': a.ui_source.resolve()}
     commits = {}
     for name, root in roots.items():

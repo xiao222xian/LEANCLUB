@@ -23,7 +23,7 @@
     if (!append) { page = 1; list.replaceChildren(node('p', 'portal-directory-empty', '正在读取学校目录…')); }
     more.hidden = true; document.querySelector('#directory-error').hidden = true;
     try {
-      const data = await api('/leanclub/school/list?' + new URLSearchParams({ keyword: search.value.trim(), pageNo: String(page), pageSize: '20' }));
+      const data = await window.LeanSchoolDirectory.list({ keyword: search.value.trim(), pageNo: page, pageSize: 20 });
       if (current !== version) return;
       if (!append) list.replaceChildren();
       const schools = Array.isArray(data?.list) ? data.list : [];

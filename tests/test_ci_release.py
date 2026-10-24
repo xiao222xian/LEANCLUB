@@ -44,7 +44,11 @@ class ReleasePackageTests(unittest.TestCase):
         self.ui = self.root / 'ui'
         self.site = self.root / 'site'
         ui_sha = repository(self.ui, {'.gitignore': 'dist-leanschool/\n'})
-        site_sha = repository(self.site, {f'{d}/file.txt': 'source' for d in ('backend', 'web', 'scripts', 'deploy')} | {'requirements.txt': 'example==1\n'})
+        site_sha = repository(self.site, {f'{d}/file.txt': 'source' for d in ('backend', 'web', 'scripts', 'deploy')} | {
+            'requirements.txt': 'example==1\n', 'frontend/package.json': '{}',
+            'web/creator/design/index.html': '<script type="module" src="/design/assets/app.js"></script>',
+            'web/creator/design/assets/app.js': '/* compiled public design */',
+        })
         self.commits = {'website': site_sha, 'backend': 'b' * 40, 'adminUi': ui_sha}
         self.resolution = {'format': 1, 'repository': 'https://github.com/papaoo/bojizhuye',
                            'workflowEvent': 'push', 'workflowRef': 'refs/heads/platform/backend',
@@ -81,6 +85,9 @@ class ReleasePackageTests(unittest.TestCase):
         self.assertEqual(manifest['commits'], self.commits)
         with tarfile.open(output / 'website.tar.gz') as archive:
             self.assertEqual(archive.pax_headers['comment'], self.commits['website'])
+            self.assertIn('web/creator/design/index.html', archive.getnames())
+            self.assertIn('web/creator/design/assets/app.js', archive.getnames())
+            self.assertNotIn('frontend/package.json', archive.getnames())
         with tarfile.open(output / 'console.tar.gz') as archive:
             self.assertEqual(archive.pax_headers['comment'], self.commits['adminUi'])
             self.assertTrue(all(m.isfile() and m.mode == 0o644 and m.name.startswith('console/') for m in archive.getmembers()))

@@ -204,8 +204,9 @@ def patch_legacy_nginx(text):
                  '        }\n'
                  '        try_files $uri $uri/ /console/index.html;\n'
                  '    }\n')
-    # Older 4499b01 does not have the newer event HTML routes.
-    for route, target in (('events', '/events/index.html'), ('ticket', '/ticket/index.html'),
+    # Preserve existing routes and add public modules missing from older releases.
+    for route, target in (('design', '/design/index.html'),
+                          ('events', '/events/index.html'), ('ticket', '/ticket/index.html'),
                           ('check-in', '/console/leanclub/registrations')):
         for suffix in ('', '/'):
             path = '/' + route + suffix

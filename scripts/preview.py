@@ -20,6 +20,8 @@ ROUTES = {
     "/": "/index.html",
     "/schools": "/lean-school-ranking.html",
     "/join": "/school-submit.html",
+    "/design": "/design/index.html",
+    "/design/": "/design/index.html",
     "/city-vote": "/city-vote/index.html",
     "/city-vote/": "/city-vote/index.html",
     "/admin": "/admin/index.html",

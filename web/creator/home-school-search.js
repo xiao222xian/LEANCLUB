@@ -101,7 +101,9 @@
     const current = ++version, term = query();
     pending();
     try {
-      const data = await api('/leanclub/school/list?' + new URLSearchParams({ keyword: term, pageNo: '1', pageSize: '6' }));
+      const data = await (window.LeanSchoolDirectory
+        ? window.LeanSchoolDirectory.list({ keyword: term, pageNo: 1, pageSize: 6 })
+        : api('/leanclub/school/list?' + new URLSearchParams({ keyword: term, pageNo: '1', pageSize: '6' })));
       if (current !== version || popup.hidden || query() !== term) return;
       items = Array.isArray(data?.list) ? data.list.filter(item => item && /^\d+$/.test(String(item.id)) && typeof item.name === 'string') : [];
       loadedQuery = term;

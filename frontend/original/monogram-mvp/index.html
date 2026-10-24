@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>硅基源流 · 双字母设计工具</title>
+  <link rel="icon" href="../logo-favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="../design-brand.css">
+</head>
+<body>
+  <main>
+    <div class="design-brandbar">
+      <a class="design-brand" href="../index.html" aria-label="硅基源流 Logo Design，返回项目首页"><img src="../logo-mark.svg" width="42" height="42" alt=""><span class="design-brand-name"><strong>硅基源流</strong><small>SiliRoot</small></span></a>
+      <nav class="design-brandnav" aria-label="设计页面导航"><a href="https://siliroot.com/">公司官网</a><a href="../index.html">项目首页</a><a href="../logo-lab.html">Logo 设计</a><a href="./index.html" aria-current="page">双字母设计工具</a></nav>
+    </div>
+    <header class="topbar">
+      <div>
+        <p class="kicker">SILIROOT / MONOGRAM STUDY</p>
+        <h1>双字母共形实验</h1>
+        <p class="lede">用圆与直线切出字母的内外边缘，描出封闭轮廓，再逐步填黑。</p>
+      </div>
+    </header>
+
+    <section class="workspace" aria-label="双字母 Logo 生成器">
+      <aside class="controls">
+        <div class="control-group">
+          <label for="letters">输入两个字母</label>
+          <input id="letters" value="SR" maxlength="2" autocomplete="off" spellcheck="false" aria-describedby="input-help">
+          <p id="input-help">输入任意两个 A–Z 字母，也可使用相同字母，如 AA。字母顺序会影响构图。</p>
+          <p id="input-error" class="error" role="alert" hidden>请输入两个英文字母。</p>
+          <p id="geometry-error" class="error" role="alert" hidden>这个组合暂未闭合，请调整参数后重试。</p>
+          <div class="letter-examples" aria-labelledby="examples-title">
+            <h2 id="examples-title">不知道从哪开始？试试这些组合</h2>
+            <div class="example-group">
+              <p>圆弧与负空间</p>
+              <div class="example-buttons">
+                <button type="button" data-letters="SR">SR</button>
+                <button type="button" data-letters="RS">RS</button>
+                <button type="button" data-letters="OG">OG</button>
+                <button type="button" data-letters="BQ">BQ</button>
+              </div>
+            </div>
+            <div class="example-group">
+              <p>直边与斜线</p>
+              <div class="example-buttons">
+                <button type="button" data-letters="AI">AI</button>
+                <button type="button" data-letters="TL">TL</button>
+                <button type="button" data-letters="NX">NX</button>
+                <button type="button" data-letters="KM">KM</button>
+              </div>
+            </div>
+            <div class="example-group">
+              <p>更多轮廓关系</p>
+              <div class="example-buttons">
+                <button type="button" data-letters="CD">CD</button>
+                <button type="button" data-letters="PU">PU</button>
+                <button type="button" data-letters="VW">VW</button>
+                <button type="button" data-letters="YZ">YZ</button>
+              </div>
+            </div>
+            <p class="examples-help">点击组合，以默认参数播放构造过程；再选下方六种关系比较。支持全部 26 个字母，以上只是入门示例。</p>
+          </div>
+        </div>
+
+        <div class="control-group ranges">
+          <label for="weight"><span>笔画重量</span><output id="weight-value">24</output></label>
+          <input id="weight" type="range" min="14" max="38" value="24">
+          <label for="overlap"><span>重叠强度</span><output id="overlap-value">44%</output></label>
+          <input id="overlap" type="range" min="24" max="68" value="44">
+          <label for="tension"><span>关系张力</span><output id="tension-value">52%</output></label>
+          <input id="tension" type="range" min="0" max="100" value="52">
+        </div>
+
+        <div class="control-group actions">
+          <button id="regenerate" type="button">换一组关系</button>
+          <button id="toggle-guides" type="button" aria-pressed="true">查看纯黑结果</button>
+        </div>
+
+        <div class="logic-note">
+          <h2>本轮设计逻辑</h2>
+          <p id="logic">S 的曲线进入 R 的圆腹，交叉区域通过留白建立前后关系。</p>
+        </div>
+      </aside>
+
+      <div class="studio">
+        <section class="hero-stage" aria-labelledby="selected-title">
+          <div class="stage-head">
+            <div><span id="selected-index">01</span><h2 id="selected-title">交错穿插</h2></div>
+            <div class="exports">
+              <button id="download-svg" type="button">导出 SVG</button>
+              <button id="download-png" type="button">导出 PNG</button>
+            </div>
+          </div>
+          <div id="hero-mark" class="hero-mark"></div>
+          <div class="motion-transport">
+            <div class="motion-buttons">
+              <button id="playback" type="button">暂停动画</button>
+              <button id="replay" type="button">重新播放</button>
+              <button id="loop" type="button" aria-pressed="true">循环</button>
+            </div>
+            <label class="motion-rate">速度<select id="rate" aria-label="动画播放速度"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option></select></label>
+            <label class="motion-seek"><span class="sr-only">动画进度</span><input id="timeline" aria-label="动画进度" type="range" min="0" max="450" value="0"></label>
+            <output id="motion-time" class="motion-time">0.0 / 15.0 s</output>
+          </div>
+          <div class="motion-chapters" aria-label="动画阶段">
+            <button type="button" data-time="1.5" aria-pressed="true"><span>01</span>直边定位</button>
+            <button type="button" data-time="3.4" aria-pressed="false"><span>02</span>构造圆展开</button>
+            <button type="button" data-time="7.8" aria-pressed="false"><span>03</span>边缘成形</button>
+            <button type="button" data-time="10.5" aria-pressed="false"><span>04</span>渐进填黑</button>
+            <button type="button" data-time="14" aria-pressed="false"><span>05</span>完整标志</button>
+          </div>
+          <div class="stage-foot">
+            <span id="geometry-count">正在计算封闭边缘</span>
+            <span>构造圆与填色共用同一份封闭边界</span>
+          </div>
+        </section>
+
+        <section class="variants" aria-labelledby="variants-title">
+          <div class="variants-head"><h2 id="variants-title">关系候选</h2><p>选择一个方案查看构造逻辑</p></div>
+          <div id="variant-grid" class="variant-grid"></div>
+        </section>
+      </div>
+    </section>
+    <footer class="design-company" aria-label="公司信息">
+      <div><a class="design-brand" href="https://siliroot.com/" aria-label="硅基源流 SiliRoot 公司官网"><img src="../logo-mark.svg" width="42" height="42" alt="" loading="lazy"><span class="design-brand-name"><strong>硅基源流</strong><small>SiliRoot</small></span></a><p>苏州硅基源流人工智能。以 Agent 特区承接 AI 战略，把试点放进有边界的真实工作。</p></div>
+      <nav class="design-company-links" aria-label="公司相关链接"><a href="https://siliroot.com/#team">了解团队</a><a href="https://siliroot.com/#engagement">合作咨询</a><a href="mailto:yzw@imcoders.net">联系我们</a></nav>
+      <p class="design-company-meta">苏州硅基源流人工智能 · 苏州</p>
+    </footer>
+  </main>
+  <script type="module" src="./generator.js"></script>
+</body>
+</html>

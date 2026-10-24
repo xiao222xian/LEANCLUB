@@ -1,0 +1,17 @@
+{
+  "source": "https://github.com/auenger/SiliRootLogoDesign",
+  "commit": "677e8f8f1a3d7128d8ab831cae99d7e00ac567ce",
+  "date": "2026-10-24",
+  "files": {
+    "monogram-mvp/index.html": "a367d09026b150086eea6dfbcca9af5c7663abe6fd16164682f937026d406b0a",
+    "monogram-mvp/styles.css": "cb5166e9582c20f635a71bf6959c18dc685d1ed6e2b2ef240d3b169fc5589010",
+    "monogram-mvp/generator.js": "2623148000a993ebc89b12aecc5e2b20d4af2e49e326a6156a0d909126b83529",
+    "monogram-mvp/boundary-geometry.js": "88faa3df706cad47454c87a39381f600fcf0da345c57fa5250a0d06f4baea409",
+    "monogram-mvp/tests/geometry.mjs": "7304249f348758b274b25c810c8b1401df2630d9d30763a7a63749a51040cd32",
+    "design-brand.css": "8803a3e4e7f4c606d9fc3d892db1b06f417df333343733c4509a90e2e5d385f1",
+    "logo-geometry.js": "54fbe56011b44209e9c6a6a55189bf60119adbe3e40a3dc72f16bfda46e48668",
+    "logo-mark.svg": "70354bd24a949258ee8360670decbcc636f6e5decb5202cbaad63bf0b441352b",
+    "logo-favicon.svg": "8b436300360cd73046e380b398d067d77c70b08bcc86fae6133a209575a5b6c9"
+  },
+  "generatorNormalizedSha256": "392818461f22eee5e6bea02c0b5e64801582ce205cae20d5c7eef502f3e3fbbf"
+}

@@ -1,0 +1,2 @@
+# Preserve the fixed upstream bytes checked by scripts/check-original.mjs.
+original/** -text

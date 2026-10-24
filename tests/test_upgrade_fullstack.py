@@ -113,6 +113,8 @@ class NginxTests(unittest.TestCase):
         self.assertIn('location /console/assets/ { try_files $uri =404; }', result)
         self.assertIn('location ~ /\\. { return 404; }', result)
         self.assertIn('location = /check-in { return 302 /console/leanclub/registrations; }', result)
+        self.assertIn('location = /design { try_files /design/index.html =404; }', result)
+        self.assertIn('location = /design/ { try_files /design/index.html =404; }', result)
         self.assertIn('access_log off;', result)
         self.assertNotIn('proxy_set_header Origin', result)
         self.assertEqual(upgrade.patch_legacy_nginx(result), result)

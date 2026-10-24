@@ -72,7 +72,7 @@
         return '';
       }
       if (url.origin === location.origin) {
-        if (/^\/(?:|schools\/?|join\/?|events\/?|ticket\/?|city-vote\/?|index\.html|lean-creator-home\.html)$/.test(url.pathname)) return url.pathname + url.search + url.hash;
+        if (/^\/(?:|schools\/?|join\/?|design\/?|events\/?|ticket\/?|city-vote\/?|index\.html|lean-creator-home\.html)$/.test(url.pathname)) return url.pathname + url.search + url.hash;
         return '';
       }
       if (url.protocol === 'https:') return url.href;
@@ -225,7 +225,9 @@
     if (!append) { page = 1; results.replaceChildren(node('p', 'lc-muted', '正在搜索…')); }
     more.hidden = true;
     try {
-      const data = await api('/leanclub/school/list?' + new URLSearchParams({ keyword: query, pageNo: String(page), pageSize: '20' }));
+      const data = await (window.LeanSchoolDirectory
+        ? window.LeanSchoolDirectory.list({ keyword: query, pageNo: page, pageSize: 20 })
+        : api('/leanclub/school/list?' + new URLSearchParams({ keyword: query, pageNo: String(page), pageSize: '20' })));
       if (version !== searchVersion || !schoolDialog.open) return;
       if (!append) results.replaceChildren();
       const list = Array.isArray(data?.list) ? data.list : [];

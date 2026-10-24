@@ -11,11 +11,15 @@ import subprocess
 import tarfile
 
 BRANCHES = {'website': 'main', 'backend': 'platform/backend', 'adminUi': 'platform/admin-ui'}
-TOOLS = {'java': 'Temurin 25.0.5+8', 'maven': '3.9.7', 'node': '24.20.0', 'pnpm': '10.30.0'}
+TOOLS = {'java': 'Temurin 25.0.5+8', 'maven': '3.9.7', 'node': '24.20.0', 'pnpm': '10.30.0',
+         'publicPnpm': '10.29.2'}
 ARTIFACTS = {'yudao-server.jar', 'java-release.json', 'console.tar.gz', 'website.tar.gz'}
 spec = importlib.util.spec_from_file_location('release_preflight', Path(__file__).resolve().parents[1] / 'yudao/preflight.py')
 preflight = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(preflight)
+design_spec = importlib.util.spec_from_file_location('design_build', Path(__file__).resolve().parents[2] / 'scripts/check-design-build.py')
+design_build = importlib.util.module_from_spec(design_spec)
+design_spec.loader.exec_module(design_build)
 
 
 def git(root, *args):
@@ -144,6 +148,7 @@ def package_bundle(website, backend, console, output, resolution, run_id, run_at
     if not re.fullmatch(r'[0-9]+', run_id) or not re.fullmatch(r'[0-9]+', run_attempt):
         raise ValueError('Expected a GitHub Actions run identity')
     clean_source(website, commits['website'])
+    design_build.validate(website)
     exact_files(backend, {'yudao-server.jar', 'java-release.json'})
     exact_files(console, {'console.tar.gz'})
     report = preflight.inspect_jar(backend / 'yudao-server.jar')

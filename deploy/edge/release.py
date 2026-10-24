@@ -147,7 +147,10 @@ def deploy(record_path, config_dir, skip_data_backup=False):
         run(['nginx', '-t'])
         symlink(stage, BASE / 'current')
         run(['systemctl', 'reload', 'nginx'])
-        for path in ('/', '/api/club/health', '/app-api/leanclub/site/capabilities', '/console/'):
+        health_paths = ['/', '/api/club/health', '/app-api/leanclub/site/capabilities', '/console/']
+        if 'design/index.html' in record['files']:
+            health_paths.extend(['/design/', '/design/monogram-mvp/generator.js'])
+        for path in health_paths:
             for attempt in range(5):
                 status = run(['curl', '--noproxy', '*', '-sS', '-o', '/dev/null', '-w', '%{http_code}', '--max-time', '20',
                               '--resolve', 'leanmuscleclub.com:443:127.0.0.1', ORIGIN + path])

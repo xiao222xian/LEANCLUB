@@ -29,6 +29,8 @@ server {
     location = / { try_files /index.html =404; }
     location = /schools { try_files /lean-school-ranking.html =404; }
     location = /join { try_files /school-submit.html =404; }
+    location = /design { try_files /design/index.html =404; }
+    location = /design/ { try_files /design/index.html =404; }
     location = /city-vote { try_files /city-vote/index.html =404; }
     location = /city-vote/ { try_files /city-vote/index.html =404; }
     location = /admin { try_files /admin/index.html =404; }

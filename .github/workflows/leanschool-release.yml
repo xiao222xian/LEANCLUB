@@ -95,6 +95,17 @@ jobs:
           node-version: '24.20.0'
           architecture: x64
           package-manager-cache: false
+      - name: Rebuild and verify committed public Vue artifacts
+        if: ${{ hashFiles('frontend/package.json') != '' }}
+        working-directory: frontend
+        run: |
+          set -euo pipefail
+          corepack pnpm install --frozen-lockfile
+          corepack pnpm test
+          corepack pnpm build
+          python3 ../scripts/check-design-build.py ..
+          # Include untracked hash-named assets as well as modified/deleted files.
+          test -z "$(git status --porcelain --untracked-files=all -- ../web/creator/design)"
       - name: Check website Python and client behavior
         run: |
           set -euo pipefail

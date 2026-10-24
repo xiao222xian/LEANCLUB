@@ -46,6 +46,24 @@
     const mirror = group.cloneNode(true); mirror.setAttribute('aria-hidden', 'true'); mirror.inert = true;
     track.replaceChildren(group, mirror);
   }
+  function navigation(list) {
+    const design = { label: '薄肌设计', href: '/design/' }, seen = new Set(), entries = [];
+    list.forEach(item => {
+      if (!item || typeof item.label !== 'string' || !item.label.trim()) return;
+      const safe = safeHref(item.href);
+      if (!safe) return;
+      const url = new URL(safe, location.href);
+      const isDesign = url.origin === location.origin && /^\/design\/?$/.test(url.pathname);
+      const key = isDesign ? design.href : url.href;
+      if (seen.has(key)) return;
+      seen.add(key);
+      entries.push(isDesign ? design : { label: item.label, href: safe });
+    });
+    const visible = entries.slice(0, 6);
+    // A published editorial menu keeps its order; reserve a slot for the product.
+    if (!visible.some(item => item === design)) return [...visible.slice(0, 5), design];
+    return visible;
+  }
   window.leanSitePublishedReady = portal.api('/leanclub/site/published').then(snapshot => {
     if (!snapshot) { document.body.dataset.contentState = 'built-in'; return; }
     const data = snapshot.content;
@@ -60,7 +78,7 @@
       if (nav) {
         nav.querySelectorAll('a').forEach(el => el.remove());
         const items = document.createDocumentFragment();
-        data.navigation.slice(0, 6).forEach(item => { const safe = safeHref(item.href); if (!safe || !item.label) return; const link = node('a', '', item.label); link.href = safe; link.rel = 'noopener noreferrer'; items.append(link); });
+        navigation(data.navigation).forEach(item => { const link = node('a', '', item.label); link.href = item.href; link.rel = 'noopener noreferrer'; items.append(link); });
         nav.prepend(items);
       }
     }
