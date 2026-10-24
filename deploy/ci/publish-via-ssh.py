@@ -19,7 +19,7 @@ SAFE_ERRORS = {
     'DOWNLOAD_RETRY_EXHAUSTED': ('download', 'Artifact transfer failed after bounded retries. Check server network access and retry.'),
     'RANGE_PROTOCOL_INVALID': ('download', 'Artifact range, length, encoding or ETag validation failed. Check the download service before retrying.'),
     'ARTIFACT_DIGEST_MISMATCH': ('download', 'Artifact size or SHA-256 differs from GitHub metadata. Retry from a verified build before publishing.'),
-    'BUILD_FETCH_TIMEOUT': ('download', 'Build download exceeded 60 minutes. Production was not changed.'),
+    'BUILD_FETCH_TIMEOUT': ('download', 'Build download exceeded 90 minutes. Production was not changed.'),
     'PREFLIGHT_FAILED': ('preflight', 'Release preflight failed. Check schema, dependencies and the production baseline before publishing.'),
     'PUBLISH_FAILED_ROLLED_BACK': ('publish', 'Publication failed. Previous code and configuration recovered; business data was not restored.'),
     'ROLLBACK_FAILED': ('recovery', 'Publication recovery needs server inspection. Business data was not restored.'),
@@ -28,7 +28,7 @@ SAFE_ERRORS = {
 }
 CLIENT_ERRORS = {
     'SSH_CONNECTION_OR_PROTOCOL_FAILED': 'No recognized server receipt. Check SSH connectivity and server status; raw output withheld.',
-    'RELEASE_STATUS_UNKNOWN': 'SSH exceeded 80 minutes. Inspect server status before retrying; publication may still be running.',
+    'RELEASE_STATUS_UNKNOWN': 'SSH exceeded 110 minutes. Inspect server status before retrying; publication may still be running.',
     'RELEASE_CLIENT_FAILED': 'Release client failed; sensitive details withheld.',
 }
 
@@ -99,7 +99,7 @@ def main():
             '-o', 'UserKnownHostsFile=' + str(hosts), '-o', 'GlobalKnownHostsFile=/dev/null',
             '-o', 'ConnectTimeout=20', '-o', 'ServerAliveInterval=20', '-o', 'ServerAliveCountMax=6',
             'leanschool-deploy@152.136.108.87'], input=request, text=True,
-            capture_output=True, timeout=4800)
+            capture_output=True, timeout=6600)
         if result.returncode:
             failure = safe_failure(result.stderr)
             if failure is None:

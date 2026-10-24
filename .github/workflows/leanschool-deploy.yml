@@ -22,7 +22,7 @@ jobs:
   deploy:
     if: github.repository == 'papaoo/bojizhuye' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    timeout-minutes: 120
     environment: production
     steps:
       - name: Checkout release client at this workflow commit

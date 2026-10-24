@@ -177,12 +177,12 @@ class ReleaseGateTests(unittest.TestCase):
                     self.assertEqual(caught.exception.code, code)
                     self.assertNotIn(self.request['token'], str(caught.exception))
 
-    def test_download_gets_sixty_minutes_and_timer_ends_before_release(self):
+    def test_download_gets_ninety_minutes_and_timer_ends_before_release(self):
         active = {'timer': False}
         events = []
         @contextmanager
         def download_deadline(seconds, code):
-            self.assertEqual((seconds, code), (3600, 'BUILD_FETCH_TIMEOUT'))
+            self.assertEqual((seconds, code), (5400, 'BUILD_FETCH_TIMEOUT'))
             active['timer'] = True
             events.append('download-timer-started')
             try:
@@ -229,6 +229,31 @@ class ReleaseGateTests(unittest.TestCase):
                 gate.fetch_release(request, self.config, fetcher, Path(directory))
             self.assertEqual(caught.exception.code, 'PLAN_REQUIRED')
             download.assert_not_called()
+
+    def test_plan_supplies_only_the_fixed_private_zip_cache(self):
+        fetcher = fixtures.fetcher
+        run = self.run | {'id': fixtures.RUN, 'head_sha': fixtures.SHA, 'run_attempt': fixtures.ATTEMPT}
+        artifact = fixtures.artifact_metadata() | {'workflow_run': {
+            'repository_id': 123, 'head_repository_id': 123, 'head_branch': 'main'}}
+        request = self.request | {'runId': fixtures.RUN, 'mode': 'plan'}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            supplied = []
+            def download(args, token):
+                supplied.append(args)
+                self.assertEqual(token, request['token'])
+                args.output.mkdir()
+                (args.output / 'release-manifest.json').write_text('{}')
+            with patch.object(fetcher, 'GitHub', return_value=SimpleNamespace(get=Mock(return_value=run))), \
+                    patch.object(fetcher, 'artifact_for_run', return_value=(artifact, fixtures.ATTEMPT)), \
+                    patch.object(fetcher, 'fetch', side_effect=download), \
+                    patch.object(gate, 'zip_cache_directory', return_value=gate.ZIP_CACHE) as cache:
+                gate.fetch_release(request, self.config, fetcher, root)
+            cache.assert_called_once_with()
+            self.assertEqual(supplied[0].zip_cache_dir, gate.ZIP_CACHE)
+            self.assertEqual(supplied[0].download_workers, 8)
+            with self.assertRaises(gate.GateError):
+                gate.read_request(io.StringIO(json.dumps(request | {'zipCacheDir': '/untrusted'})))
 
     def test_only_successful_preflight_creates_plan_and_publish_checks_its_identity(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -347,6 +372,24 @@ class ReleaseGateTests(unittest.TestCase):
             with self.assertRaises(gate.GateError):
                 gate.protected(link)
 
+    @unittest.skipUnless(os.name == 'posix' and getattr(os, 'geteuid', lambda: 1)() == 0,
+                         'Root-owned ZIP cache needs Linux/root validation')
+    def test_zip_cache_directory_is_private_and_rejects_existing_symlink(self):
+        with tempfile.TemporaryDirectory(dir='/root') as directory:
+            cache = Path(directory) / 'zip-cache'
+            with patch.object(gate, 'ZIP_CACHE', cache):
+                self.assertEqual(gate.zip_cache_directory(), cache)
+                self.assertEqual(cache.stat().st_mode & 0o777, 0o700)
+                self.assertEqual(gate.zip_cache_directory(), cache)
+                cache.chmod(0o750)
+                with self.assertRaises(gate.GateError):
+                    gate.zip_cache_directory()
+                cache.chmod(0o700)
+            link = Path(directory) / 'link'
+            link.symlink_to(cache, target_is_directory=True)
+            with patch.object(gate, 'ZIP_CACHE', link), self.assertRaises(gate.GateError):
+                gate.zip_cache_directory()
+
     def test_release_client_uses_stdin_and_pinned_host(self):
         environment = {'BUILD_RUN_ID': '12', 'RELEASE_MODE': 'plan', 'GH_TOKEN': self.request['token'],
                        'DEPLOY_SSH_KEY': 'synthetic private key', 'DEPLOY_KNOWN_HOSTS': 'synthetic pinned host'}
@@ -355,7 +398,7 @@ class ReleaseGateTests(unittest.TestCase):
             self.assertNotIn(self.request['token'], ' '.join(argv))
             self.assertNotIn('synthetic private key', ' '.join(argv))
             self.assertEqual(json.loads(kwargs['input']), self.request)
-            self.assertEqual(kwargs['timeout'], 4800)
+            self.assertEqual(kwargs['timeout'], 6600)
             self.assertNotIn('GH_TOKEN', client.os.environ)
             self.assertNotIn('DEPLOY_SSH_KEY', client.os.environ)
             return SimpleNamespace(returncode=0, stdout=json.dumps({'ok': True, 'buildRunId': 12, 'mode': 'plan'}))
@@ -415,7 +458,7 @@ class ReleaseGateTests(unittest.TestCase):
     def test_client_exception_annotations_do_not_expose_exception_or_timeout_output(self):
         secret = self.request['token']
         cases = ((ValueError(secret + '\n::error::injected'), 'RELEASE_CLIENT_FAILED'),
-                 (client.subprocess.TimeoutExpired(['ssh', secret], 4800, output=secret, stderr=secret), 'RELEASE_STATUS_UNKNOWN'))
+                 (client.subprocess.TimeoutExpired(['ssh', secret], 6600, output=secret, stderr=secret), 'RELEASE_STATUS_UNKNOWN'))
         for exception, code in cases:
             with self.subTest(code=code), patch.dict(client.os.environ, {'GITHUB_ACTIONS': 'true'}, clear=True), \
                     patch.object(client, 'main', side_effect=exception), \

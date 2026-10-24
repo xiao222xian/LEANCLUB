@@ -12,6 +12,7 @@ import stat
 import tarfile
 import tempfile
 import threading
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 import urllib.error
@@ -237,6 +238,155 @@ class FetchTests(unittest.TestCase):
             fetcher.fetch(self.args, TOKEN)
         api.assert_not_called()
         self.assertEqual((self.args.output / 'keep').read_text(), 'keep')
+
+    @contextlib.contextmanager
+    def zip_cache_fixture(self, payload=None):
+        cache = self.root / 'zip-cache'
+        cache.mkdir(mode=0o700, exist_ok=True)
+        self.args.zip_cache_dir = cache
+        # End-to-end transport tests use ordinary cross-platform temporary paths;
+        # ownership/path guards have separate adversarial and Linux/root tests.
+        with patch.object(fetcher, 'private_zip_directory', side_effect=lambda path: Path(path)), \
+                patch.object(fetcher, 'private_zip_file'):
+            if payload is not None:
+                path = fetcher.zip_cache_path(cache, artifact_metadata(payload))
+                path.write_bytes(payload)
+                path.chmod(0o600)
+            yield cache
+
+    def test_verified_zip_cache_rechecks_github_and_skips_download_only(self):
+        payload = zip_bytes(bundle())
+        api = FakeAPI(item=artifact_metadata(payload))
+        with self.zip_cache_fixture(payload), patch.object(fetcher, 'GitHub', return_value=api), \
+                patch.object(fetcher, 'download') as download, \
+                patch.object(fetcher, 'download_parallel') as parallel:
+            report = fetcher.fetch(self.args, TOKEN)
+        self.assertTrue(report['zipCacheHit'])
+        self.assertEqual(report['commits'], COMMITS)
+        self.assertEqual(report['zipSha256'], hashlib.sha256(payload).hexdigest())
+        self.assertEqual(len(api.calls), 3)
+        self.assertFalse(any(call.endswith('/zip') for call in api.calls))
+        download.assert_not_called()
+        parallel.assert_not_called()
+        self.assertNotIn(TOKEN, json.dumps(report))
+
+    def test_zip_cache_cannot_bypass_expiry_attempt_or_repository(self):
+        payload = zip_bytes(bundle())
+        cases = [FakeAPI(item=artifact_metadata(payload) | {'expired': True}),
+                 FakeAPI(run=run_metadata() | {'run_attempt': ATTEMPT + 1}),
+                 FakeAPI(run=run_metadata() | {'head_repository': {'full_name': 'outsider/fork'}})]
+        with self.zip_cache_fixture(payload):
+            for api in cases:
+                with self.subTest(metadata=api.run), patch.object(fetcher, 'GitHub', return_value=api), \
+                        patch.object(fetcher, 'copy_verified_zip') as cached_copy, \
+                        self.assertRaises(fetcher.FetchError):
+                    fetcher.fetch(self.args, TOKEN)
+                cached_copy.assert_not_called()
+                self.assertFalse(self.args.output.exists())
+
+    def test_zip_cache_corruption_stops_without_download_or_extraction(self):
+        payload = zip_bytes(bundle())
+        with self.zip_cache_fixture(payload) as cache:
+            path = fetcher.zip_cache_path(cache, artifact_metadata(payload))
+            for damaged in (payload[:-1], bytes([payload[0] ^ 1]) + payload[1:]):
+                path.write_bytes(damaged)
+                with patch.object(fetcher, 'GitHub', return_value=FakeAPI(item=artifact_metadata(payload))), \
+                        patch.object(fetcher, 'download') as download, \
+                        patch.object(fetcher, 'extract_code_zip') as extract, \
+                        self.assertRaises(fetcher.FetchError) as error:
+                    fetcher.fetch(self.args, TOKEN)
+                self.assertEqual(error.exception.code, 'ARTIFACT_DIGEST_MISMATCH')
+                download.assert_not_called()
+                extract.assert_not_called()
+                self.assertFalse(self.args.output.exists())
+
+    def test_cached_zip_still_rejects_unapproved_archive_contents(self):
+        wrong_manifest = bundle()
+        manifest = json.loads(wrong_manifest['release-manifest.json']) | {'runId': '999'}
+        wrong_manifest['release-manifest.json'] = metadata(manifest)
+        checksum_file(wrong_manifest)
+        for files in (bundle() | {'unexpected.txt': b'unapproved code'}, wrong_manifest):
+            payload = zip_bytes(files)
+            with self.subTest(files=list(files)), self.zip_cache_fixture(payload), \
+                    patch.object(fetcher, 'GitHub', return_value=FakeAPI(item=artifact_metadata(payload))), \
+                    self.assertRaises(fetcher.FetchError):
+                fetcher.fetch(self.args, TOKEN)
+            self.assertFalse(self.args.output.exists())
+
+    def test_downloaded_zip_survives_extract_failure_and_retry_uses_cache(self):
+        payload = zip_bytes(bundle())
+        api, download = self.clients(payload)
+        with self.zip_cache_fixture() as cache:
+            with patch.object(fetcher, 'opener', side_effect=[api, download]), \
+                    patch.object(fetcher, 'extract_code_zip', side_effect=fetcher.FetchError('Synthetic interruption')), \
+                    self.assertRaises(fetcher.FetchError):
+                fetcher.fetch(self.args, TOKEN)
+            saved = fetcher.zip_cache_path(cache, artifact_metadata(payload))
+            self.assertEqual(saved.read_bytes(), payload)
+            self.assertEqual(list(cache.iterdir()), [saved])
+            self.assertEqual(saved.stat().st_nlink, 1)
+            self.assertFalse(self.args.output.exists())
+            with patch.object(fetcher, 'GitHub', return_value=FakeAPI(item=artifact_metadata(payload))):
+                report = fetcher.fetch(self.args, TOKEN)
+            self.assertTrue(report['zipCacheHit'])
+
+    def test_zip_cache_publication_rehashes_before_atomic_visibility(self):
+        payload = zip_bytes(bundle())
+        source = self.root / 'download.zip'
+        source.write_bytes(bytes([payload[0] ^ 1]) + payload[1:])
+        with self.zip_cache_fixture() as cache:
+            saved = fetcher.zip_cache_path(cache, artifact_metadata(payload))
+            with patch.object(fetcher.os, 'link') as publish, self.assertRaises(fetcher.FetchError):
+                fetcher.save_zip_cache(source, saved, artifact_metadata(payload))
+            publish.assert_not_called()
+            self.assertEqual(list(cache.iterdir()), [])
+
+    def test_zip_cache_permissions_and_file_types_are_strict(self):
+        base = {'st_mode': stat.S_IFREG | 0o600, 'st_uid': 0, 'st_nlink': 1}
+        fetcher.private_zip_file(SimpleNamespace(**base))
+        for changed in ({'st_uid': 1000}, {'st_nlink': 2}, {'st_mode': stat.S_IFREG | 0o644},
+                        {'st_mode': stat.S_IFLNK | 0o600}, {'st_mode': stat.S_IFIFO | 0o600}):
+            with self.subTest(changed=changed), self.assertRaises(fetcher.FetchError):
+                fetcher.private_zip_file(SimpleNamespace(**(base | changed)))
+        for mode, owner in ((stat.S_IFDIR | 0o755, 0), (stat.S_IFDIR | 0o700, 1000),
+                            (stat.S_IFLNK | 0o700, 0)):
+            with patch.object(Path, 'lstat', return_value=SimpleNamespace(st_mode=mode, st_uid=owner)), \
+                    self.assertRaises(fetcher.FetchError):
+                fetcher.private_zip_directory(self.root)
+        good = SimpleNamespace(st_mode=stat.S_IFDIR | 0o700, st_uid=0)
+        unsafe_parent = SimpleNamespace(st_mode=stat.S_IFDIR | 0o777, st_uid=0)
+        with patch.object(Path, 'lstat', side_effect=[good, unsafe_parent]), self.assertRaises(fetcher.FetchError):
+            fetcher.private_zip_directory(self.root)
+
+    @unittest.skipUnless(os.name == 'posix' and getattr(os, 'geteuid', lambda: 1)() == 0,
+                         'Root-owned ZIP cache needs Linux/root validation')
+    def test_real_private_zip_cache_rejects_symlinks_and_shared_permissions(self):
+        payload = zip_bytes(bundle())
+        with tempfile.TemporaryDirectory(dir='/root') as temporary:
+            directory = Path(temporary)
+            cache = directory / 'cache'
+            cache.mkdir(mode=0o700)
+            source = directory / 'source.zip'
+            source.write_bytes(payload)
+            source.chmod(0o600)
+            item = artifact_metadata(payload)
+            saved = fetcher.zip_cache_path(cache, item)
+            fetcher.save_zip_cache(source, saved, item)
+            target = directory / 'checked.zip'
+            fetcher.copy_verified_zip(saved, target, item)
+            self.assertEqual(target.read_bytes(), payload)
+            self.assertEqual(stat.S_IMODE(saved.stat().st_mode), 0o600)
+            saved.chmod(0o640)
+            with self.assertRaises(fetcher.FetchError):
+                fetcher.copy_verified_zip(saved, directory / 'forbidden.zip', item)
+            saved.chmod(0o600)
+            link = directory / 'link.zip'
+            link.symlink_to(saved)
+            with self.assertRaises(fetcher.FetchError):
+                fetcher.copy_verified_zip(link, directory / 'forbidden.zip', item)
+            cache.chmod(0o750)
+            with self.assertRaises(fetcher.FetchError):
+                fetcher.zip_cache_path(cache, item)
 
     def test_run_must_be_completed_successful_exact_sha_and_same_repository(self):
         cases = [{'status': 'in_progress'}, {'conclusion': 'failure'}, {'head_sha': 'd' * 40},

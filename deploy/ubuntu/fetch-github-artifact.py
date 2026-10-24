@@ -497,24 +497,101 @@ def verify_bundle(directory, hashes, run_id, attempt, expected_sha):
     return commits
 
 
+def private_zip_directory(path):
+    """The gate, never request JSON/CLI input, supplies this root-owned cache."""
+    path = Path(path)
+    if not path.is_absolute():
+        raise FetchError('ZIP cache must be an absolute root-managed directory.')
+    for parent in (path, *path.parents):
+        info = parent.lstat()
+        if (not stat.S_ISDIR(info.st_mode) or info.st_uid != 0 or info.st_mode & 0o022
+                or parent == path and stat.S_IMODE(info.st_mode) != 0o700):
+            raise FetchError('ZIP cache ownership, path type or permissions are invalid.')
+    return path
+
+
+def private_zip_file(info):
+    if (not stat.S_ISREG(info.st_mode) or info.st_uid != 0 or info.st_nlink != 1
+            or stat.S_IMODE(info.st_mode) != 0o600):
+        raise FetchError('ZIP cache requires a private root-owned regular file without links.')
+
+
+def zip_cache_path(directory, artifact):
+    directory = private_zip_directory(directory)
+    artifact_id, digest = artifact.get('id'), artifact.get('digest')
+    if type(artifact_id) is not int or artifact_id < 1 or not isinstance(digest, str) or not re.fullmatch(r'sha256:[a-f0-9]{64}', digest):
+        raise FetchError('ZIP cache requires a verified artifact identity.')
+    return directory / ('%d-%s.zip' % (artifact_id, digest.removeprefix('sha256:')))
+
+
+def copy_verified_zip(source, target, artifact):
+    # Copy from one opened inode, then hash exactly the bytes sent to extraction.
+    # Neither a pathname check alone nor a cache filename is proof of integrity.
+    private_zip_file(Path(source).lstat())
+    descriptor = os.open(source, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0))
+    with os.fdopen(descriptor, 'rb') as stream:
+        info = os.fstat(stream.fileno())
+        private_zip_file(info)
+        if info.st_size != artifact['size_in_bytes']:
+            raise FetchError('Cached ZIP size differs from GitHub metadata.', 'ARTIFACT_DIGEST_MISMATCH')
+        digest, total = hashlib.sha256(), 0
+        with Path(target).open('xb') as output:
+            Path(target).chmod(0o600)
+            while True:
+                chunk = stream.read(min(1024 * 1024, artifact['size_in_bytes'] - total + 1))
+                if not chunk:
+                    break
+                total += len(chunk)
+                if total > artifact['size_in_bytes']:
+                    raise FetchError('Cached ZIP exceeds its verified size.', 'ARTIFACT_DIGEST_MISMATCH')
+                output.write(chunk)
+                digest.update(chunk)
+            output.flush()
+            os.fsync(output.fileno())
+    if total != artifact['size_in_bytes'] or 'sha256:' + digest.hexdigest() != artifact['digest']:
+        raise FetchError('Cached ZIP SHA-256 differs from GitHub metadata.', 'ARTIFACT_DIGEST_MISMATCH')
+    return digest.hexdigest(), total
+
+
+def save_zip_cache(source, destination, artifact):
+    # Publish only a complete, rehashed inode, without replacing any existing cache.
+    private_zip_directory(destination.parent)
+    with tempfile.TemporaryDirectory(prefix='.zip-cache-', dir=destination.parent) as temporary:
+        staged = Path(temporary) / 'artifact.zip'
+        copy_verified_zip(source, staged, artifact)
+        try:
+            os.link(staged, destination, follow_symlinks=False)
+        except FileExistsError:
+            raise FetchError('ZIP cache appeared concurrently; inspect it before retrying.') from None
+        staged.unlink()  # The published inode now has exactly one name.
+
+
 def fetch(args, token):
     output = Path(args.output).absolute()
     if output.exists() or output.is_symlink() or not output.parent.is_dir():
         raise FetchError('Output must not exist, and its parent must already be a directory.')
     api = GitHub(token)
     artifact, attempt = artifact_for_run(api, args.run_id, args.artifact_name, args.expected_workflow_sha)
+    cache_directory = getattr(args, 'zip_cache_dir', None)
+    cached = zip_cache_path(cache_directory, artifact) if cache_directory is not None else None
     with tempfile.TemporaryDirectory(prefix='.leanschool-artifact-', dir=output.parent) as temporary:
         temporary = Path(temporary)
-        url = api.get('/actions/artifacts/%d/zip' % artifact['id'], redirect=True)
         target, digest = temporary / 'artifact.zip', artifact['digest'].removeprefix('sha256:')
-        workers = getattr(args, 'download_workers', 1)
-        if workers == 1:
-            zip_hash, zip_bytes = download(url, target, digest)
+        cache_hit = cached is not None and (cached.exists() or cached.is_symlink())
+        if cache_hit:
+            zip_hash, zip_bytes = copy_verified_zip(cached, target, artifact)
         else:
-            zip_hash, zip_bytes = download_parallel(url, target, digest, artifact['size_in_bytes'], workers,
-                refresh_url=lambda: api.get('/actions/artifacts/%d/zip' % artifact['id'], redirect=True))
+            url = api.get('/actions/artifacts/%d/zip' % artifact['id'], redirect=True)
+            workers = getattr(args, 'download_workers', 1)
+            if workers == 1:
+                zip_hash, zip_bytes = download(url, target, digest)
+            else:
+                zip_hash, zip_bytes = download_parallel(url, target, digest, artifact['size_in_bytes'], workers,
+                    refresh_url=lambda: api.get('/actions/artifacts/%d/zip' % artifact['id'], redirect=True))
         if zip_bytes != artifact['size_in_bytes']:
             raise FetchError('Downloaded ZIP size differs from the GitHub artifact metadata.', 'ARTIFACT_DIGEST_MISMATCH')
+        if cached is not None and not cache_hit:
+            save_zip_cache(target, cached, artifact)
         directory = temporary / 'release'
         hashes = extract_code_zip(temporary / 'artifact.zip', directory)
         commits = verify_bundle(directory, hashes, args.run_id, attempt, args.expected_workflow_sha)
@@ -524,7 +601,8 @@ def fetch(args, token):
     return {'ok': True, 'repository': REPOSITORY, 'runId': args.run_id, 'runAttempt': attempt,
             'artifactId': artifact['id'], 'artifactName': args.artifact_name,
             'workflowSha': args.expected_workflow_sha, 'zipSha256': zip_hash, 'zipBytes': zip_bytes,
-            'files': hashes, 'commits': commits, 'output': str(output), 'deployed': False}
+            'files': hashes, 'commits': commits, 'output': str(output), 'deployed': False,
+            'zipCacheHit': cache_hit}
 
 
 def main():

@@ -16,6 +16,7 @@ import tempfile
 
 CONFIG = Path('/etc/leanschool/release-gate.json')
 ROOT = Path('/var/lib/leanschool/releases/cloud')
+ZIP_CACHE = Path('/var/lib/leanschool/releases/zip-cache')
 REPO = 'papaoo/bojizhuye'
 BRANCHES = {'main', 'platform/backend', 'platform/admin-ui'}
 WORKFLOW = '.github/workflows/leanschool-release.yml'
@@ -30,7 +31,7 @@ SAFE_ERRORS = {
     'DOWNLOAD_RETRY_EXHAUSTED': ('download', 'Artifact transfer failed after bounded retries. Check server network access and retry.'),
     'RANGE_PROTOCOL_INVALID': ('download', 'Artifact range, length, encoding or ETag validation failed. Check the download service before retrying.'),
     'ARTIFACT_DIGEST_MISMATCH': ('download', 'Artifact size or SHA-256 differs from GitHub metadata. Retry from a verified build before publishing.'),
-    'BUILD_FETCH_TIMEOUT': ('download', 'Build download exceeded 60 minutes. Production was not changed.'),
+    'BUILD_FETCH_TIMEOUT': ('download', 'Build download exceeded 90 minutes. Production was not changed.'),
     'PREFLIGHT_FAILED': ('preflight', 'Release preflight failed. Check schema, dependencies and the production baseline before publishing.'),
     'PUBLISH_FAILED_ROLLED_BACK': ('publish', 'Publication failed. Previous code and configuration recovered; business data was not restored.'),
     'ROLLBACK_FAILED': ('recovery', 'Publication recovery needs server inspection. Business data was not restored.'),
@@ -113,6 +114,16 @@ def protected(path, directory=False, private=False):
         if parent.is_symlink() or parent.stat().st_uid != 0 or parent.stat().st_mode & 0o022:
             raise GateError('Untrusted parent directory.')
     return path
+
+
+def zip_cache_directory():
+    protected(ZIP_CACHE.parent, directory=True)
+    if not ZIP_CACHE.exists() and not ZIP_CACHE.is_symlink():
+        ZIP_CACHE.mkdir(mode=0o700)
+    protected(ZIP_CACHE, directory=True, private=True)
+    if stat.S_IMODE(ZIP_CACHE.stat().st_mode) != 0o700:
+        raise GateError('ZIP cache directory must remain root private.')
+    return ZIP_CACHE
 
 
 def validate_run(run, config, run_id):
@@ -204,7 +215,8 @@ def fetch_release(request, config, fetcher, root):
         if receipt_path.exists() or receipt_path.is_symlink():
             raise GateError('Unpaired release receipt exists.')
         fetcher.fetch(argparse.Namespace(run_id=request['runId'], artifact_name=name,
-                      expected_workflow_sha=workflow_sha, output=folder, download_workers=8), request['token'])
+                      expected_workflow_sha=workflow_sha, output=folder, download_workers=8,
+                      zip_cache_dir=zip_cache_directory()), request['token'])
         fd = os.open(receipt_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
         with os.fdopen(fd, 'w') as output:
             json.dump(identity, output)
@@ -218,7 +230,7 @@ def fetch_release(request, config, fetcher, root):
 def execute(request, config, fetcher, root=ROOT):
     # This timer ends before any production mutation starts. Range workers also
     # have their own bounded HTTP retries and cancel pending pieces on failure.
-    with deadline(3600, 'BUILD_FETCH_TIMEOUT'):
+    with deadline(5400, 'BUILD_FETCH_TIMEOUT'):
         try:
             folder, manifest, attempt, identity = fetch_release(request, config, fetcher, root)
         except fetcher.FetchError as error:
