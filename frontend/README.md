@@ -14,4 +14,4 @@ build按清单复制8个静态文件到 ../web/creator/design，零新增运行�
 
 原始来源与文件摘要见 [original/upstream.json](original/upstream.json)。保留的Vue开发依赖仅用于历史代码，test:experimental不是当前页面验收。旧 [ENGINE-NOTES.md](ENGINE-NOTES.md) 为已停止方向的历史说明。
 
-交付状态见工作区 04-products/lean-design/ORIGINAL-PAGE-20261024.md。只做本地切换，未部署。接入路由和发布边界仍见 [官网接入说明](../docs/lean-design-integration.md)。
+交付状态见工作区 04-products/lean-design/ORIGINAL-PAGE-20261024.md。2026-10-24已发布至 https://leanmuscleclub.com/design/ ，源码与8个运行文件一并纳入固定版本。接入路由和发布边界见 [官网接入说明](../docs/lean-design-integration.md)。
