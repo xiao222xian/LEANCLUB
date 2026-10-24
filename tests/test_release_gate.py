@@ -1,6 +1,6 @@
 """Release identity and credential isolation; synthetic inputs, no external actions."""
 import copy
-from contextlib import nullcontext
+from contextlib import contextmanager, nullcontext
 import importlib.util
 import io
 import json
@@ -122,13 +122,135 @@ class ReleaseGateTests(unittest.TestCase):
                     return SimpleNamespace(returncode=1, stdout='', stderr=json.dumps({
                         'ok': False, 'databaseRestored': False, 'errorCode': code, 'error': self.request['token']}))
                 with patch.object(gate, 'deadline', return_value=nullcontext()), \
-                        patch.object(gate, 'fetch_release', return_value=(Path('/private/release'), manifest, 1)), \
+                        patch.object(gate, 'fetch_release', return_value=(Path('/private/release'), manifest, 1, {})), \
                         patch.object(gate, 'protected', side_effect=lambda p, **_: p), \
                         patch.object(gate.subprocess, 'run', side_effect=child):
                     with self.assertRaises(gate.GateError) as caught:
                         gate.execute(request, self.config | {'toolsRoot': '/fixed/tools'}, fetcher)
                     self.assertEqual(caught.exception.code, code)
                     self.assertNotIn(self.request['token'], str(caught.exception))
+
+    def test_download_gets_sixty_minutes_and_timer_ends_before_release(self):
+        active = {'timer': False}
+        events = []
+        @contextmanager
+        def download_deadline(seconds, code):
+            self.assertEqual((seconds, code), (3600, 'BUILD_FETCH_TIMEOUT'))
+            active['timer'] = True
+            events.append('download-timer-started')
+            try:
+                yield
+            finally:
+                active['timer'] = False
+                events.append('download-timer-cleared')
+        def retrieve(*_args):
+            self.assertTrue(active['timer'])
+            return Path('/private/release'), {'commits': {'website': 'a' * 40}}, 1, {}
+        def release(*_args, **kwargs):
+            self.assertFalse(active['timer'])
+            self.assertNotIn('timeout', kwargs)
+            events.append('release-started')
+            return SimpleNamespace(returncode=0, stdout=json.dumps({
+                'ok': True, 'mode': 'plan', 'deployed': False, 'schemaCompatible': True}))
+        with patch.object(gate, 'deadline', side_effect=download_deadline), \
+                patch.object(gate, 'fetch_release', side_effect=retrieve), \
+                patch.object(gate, 'protected', side_effect=lambda p, **_: p), \
+                patch.object(gate, 'save_plan'), \
+                patch.object(gate.subprocess, 'run', side_effect=release):
+            result = gate.execute(dict(self.request), self.config | {'toolsRoot': '/fixed/tools'},
+                                  SimpleNamespace(FetchError=RuntimeError))
+        self.assertTrue(result['ok'])
+        self.assertEqual(events, ['download-timer-started', 'download-timer-cleared', 'release-started'])
+
+    def test_publish_cannot_download_uncached_artifact(self):
+        fetcher = fixtures.fetcher
+        run = self.run | {'id': fixtures.RUN, 'head_sha': fixtures.SHA, 'run_attempt': fixtures.ATTEMPT}
+        artifact = fixtures.artifact_metadata() | {'workflow_run': {
+            'repository_id': 123, 'head_repository_id': 123, 'head_branch': 'main'}}
+        request = self.request | {'runId': fixtures.RUN, 'mode': 'publish'}
+        with tempfile.TemporaryDirectory() as directory, \
+                patch.object(fetcher, 'GitHub', return_value=SimpleNamespace(get=Mock(return_value=run))), \
+                patch.object(fetcher, 'artifact_for_run', return_value=(artifact, fixtures.ATTEMPT)), \
+                patch.object(fetcher, 'fetch') as download:
+            with self.assertRaises(gate.GateError) as caught:
+                gate.fetch_release(request, self.config, fetcher, Path(directory))
+            self.assertEqual(caught.exception.code, 'PLAN_REQUIRED')
+            download.assert_not_called()
+            folder = Path(directory) / ('%d-%d-%s' % (fixtures.RUN, fixtures.ATTEMPT, fixtures.SHA[:12]))
+            folder.mkdir()  # A leftover directory without a verified receipt is not a prepared release.
+            with self.assertRaises(gate.GateError) as caught:
+                gate.fetch_release(request, self.config, fetcher, Path(directory))
+            self.assertEqual(caught.exception.code, 'PLAN_REQUIRED')
+            download.assert_not_called()
+
+    def test_only_successful_preflight_creates_plan_and_publish_checks_its_identity(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            folder = root / '12-1-aaaaaaaaaaaa'
+            folder.mkdir()
+            path = root / (folder.name + '.planned.json')
+            config = self.config | {'toolsRoot': str(root / 'fixed-tools-v1')}
+            identity = {'artifactId': 789, 'digest': 'sha256:' + 'b' * 64, 'workflowSha': 'a' * 40}
+            expected = {'format': 1, 'runId': 12, 'attempt': 1, **identity, 'toolsRoot': config['toolsRoot']}
+            manifest = {'commits': {'website': 'a' * 40}}
+            fetcher = SimpleNamespace(FetchError=RuntimeError)
+            fetched = (folder, manifest, 1, identity)
+            failure = SimpleNamespace(returncode=1, stdout='', stderr=json.dumps({
+                'ok': False, 'databaseRestored': False, 'errorCode': 'PREFLIGHT_FAILED'}))
+            planned = SimpleNamespace(returncode=0, stdout=json.dumps({
+                'ok': True, 'mode': 'plan', 'deployed': False, 'schemaCompatible': True}))
+            published = SimpleNamespace(returncode=0, stdout=json.dumps({'ok': True, 'mode': 'publish'}))
+            with patch.object(gate, 'deadline', return_value=nullcontext()), \
+                    patch.object(gate, 'fetch_release', return_value=fetched), \
+                    patch.object(gate, 'protected', side_effect=lambda p, **_: p), \
+                    patch.object(gate.subprocess, 'run', return_value=failure) as child:
+                with self.assertRaises(gate.GateError) as caught:
+                    gate.execute(dict(self.request), config, fetcher, root)
+                self.assertEqual(caught.exception.code, 'PREFLIGHT_FAILED')
+                self.assertFalse(path.exists())
+                child.reset_mock()
+                with self.assertRaises(gate.GateError) as caught:
+                    gate.execute(self.request | {'mode': 'publish'}, config, fetcher, root)
+                self.assertEqual(caught.exception.code, 'PLAN_REQUIRED')
+                child.assert_not_called()
+                child.return_value = planned
+                gate.execute(dict(self.request), config, fetcher, root)
+                self.assertEqual(json.loads(path.read_text()), expected)
+                self.assertNotIn(self.request['token'], path.read_text())
+                if os.name == 'posix':
+                    self.assertEqual(path.stat().st_mode & 0o777, 0o600)
+                child.return_value = published
+                result = gate.execute(self.request | {'mode': 'publish'}, config, fetcher, root)
+                self.assertTrue(result['ok'])
+                for change in ({'runId': 13}, {'attempt': 2}, {'artifactId': 999},
+                               {'digest': 'sha256:' + 'c' * 64}, {'workflowSha': 'd' * 40},
+                               {'toolsRoot': str(root / 'previous-tools')}, {'extra': True}):
+                    with self.subTest(change=change):
+                        path.write_text(json.dumps(expected | change))
+                        child.reset_mock()
+                        with self.assertRaises(gate.GateError) as caught:
+                            gate.execute(self.request | {'mode': 'publish'}, config, fetcher, root)
+                        self.assertEqual(caught.exception.code, 'PLAN_REQUIRED')
+                        child.assert_not_called()
+                path.write_text(json.dumps(expected))
+                with self.assertRaises(gate.GateError) as caught:
+                    gate.execute(self.request | {'mode': 'publish'}, config | {'toolsRoot': str(root / 'fixed-tools-v2')}, fetcher, root)
+                self.assertEqual(caught.exception.code, 'PLAN_REQUIRED')
+
+    def test_incomplete_success_receipt_does_not_authorize_publication(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fetcher = SimpleNamespace(FetchError=RuntimeError)
+            with patch.object(gate, 'deadline', return_value=nullcontext()), \
+                    patch.object(gate, 'fetch_release', return_value=(root / 'release', {'commits': {}}, 1, {})), \
+                    patch.object(gate, 'protected', side_effect=lambda p, **_: p), \
+                    patch.object(gate, 'save_plan') as save, \
+                    patch.object(gate.subprocess, 'run', return_value=SimpleNamespace(
+                        returncode=0, stdout=json.dumps({'ok': True, 'mode': 'plan'}))):
+                with self.assertRaises(gate.GateError) as caught:
+                    gate.execute(dict(self.request), self.config | {'toolsRoot': str(root)}, fetcher, root)
+                self.assertEqual(caught.exception.code, 'COORDINATOR_FAILED')
+                save.assert_not_called()
 
     def test_cached_bundle_is_rehashed_and_needs_live_matching_identity(self):
         fetcher = fixtures.fetcher

@@ -40,8 +40,8 @@ git -C E:/work/natie/05-lab/yudao/sources/yudao-ui-admin-vue3 push production HE
 1. 打开 [Build LEAN SCHOOL release](https://github.com/papaoo/bojizhuye/actions/workflows/leanschool-release.yml)，选择状态为成功的构建，核对三个源码 SHA。
 2. 复制构建页面地址中 `/actions/runs/` 后的数字，即 **run ID**。不要复制列表中的 `#123` 运行序号，也不要填 artifact ID。
 3. 打开 [Publish LEAN SCHOOL production](https://github.com/papaoo/bojizhuye/actions/workflows/leanschool-deploy.yml)，点击 **Run workflow**，分支选 `main`；`build_run_id` 填上述 run ID，`mode` 保持默认 **plan**。
-4. 查看 plan 的 Actions 摘要。`changed.website`、`changed.backend`、`changed.adminUi` 显示预计更新的组件；预检失败时先处理原因。plan 会下载并缓存验证包、读取生产状态，但不会切换应用版本、重启服务或修改业务数据。
-5. 确认版本和预检结果后，再次运行 Publish，填同一个 run ID，把 `mode` 改为 **publish**。这一步才会执行生产更新。完成后查看发布回执，并检查官网、管理后台及本次修改的业务功能。
+4. 查看 plan 的 Actions 摘要。`changed.website`、`changed.backend`、`changed.adminUi` 显示预计更新的组件；预检失败时先处理原因。plan 会下载并缓存验证包、读取生产状态，但不会切换应用版本、重启服务或修改业务数据。只有预检完整通过，才写入服务器私有的成功 plan 回执；仅下载成功不算预检通过。
+5. 确认版本和预检结果后，再次运行 Publish，填同一个 run ID，把 `mode` 改为 **publish**。这一步才会执行生产更新。**成功 plan 是强制前置条件：publish 不下载缺失的安装包，也不接受其他 attempt、其他 artifact 或其他服务器工具版本的 plan 回执。** 完成后查看发布回执，并检查官网、管理后台及本次修改的业务功能。
 
 命令行等价操作如下；先将 `<BUILD_RUN_ID>` 替换为真实构建 ID：
 
@@ -55,7 +55,7 @@ gh workflow run leanschool-deploy.yml --repo papaoo/bojizhuye --ref main \
 
 服务端只接受该构建当前已完成且成功的 attempt。若 plan 后重新运行了同一个 Build，attempt 和产物会变化，发布前应重新核对并执行 plan。最终 artifact 当前保留 **3 天**；过期后需重新构建，不能依靠服务器旧缓存绕过 GitHub 过期检查。
 
-大文件从 GitHub 直接下载到服务器，本机不需要中转 JAR。plan 已缓存且身份、摘要均一致时，publish 复用缓存并重新验证。
+大文件从 GitHub 直接下载到服务器，本机不需要中转 JAR。publish 必须复用成功 plan 的缓存，核对 run、attempt、artifact ID/摘要和当前可信工具目录，然后重新验证全部文件摘要及当前生产基线。服务器工具升级或构建 attempt 变化后，需要重新执行 plan。
 
 ## 服务器会做什么
 
@@ -92,7 +92,9 @@ Publish 只在私有仓库 `main` 手动运行，使用 `contents: read` 与 `ac
 
 服务器使用 `leanschool-deploy` 专用身份、强制固定命令及受限 sudo 入口，禁止一般 shell、PTY、端口/代理/X11 转发。入口仅接收 `runId`、`mode` 和短效 token 的限定 JSON。token 通过加密 SSH 的标准输入传递，仅用于本次 GitHub 读取，不写入服务器文件、命令参数或发布回执。客户端验证固定 SSH 主机密钥，不在每次发布时动态信任新的主机密钥。
 
-请求输入截止 20 秒；下载阶段截止 30 分钟且发生在生产修改之前；生产协调器负责各步骤的限时和失败恢复，不由 gate 在更新中途直接强杀。客户端最多等待 80 分钟，Publish job 上限 90 分钟。网络中断或外部取消仍需核查真实服务器状态。
+首次安装和可信工具升级使用 `deploy/ubuntu/install-release-gate.py`。维护者先把已审查提交的工具放到 root 所有、其他账号不可写的独立目录，再传入 `--tools-root` 和仅含公钥的 `--public-key-file`。首次可传 `--baseline-release-dir`，从已核验的旧包建立运行版本记录。工具会验证现有账号登记、所有权、无参数 sudo 规则及运行产物，不接收私钥，不修改现有 SSH 登录账号，也不重启生产服务。安装记录在 `/etc/leanschool/release-gate-install.json`；升级时不直接改写已有固定工具目录。
+
+请求输入截止 20 秒；plan 下载阶段截止 60 分钟且发生在生产修改之前；publish 只使用已验证的本地缓存，重新核对 GitHub 来源和生产预检。生产协调器负责各步骤的限时和失败恢复，不由 gate 在更新中途直接强杀。客户端最多等待 80 分钟，Publish job 上限 90 分钟。强制先完成 plan 再 publish，可避免把慢速下载与生产更新挤在同一次等待期限内。网络中断或外部取消仍需核查真实服务器状态。
 
 服务器记录位置：
 
@@ -101,7 +103,7 @@ Publish 只在私有仓库 `main` 手动运行，使用 `contents: read` 与 `ac
 | `/etc/leanschool/release-gate.json` | 固定仓库/workflow身份和可信工具目录配置 |
 | `/etc/leanschool/daily-release-host.json` | 本机发布身份标记 |
 | `/etc/leanschool/daily-current.json` | 最近成功发布的源码、实际运行产物和验证记录 |
-| `/var/lib/leanschool/releases/cloud/` | root 私有的已校验代码缓存及身份回执 |
+| `/var/lib/leanschool/releases/cloud/` | root 私有的代码缓存、`.verified.json` 产物身份回执和 `.planned.json` 成功预检回执；回执权限为 root 0600 |
 | `/var/backups/leanschool-daily/` | 每次更新的私有配置/数据库备份及结果记录 |
 
 记录和备份可能含私有运行配置与业务数据，不能上传至 Git 或作为 Actions artifact。下载缓存与备份目前不自动清理；维护者应按磁盘占用和恢复需要安排保留策略。
@@ -114,6 +116,7 @@ Actions 只展示固定安全错误码和固定说明，不展示原始子进程
 | --- | --- |
 | `REQUEST_REJECTED` / `REQUEST_TIMEOUT` | 检查 run ID、模式和请求连接；没有进入生产更新 |
 | `RELEASE_BUSY` | 已有发布正在执行，等待该次结果，不并发操作 |
+| `PLAN_REQUIRED` | 使用该 build 的当前 attempt 和服务器当前工具版本重新运行 plan；成功后再 publish |
 | `GATE_REJECTED` | 检查所选构建的仓库、workflow、分支、状态及可信服务器配置 |
 | `BUILD_FETCH_FAILED` / `BUILD_FETCH_TIMEOUT` | 检查构建是否成功、artifact 是否过期及服务器到 GitHub 的网络；生产尚未修改 |
 | `PREFLIGHT_FAILED` | 检查数据库契约、依赖及当前生产基线；不要绕过校验发布 |

@@ -12,6 +12,7 @@ import signal
 import stat
 import subprocess
 import sys
+import tempfile
 
 CONFIG = Path('/etc/leanschool/release-gate.json')
 ROOT = Path('/var/lib/leanschool/releases/cloud')
@@ -22,9 +23,10 @@ SAFE_ERRORS = {
     'REQUEST_REJECTED': ('request', 'Invalid release request.'),
     'REQUEST_TIMEOUT': ('request', 'Release request was not received within 20 seconds.'),
     'RELEASE_BUSY': ('validation', 'Another release is in progress.'),
+    'PLAN_REQUIRED': ('preflight', 'Run a successful plan for this build and current server tools before publishing.'),
     'GATE_REJECTED': ('validation', 'Release validation was rejected. Check the selected build and trusted server configuration.'),
     'BUILD_FETCH_FAILED': ('download', 'Build metadata or artifact download failed. Check the successful build and retry.'),
-    'BUILD_FETCH_TIMEOUT': ('download', 'Build download exceeded 30 minutes. Production was not changed.'),
+    'BUILD_FETCH_TIMEOUT': ('download', 'Build download exceeded 60 minutes. Production was not changed.'),
     'PREFLIGHT_FAILED': ('preflight', 'Release preflight failed. Check schema, dependencies and the production baseline before publishing.'),
     'PUBLISH_FAILED_ROLLED_BACK': ('publish', 'Publication failed. Previous code and configuration recovered; business data was not restored.'),
     'ROLLBACK_FAILED': ('recovery', 'Publication recovery needs server inspection. Business data was not restored.'),
@@ -140,6 +142,29 @@ def load_fetcher(tools):
     return module
 
 
+def successful_plan(path, identity):
+    try:
+        protected(path, private=True)
+        if json.loads(path.read_text()) != identity:
+            raise ValueError('Plan identity differs.')
+    except (OSError, ValueError, GateError):
+        raise GateError(SAFE_ERRORS['PLAN_REQUIRED'][1], 'PLAN_REQUIRED') from None
+
+
+def save_plan(path, identity):
+    if path.exists() or path.is_symlink():
+        protected(path, private=True)
+    fd, temporary = tempfile.mkstemp(prefix='.' + path.name + '-', dir=path.parent)
+    try:
+        os.chmod(temporary, 0o600)
+        with os.fdopen(fd, 'w') as output:
+            json.dump(identity, output)
+        os.replace(temporary, path)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
+
 def fetch_release(request, config, fetcher, root):
     api = fetcher.GitHub(request['token'])
     run = api.get('/actions/runs/' + str(request['runId']))
@@ -156,6 +181,8 @@ def fetch_release(request, config, fetcher, root):
     receipt_path = root / (folder.name + '.verified.json')
     identity = {'artifactId': artifact['id'], 'digest': artifact['digest'], 'workflowSha': workflow_sha}
     if folder.exists():
+        if request['mode'] == 'publish' and not receipt_path.exists():
+            raise GateError(SAFE_ERRORS['PLAN_REQUIRED'][1], 'PLAN_REQUIRED')
         protected(folder, directory=True, private=True)
         protected(receipt_path, private=True)
         if json.loads(receipt_path.read_text()) != identity or {p.name for p in folder.iterdir()} != fetcher.FILES:
@@ -166,6 +193,8 @@ def fetch_release(request, config, fetcher, root):
             hashes[name] = {'bytes': item.stat().st_size, 'sha256': sha(item)}
         fetcher.verify_bundle(folder, hashes, request['runId'], attempt, workflow_sha)
     else:
+        if request['mode'] == 'publish':
+            raise GateError(SAFE_ERRORS['PLAN_REQUIRED'][1], 'PLAN_REQUIRED')
         if receipt_path.exists() or receipt_path.is_symlink():
             raise GateError('Unpaired release receipt exists.')
         fetcher.fetch(argparse.Namespace(run_id=request['runId'], artifact_name=name,
@@ -177,19 +206,24 @@ def fetch_release(request, config, fetcher, root):
     if ('workflowSha' in manifest and (manifest.get('workflowEvent') != run['event']
             or manifest.get('workflowRef') != 'refs/heads/' + run['head_branch'])):
         raise GateError('Bundle event/ref differ from GitHub provenance.')
-    return folder, manifest, attempt
+    return folder, manifest, attempt, identity
 
 
 def execute(request, config, fetcher, root=ROOT):
     # This timer ends before any production mutation starts. Range workers also
     # have their own bounded HTTP retries and cancel pending pieces on failure.
-    with deadline(1800, 'BUILD_FETCH_TIMEOUT'):
+    with deadline(3600, 'BUILD_FETCH_TIMEOUT'):
         try:
-            folder, manifest, attempt = fetch_release(request, config, fetcher, root)
+            folder, manifest, attempt, identity = fetch_release(request, config, fetcher, root)
         except fetcher.FetchError:
             raise GateError('Build retrieval failed.', 'BUILD_FETCH_FAILED') from None
     tools = protected(Path(config['toolsRoot']), directory=True)
     coordinator = protected(tools / 'deploy/ubuntu/deploy-daily-release.py')
+    planned_path = root / (folder.name + '.planned.json')
+    planned_identity = {'format': 1, 'runId': request['runId'], 'attempt': attempt,
+                        **identity, 'toolsRoot': str(tools)}
+    if request['mode'] == 'publish':
+        successful_plan(planned_path, planned_identity)
     # Clear the short-lived token before executing any release operation.
     request.pop('token', None)
     # The coordinator owns bounded steps and recovery. An outer timeout must not
@@ -217,6 +251,10 @@ def execute(request, config, fetcher, root=ROOT):
         raise GateError('Release operation returned an invalid receipt.') from None
     if not isinstance(report, dict) or report.get('ok') is not True or report.get('mode') != request['mode']:
         raise GateError('Release operation returned an unsuccessful receipt.', 'COORDINATOR_FAILED')
+    if request['mode'] == 'plan':
+        if report.get('deployed') is not False or report.get('schemaCompatible') is not True:
+            raise GateError('Release plan returned an incomplete receipt.', 'COORDINATOR_FAILED')
+        save_plan(planned_path, planned_identity)
     return {'ok': True, 'buildRunId': request['runId'], 'attempt': attempt,
             'mode': request['mode'], 'commits': manifest['commits'], 'result': report}
 
