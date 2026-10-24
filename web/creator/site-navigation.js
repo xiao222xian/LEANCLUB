@@ -19,7 +19,7 @@
  if (next) {
   const preload = () => {
    warm(next);
-   const assets = next === '/schools' ? ['/campus-rankings.css?v=20261024-r1','/campus-rankings.js?v=20261024-r1'] : ['/lean-creator-home.css?v=campuses-20261021','/lean-creator-home.js?v=metadata-20261021'];
+   const assets = next === '/schools' ? ['/community.css?v=20261024-1','/community-list.js?v=20261024-1'] : ['/lean-creator-home.css?v=campuses-20261021','/lean-creator-home.js?v=metadata-20261021'];
    if (!connection?.saveData && !/2g/.test(connection?.effectiveType || '')) assets.forEach(href => fetch(href, {cache:'force-cache'}).catch(() => {}));
   };
   const schedule = () => { if ('requestIdleCallback' in window) requestIdleCallback(preload,{timeout:2000}); else setTimeout(preload,800); };

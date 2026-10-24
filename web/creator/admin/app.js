@@ -196,8 +196,8 @@
     $('#admin-view').hidden = true;
     $('#auth-view').hidden = false;
     $('#auth-loading').hidden = true;
-    $('#auth-title').textContent = state.setup ? '建立管理账号' : '进入俱乐部';
-    $('#auth-description').textContent = state.setup ? '设置账号，开启你的管理台。' : '城市、海报、每一次见面的可能。';
+    $('#auth-title').textContent = state.setup ? '建立管理账号' : '内容管理';
+    $('#auth-description').textContent = state.setup ? '设置管理员账号' : '';
     $('#setup-unavailable').hidden = !(session.setupRequired && !session.setupAvailable);
     $('#auth-form').hidden = Boolean(session.setupRequired && !session.setupAvailable);
     $('#confirm-field').hidden = !state.setup;
@@ -356,7 +356,7 @@
       if (active && focus) tab.focus();
     }
     for (const panel of $$('[role="tabpanel"]')) panel.hidden = panel.id !== `panel-${name}`;
-    document.title = `${({ schools: '学校社群', posters: '城市海报', overview: '数据概览', feedback: '意见箱', events: '活动报名', feishu: '飞书通知' })[name]} · LEAN SCHOOL`;
+    document.title = `${({ schools: '资料管理', posters: '城市海报', overview: '数据概览', feedback: '意见箱', events: '活动报名', feishu: '飞书通知' })[name]} · LEAN SCHOOL`;
     if (name === 'posters' && !state.postersLoaded && !state.postersLoading) loadPosters();
     if (name === 'overview') refreshVisibleStats();
     if (name === 'feedback' && !state.feedback && !state.feedbackLoading) loadFeedback();

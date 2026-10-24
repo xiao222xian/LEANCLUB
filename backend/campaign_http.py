@@ -12,6 +12,7 @@ from campaign_comments import validate as validate_comment
 from events_http import EventsAPI
 from store import Problem
 from club_management import ClubManagement
+from directory import Directory
 
 VISITOR_COOKIE = 'lean_visitor'
 SESSION_COOKIE = 'lean_admin'
@@ -32,6 +33,7 @@ class CampaignAPI:
         self.allowed_origins = {configured}
         self.events = EventsAPI(self)
         self.clubs = ClubManagement(store) if store is not None else None
+        self.directory = Directory(store) if store is not None else None
         if self.local_setup:
             # The explicit loopback launcher serves these names on the same port.
             # Production keeps the single configured origin.
@@ -57,7 +59,7 @@ class CampaignAPI:
 
     @staticmethod
     def matches(path):
-        return any(path == prefix or path.startswith(prefix + '/') for prefix in ('/api/campaign', '/api/analytics', '/api/admin', '/api/media'))
+        return any(path == prefix or path.startswith(prefix + '/') for prefix in ('/api/campaign', '/api/analytics', '/api/admin', '/api/media', '/api/directory'))
 
     @staticmethod
     def cookie(handler, key):
@@ -131,7 +133,7 @@ class CampaignAPI:
             raise Problem(400, '请求内容不完整。')
         return raw
 
-    def json_body(self, handler):
+    def json_body(self, handler, maximum=JSON_LIMIT):
         if handler.headers.get('Content-Type', '').split(';')[0].strip().lower() != 'application/json':
             raise Problem(415, '请求须为 JSON 格式。')
         def reject_constant(_):
@@ -144,7 +146,7 @@ class CampaignAPI:
                 result[key] = value
             return result
         try:
-            data = json.loads(self.read_body(handler, JSON_LIMIT).decode('utf-8'),
+            data = json.loads(self.read_body(handler, maximum).decode('utf-8'),
                               parse_constant=reject_constant, object_pairs_hook=unique_object)
         except (UnicodeError, ValueError, RecursionError):
             raise Problem(400, '请求内容无效。')
@@ -153,6 +155,20 @@ class CampaignAPI:
         return data
 
     def get(self, handler, path):
+        if path == '/api/directory':
+            self.store.limit(handler.ip(), 'directory-read', 180, 60)
+            return handler.send_json(200, {'items': self.directory.listing()})
+        match = re.fullmatch(r'/api/directory/([A-Za-z0-9_-]{1,80})', path)
+        if match:
+            self.store.limit(handler.ip(), 'directory-detail', 60, 60)
+            return handler.send_json(200, self.directory.detail(match[1]))
+        if path == '/api/admin/directory':
+            self.admin(handler)
+            return handler.send_json(200, {'items': self.directory.listing(private=True)})
+        match = re.fullmatch(r'/api/admin/directory/([A-Za-z0-9_-]{1,80})', path)
+        if match:
+            self.admin(handler)
+            return handler.send_json(200, self.directory.detail(match[1], private=True))
         if path == '/api/admin/schools' or path.startswith('/api/admin/schools/'):
             self.admin(handler)
             if path == '/api/admin/schools':
@@ -228,6 +244,21 @@ class CampaignAPI:
 
     def post(self, handler, path):
         self.require_origin(handler)
+        if path == '/api/admin/directory':
+            session = self.admin(handler, writing=True)
+            return handler.send_json(201, self.directory.create(self.json_body(handler, 3 * 1024 * 1024), session['username']))
+        if path in ('/api/directory/submit', '/api/directory/manage'):
+            self.store.limit(handler.ip(), 'directory-manage', 120, 60)
+            data = self.json_body(handler, 3 * 1024 * 1024)
+            if path.endswith('/manage'):
+                return handler.send_json(200, self.directory.manage(data.get('editKey')))
+            self.store.limit(handler.ip(), 'directory-submit', 60, 3600)
+            self.store.limit(self.directory.key(data.get('editKey')), 'directory-owner-submit', 10, 3600)
+            return handler.send_json(200, self.directory.submit(data))
+        match = re.fullmatch(r'/api/admin/directory/([A-Za-z0-9_-]{1,80})', path)
+        if match:
+            session = self.admin(handler, writing=True)
+            return handler.send_json(200, self.directory.review(match[1], self.json_body(handler, 3 * 1024 * 1024), session['username']))
         match = re.fullmatch(r'/api/admin/schools/([A-Za-z0-9_-]{1,80})(/qr)?', path)
         if match:
             session = self.admin(handler, writing=True)

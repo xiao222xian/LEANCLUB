@@ -25,6 +25,8 @@ class Store:
             db.execute('CREATE INDEX IF NOT EXISTS event_lookup ON events(ip,kind,stamp)')
         from club_management import ClubManagement
         self.management = ClubManagement(self)
+        from directory import Directory
+        self.directory = Directory(self)
 
     @contextmanager
     def connect(self):
@@ -56,14 +58,17 @@ class Store:
             return [dict(r) for r in db.execute('''SELECT c.id,c.name,c.count,c.updated,
                 m.en,m.region,m.alias,m.school_id schoolId,m.source
                 FROM clubs c LEFT JOIN club_directory_meta m ON m.club_id=c.id
-                WHERE COALESCE(m.visible,1)=1 ORDER BY c.count DESC,c.name''')]
+                WHERE COALESCE(m.visible,1)=1 AND COALESCE(m.profile_public,1)=1
+                AND COALESCE(m.kind,'group')='group' ORDER BY c.count DESC,c.name''')]
 
     def profile(self, school_id, ip):
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
-            row = db.execute('''SELECT c.id,c.name,c.contact,c.count,c.qr,c.updated,c.revision
+            row = db.execute('''SELECT c.id,c.name,
+                CASE WHEN COALESCE(m.contact_public,1)=1 THEN c.contact ELSE '' END contact,
+                c.count,CASE WHEN COALESCE(m.contact_public,1)=1 THEN c.qr ELSE '' END qr,c.updated,c.revision
                 FROM clubs c LEFT JOIN club_directory_meta m ON m.club_id=c.id
-                WHERE c.id=? AND COALESCE(m.visible,1)=1''', (school_id,)).fetchone()
+                WHERE c.id=? AND COALESCE(m.visible,1)=1 AND COALESCE(m.profile_public,1)=1''', (school_id,)).fetchone()
             if row is None:
                 return None
             since = int(time.time()) - 3600
