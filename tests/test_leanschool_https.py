@@ -138,11 +138,13 @@ class InstallerTests(unittest.TestCase):
             p.write_text(str(target), encoding='utf-8')))
         self.calls = []
 
-    def command(self, *args, data=None):
+    def command(self, *args, data=None, timeout=60):
         self.calls.append(args)
         if args[0] == 'curl':
             self.assertIn('--noproxy', args)
             self.assertNotIn('-k', args)
+            self.assertNotIn('--insecure', args)
+            self.assertIn('--resolve', args)
             url = urlsplit(args[-1])
             if args[args.index('-w') + 1] == '%{http_code}\n%{redirect_url}':
                 target = '/console/login?redirect=/leanclub/content' if url.path == '/admin' else '/console/leanclub/registrations'
@@ -166,6 +168,78 @@ class InstallerTests(unittest.TestCase):
         with patch.object(https, 'preflight'), patch.object(https, 'run', side_effect=command or self.command), redirect_stdout(io.StringIO()):
             https.apply_certificate(CERT + CHAIN, KEY)
 
+    def readiness_clock(self):
+        elapsed = [0.0]
+        self.stack.enter_context(patch.object(https.time, 'monotonic', side_effect=lambda: elapsed[0]))
+        def sleep(seconds):
+            self.assertGreater(seconds, 0)
+            elapsed[0] += seconds
+        self.stack.enter_context(patch.object(https.time, 'sleep', side_effect=sleep))
+        return elapsed
+
+    def test_first_old_worker_certificate_failure_retries_then_verifies_all_routes(self):
+        elapsed = self.readiness_clock()
+        attempts = 0
+        def command(*args, data=None, timeout=60):
+            nonlocal attempts
+            result = self.command(*args, data=data, timeout=timeout)
+            if args[0] == 'curl' and args[-1] == 'https://' + https.DOMAIN + '/':
+                attempts += 1
+                if attempts == 1:
+                    self.assertEqual(timeout, 3.0)
+                    self.assertEqual(args[args.index('--max-time') + 1], '3.0')
+                    raise https.CommandError('curl', 60)
+            return result
+        self.apply(command)
+        self.assertEqual(elapsed[0], 0.5)
+        self.assertEqual(attempts, 3)  # Two readiness probes and the normal route verification.
+        self.assertEqual(self.calls.count(('systemctl', 'reload', 'nginx')), 1)
+        self.assertEqual(self.old.read_bytes(), self.old_bytes)
+        self.assertTrue(https.ENABLED.exists())
+        self.assertTrue(any(call[-1].endswith('/doc.html') for call in self.calls if call[0] == 'curl'))
+        self.assertTrue(any(call[-1] == 'https://' + https.OLD_DOMAIN + '/admin'
+                            for call in self.calls if call[0] == 'curl'))
+
+    def test_persistent_certificate_failure_reaches_deadline_and_restores_previous_site(self):
+        previous = self.seed_previous()
+        elapsed = self.readiness_clock()
+        attempts = []
+        def command(*args, data=None, timeout=60):
+            result = self.command(*args, data=data, timeout=timeout)
+            if args[0] == 'curl':
+                self.assertEqual(args[-1], 'https://' + https.DOMAIN + '/')
+                self.assertGreater(timeout, 0)
+                self.assertLessEqual(timeout, min(3.0, 20.0 - elapsed[0]))
+                attempts.append(timeout)
+                raise https.CommandError('curl', 60)
+            return result
+        with self.assertRaisesRegex(RuntimeError, 'timed out after 20 seconds; last curl exit 60'):
+            self.apply(command)
+        self.assertEqual(elapsed[0], 20.0)
+        self.assertGreater(len(attempts), 1)
+        self.assertEqual(self.calls.count(('systemctl', 'reload', 'nginx')), 2)
+        for path, data in previous.items():
+            self.assertEqual(path.read_bytes(), data)
+        self.assertTrue(https.ENABLED.exists())
+        self.assertEqual(self.old.read_bytes(), self.old_bytes)
+
+    def test_hanging_requests_cannot_extend_readiness_deadline(self):
+        elapsed = self.readiness_clock()
+        def command(*args, data=None, timeout=60):
+            result = self.command(*args, data=data, timeout=timeout)
+            if args[0] == 'curl':
+                self.assertEqual(float(args[args.index('--max-time') + 1]), timeout)
+                self.assertLessEqual(timeout, min(3.0, 20.0 - elapsed[0]))
+                elapsed[0] += timeout
+                raise subprocess.TimeoutExpired('curl', timeout)
+            return result
+        with self.assertRaisesRegex(RuntimeError, 'timed out after 20 seconds; last request timeout'):
+            self.apply(command)
+        self.assertEqual(elapsed[0], 20.0)
+        self.assertFalse(https.CONF.exists())
+        self.assertFalse(https.ENABLED.exists())
+        self.assertEqual(self.old.read_bytes(), self.old_bytes)
+
     def test_success_preserves_old_vhost_and_keeps_backup(self):
         previous = self.seed_previous()
         self.apply()
@@ -180,7 +254,7 @@ class InstallerTests(unittest.TestCase):
 
     def test_nginx_validation_failure_removes_new_site(self):
         first = True
-        def command(*args, data=None):
+        def command(*args, data=None, timeout=60):
             nonlocal first
             if args == ('nginx', '-t') and first:
                 first = False
@@ -197,7 +271,7 @@ class InstallerTests(unittest.TestCase):
     def test_reload_or_https_failure_restores_previous_site(self):
         previous = self.seed_previous()
         first = True
-        def command(*args, data=None):
+        def command(*args, data=None, timeout=60):
             nonlocal first
             if args == ('systemctl', 'reload', 'nginx') and first:
                 first = False
@@ -211,7 +285,7 @@ class InstallerTests(unittest.TestCase):
         self.assertEqual(self.old.read_bytes(), self.old_bytes)
 
     def test_missing_static_returning_html_triggers_rollback(self):
-        def command(*args, data=None):
+        def command(*args, data=None, timeout=60):
             if args[0] == 'curl' and '__leanschool_missing__' in args[-1]:
                 return b'200'
             return self.command(*args, data=data)
@@ -228,7 +302,7 @@ class InstallerTests(unittest.TestCase):
             if path == https.CONF and data == previous[https.CONF]:
                 raise OSError('synthetic rollback write failure')
             return original_write(path, data, mode)
-        def command(*args, data=None):
+        def command(*args, data=None, timeout=60):
             if args == ('nginx', '-t'):
                 raise RuntimeError('synthetic invalid configuration')
             return self.command(*args, data=data)

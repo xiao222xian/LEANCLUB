@@ -1,12 +1,22 @@
 # leanschool.net 接入进度与切换清单
 
-检查日期：2026-10-24（Asia/Shanghai）。目标 `https://www.leanschool.net`，沿用 `152.136.108.87`。本文件是当前接入清单，不代表已切换生产。
+检查日期：2026-10-24（Asia/Shanghai）。目标 `https://www.leanschool.net`，沿用 `152.136.108.87`。当前已完成服务器配置，外部新域HTTPS仍待核查。
 
 ## 最新执行范围
 
-用户后续已明确授权推送和整套部署，当前按[全栈发布记录](fullstack-release-20261024.md)执行，不再采用仅展示/投票302回旧域的临时方案。双域后端、生产网关、`/console/`构建和证书安装脚本已通过本机验证；服务器控制连接尚未恢复，不能声称已上线。
+用户已授权的整套部署完成：Java、双域官网、公众网关、`/console/`与新域证书已安装，全部相关服务active+enabled。服务器回环 `--resolve` 严格TLS路由、内部404、跳转和平台验收通过；服务器自身走公网DNS的新旧HTTPS均200。新证书SAN覆盖www与根域，到期2027-01-20；旧域及旧证书保留。详细固定版本、备份和限制见[全栈发布记录](fullstack-release-20261024.md)。
 
-## 已核实
+双域租户映射最终GET已复验：`/admin-api/system/tenant/get-by-website` 分别传入 `www.leanschool.net` 和 `boji.tensorbot.xyz`，均返回 `code=0/data.id=1`。两项Java桥接开关均为true，六项服务仍active。
+
+本机热点访问旧域官网及`/console/`严格HTTPS均200且品牌匹配；新www HTTPS仍连接重置（urllib10054/curl35），HTTP301正常，DNS为152.136.108.87，Web工具也未打开新域。**服务器配置完成不代表外部新域已全面可用**；重置原因未定位，不将其直接归因为备案或某个单一网络环节。首次交互登录仍待验收。
+
+## 现在需要用户处理
+
+1. 用户此前确认只完成域名实名认证，新域网站ICP备案尚未办理；继续在实际接入云平台办理，并向云平台核查新域公网接入/拦截状态。保留现有 `www / A / 152.136.108.87`，无需重复上传或购买证书。
+2. 用另一条外部网络测试 `https://www.leanschool.net`，记录时间与具体错误，供云平台和后续网络排查对照。当前可先用[旧域官网](https://boji.tensorbot.xyz/)和[旧域后台](https://boji.tensorbot.xyz/console/)。账户已通过本机私密文件交付，不在聊天粘贴密码或私钥。
+3. 如需不带www的入口，再核对根域A记录并安排服务器HTTPS跳转；证书已覆盖根域，但本次尚未启用该入口。后续仍需完成首次登录、内容/评论审核和手机流程验收，短信/支付渠道及通用文件存储未配置。
+
+## 接入前检查历史（以下结果已由顶部状态更新）
 
 | 项目 | 本轮结果 |
 | --- | --- |
@@ -21,13 +31,13 @@
 
 注册局最新变更时间为 `2026-10-23T15:56:31Z`。用户最新 DNS 截图显示绿色正确提示，与实查一致。无需再处理上一轮的 NS 警告。
 
-## 用户控制台操作
+## 原用户控制台清单（历史）
 
 1. 阿里云解析列表保留现有 `www / A / 152.136.108.87`，再添加 `@ / A / 152.136.108.87`，默认线路、TTL 10 分钟即可。`@` 支持不带 www 的地址，不代替服务器 HTTPS 跳转。
 2. 用户已确认本次仅域名实名认证通过，新域网站 ICP 备案尚未办理。当前服务器在腾讯云中国内地，新域备案按实际接入和主体在腾讯云办理；旧域备案号不能直接视为新域备案。腾讯云当前文档说明已备案网站不支持直接新增/替换成新域名，应按对应新增服务流程办理。[腾讯云说明](https://cloud.tencent.com/document/product/243/37406)
 3. 用户已有新 SSL 证书：下载 Nginx 格式证书包并放到服务器 `/data/` 下，再提供完整路径即可，不在聊天中粘贴私钥。接收后核实 SAN 是否覆盖 `www.leanschool.net` 和 `leanschool.net`、链完整性、有效期及密钥匹配；文件在 /data/ 只作接收，不直接用作永久私钥存放。实际部署到 root 私有证书目录并设置权限、记录续期方式。用户无需重新购买证书。
 
-## 代码与服务器工作
+## 原代码与服务器工作清单（历史）
 
 由开发侧处理，用户不需要手改源码：
 
@@ -49,7 +59,7 @@
 
 ## 当前可用入口
 
-- 线上：[旧域官网](https://boji.tensorbot.xyz/)。新域仍未完成站点和 HTTPS 接入。
+- 线上：[旧域官网](https://boji.tensorbot.xyz/)及[原芋道后台](https://boji.tensorbot.xyz/console/)。新域站点与HTTPS已安装，外部热点访问仍重置，待继续核查。
 - 本机：[新版投票与留言](http://127.0.0.1:4180/city-vote#conversation)。本地改版不自动出现在公网。
 
 来源复核于 2026-10-24：[Verisign RDAP](https://rdap.verisign.com/net/v1/domain/leanschool.net)、[阿里云解析记录](https://help.aliyun.com/zh/dns/pubz-add-parsing-record/)、[腾讯云变更备案](https://cloud.tencent.com/document/product/243/37406)、[Let's Encrypt 验证方式](https://letsencrypt.org/docs/challenge-types/)。完整品牌及账号事项见[迁移方案](../../../02-brand/LEAN-SCHOOL-MIGRATION.md)。

@@ -3,6 +3,7 @@ import importlib.util
 import json
 import io
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tarfile
@@ -112,6 +113,19 @@ DELETE FROM system_menu;"""
         self.assertNotIn('UPDATE system_users', sql)
         self.assertNotIn('ON DUPLICATE KEY', sql)
         self.assertNotIn('$2b$12$synthetic_hash', sql) # Hex encoding is SQL-safe, not encryption.
+
+    def test_bootstrap_websites_match_upstream_comma_storage(self):
+        sql = bootstrap.render('opsadmin', '$2b$12$synthetic_hash', '2030-01-01', 'synthetic_oauth')
+        tenant = next(statement for statement in schema.statements(sql)
+                      if statement.startswith('INSERT INTO system_tenant '))
+        strings = [bytes.fromhex(value).decode('utf-8') for value in
+                   re.findall(r"CONVERT\(X'([0-9a-f]*)' USING utf8mb4\)", tenant)]
+        self.assertEqual(strings[0], '薄肌学院')
+        # StringListTypeHandler splits commas and TenantMapper uses FIND_IN_SET.
+        # JSON array brackets/quotes would stop either host from matching.
+        self.assertEqual(strings[2].split(','), ['www.leanschool.net', 'boji.tensorbot.xyz'])
+        self.assertNotIn('[', strings[2])
+        self.assertNotIn('"', strings[2])
 
     def test_bootstrap_accepts_16_character_password(self):
         with tempfile.TemporaryDirectory() as temp:

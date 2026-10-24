@@ -21,6 +21,8 @@ def validate_password(password):
 
 def render(username, password_hash, expiry, oauth_secret):
     s = sql_string
+    # TenantDO uses StringListTypeHandler (comma-separated VARCHAR), not JSON.
+    websites = 'www.leanschool.net,boji.tensorbot.xyz'
     return f'''-- Private initial bootstrap. Run only after empty-database/schema review.
 -- mysql batch must stop on error; NEVER use --force. No existing rows are updated.
 SET NAMES utf8mb4;
@@ -32,7 +34,7 @@ INSERT INTO leanschool_bootstrap_guard SELECT IF(
   (SELECT COUNT(*) FROM system_oauth2_client)=0, 1, 0);
 START TRANSACTION;
 INSERT INTO system_tenant (id,name,contact_user_id,contact_name,status,websites,package_id,expire_time,account_count)
-VALUES (1,{s('薄肌学院')},1,{s('系统管理员')},0,{s('["www.leanschool.net"]')},0,{s(expiry + ' 23:59:59')},100);
+VALUES (1,{s('薄肌学院')},1,{s('系统管理员')},0,{s(websites)},0,{s(expiry + ' 23:59:59')},100);
 INSERT INTO system_dept (id,name,parent_id,sort,leader_user_id,status,tenant_id)
 VALUES (1,{s('薄肌学院')},0,0,1,0,1);
 INSERT INTO system_users (id,username,password,nickname,dept_id,status,tenant_id)

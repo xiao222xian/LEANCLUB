@@ -15,6 +15,7 @@ import re
 import stat
 import subprocess
 import tempfile
+import time
 import urllib.request
 import zipfile
 
@@ -29,11 +30,17 @@ BACKUP_ROOT = Path('/var/backups/leanschool-https')
 UI_INDEX = Path('/opt/leanschool/ui/current/console/index.html')
 
 
-def run(*args, data=None):
-    result = subprocess.run(args, input=data, capture_output=True, timeout=60)
+class CommandError(RuntimeError):
+    def __init__(self, command, returncode):
+        self.command, self.returncode = command, returncode
+        super().__init__('Command failed: ' + command + ' (exit ' + str(returncode) + ')')
+
+
+def run(*args, data=None, timeout=60):
+    result = subprocess.run(args, input=data, capture_output=True, timeout=timeout)
     if result.returncode:
         # Do not echo command output: tools may include sensitive input in errors.
-        raise RuntimeError('Command failed: ' + args[0] + ' (exit ' + str(result.returncode) + ')')
+        raise CommandError(args[0], result.returncode)
     return result.stdout
 
 
@@ -157,10 +164,36 @@ def preflight():
             raise ValueError('Certificate target must be a regular file: ' + str(path))
 
 
-def https_status(host, route):
-    return run('curl', '--noproxy', '*', '--silent', '--show-error', '--max-time', '12',
+def https_status(host, route, timeout=12):
+    return run('curl', '--noproxy', '*', '--silent', '--show-error', '--max-time', str(timeout),
                '--resolve', host + ':443:127.0.0.1', '-o', '/dev/null', '-w', '%{http_code}',
-               'https://' + host + route).decode()
+               'https://' + host + route, timeout=timeout).decode()
+
+
+def wait_for_https_ready():
+    """Allow old Nginx workers to drain; every attempt still verifies TLS and SNI."""
+    deadline = time.monotonic() + 20.0
+    last = 'no response'
+    while True:
+        remaining = deadline - time.monotonic()
+        # Never round curl's timeout to zero, which would mean no timeout.
+        request_ms = min(3000, int(remaining * 1000))
+        if request_ms < 1:
+            raise RuntimeError('New-domain HTTPS readiness timed out after 20 seconds; last ' + last)
+        try:
+            code = https_status(DOMAIN, '/', timeout=request_ms / 1000)
+            if code == '200':
+                return
+            last = 'HTTP ' + code
+        except CommandError as error:
+            if error.command != 'curl' or error.returncode not in {7, 28, 35, 52, 56, 60}:
+                raise
+            last = 'curl exit ' + str(error.returncode)
+        except subprocess.TimeoutExpired:
+            last = 'request timeout'
+        remaining = deadline - time.monotonic()
+        if remaining > 0:
+            time.sleep(min(0.5, remaining))
 
 
 def apply_certificate(cert, key):
@@ -191,6 +224,7 @@ def apply_certificate(cert, key):
             ENABLED.symlink_to(CONF)
         run('nginx', '-t')
         run('systemctl', 'reload', 'nginx')
+        wait_for_https_ready()
         for host, routes in ((DOMAIN, ('/', '/console/', '/console/login', '/console/leanclub/content',
                                       '/api/campaign', '/app-api/leanclub/site/published')),
                              (OLD_DOMAIN, ('/', '/city-vote', '/admin', '/api/campaign'))):

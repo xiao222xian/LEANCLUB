@@ -31,6 +31,7 @@ LIMITS = {'yudao-server.jar': 2 * 1024**3, 'console.tar.gz': 512 * 1024**2,
           'website.tar.gz': 512 * 1024**2, 'java-release.json': 1024**2,
           'release-manifest.json': 1024**2, 'SHA256SUMS': 4096}
 MAX_DOWNLOAD = 3 * 1024**3
+RANGE_BLOCK_BYTES = 8 * 1024**2
 MAX_JSON = 2 * 1024**2
 USER_AGENT = 'LEAN-SCHOOL-verified-artifact-fetch/1'
 
@@ -279,8 +280,9 @@ def download_parallel(url, target, expected_digest, expected_size, workers):
             return stamp
 
     etag = attempt(probe)
-    count = min(workers, expected_size)
-    intervals = [(i * expected_size // count, (i + 1) * expected_size // count - 1) for i in range(count)]
+    intervals = [(start, min(start + RANGE_BLOCK_BYTES, expected_size) - 1)
+                 for start in range(0, expected_size, RANGE_BLOCK_BYTES)]
+    count = len(intervals)
     with tempfile.TemporaryDirectory(prefix='.artifact-parts-', dir=target.parent) as part_dir:
         parts = [Path(part_dir) / str(i) for i in range(count)]
 
@@ -308,7 +310,7 @@ def download_parallel(url, target, expected_digest, expected_size, workers):
                             raise RangeRetry('Artifact range stream was truncated.')
             return attempt(receive)
 
-        with ThreadPoolExecutor(max_workers=count, thread_name_prefix='artifact-range') as pool:
+        with ThreadPoolExecutor(max_workers=workers, thread_name_prefix='artifact-range') as pool:
             futures = [pool.submit(part, i) for i in range(count)]
             try:
                 for future in as_completed(futures):

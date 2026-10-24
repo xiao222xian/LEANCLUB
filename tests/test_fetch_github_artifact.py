@@ -415,7 +415,7 @@ class FetchTests(unittest.TestCase):
             report = fetcher.fetch(self.args, TOKEN)
         self.assertEqual(report['zipSha256'], hashlib.sha256(payload).hexdigest())
         self.assertEqual({p.name for p in self.args.output.iterdir()}, fetcher.FILES)
-        self.assertEqual(len(ranged.requests), 9)
+        self.assertEqual(len(ranged.requests), 2)  # One probe and one sub-8-MiB block.
         covered = []
         for request in ranged.requests:
             self.assertEqual(request.get_method(), 'GET')
@@ -429,6 +429,62 @@ class FetchTests(unittest.TestCase):
                 covered.extend(range(start, end + 1))
         self.assertEqual(sorted(covered), list(range(len(payload))))
         self.assertEqual(list(self.root.iterdir()), [self.args.output])
+
+    def test_fixed_blocks_keep_fast_workers_busy_with_bounded_concurrency(self):
+        block = 8 * 1024**2
+        payload = b'a' * block + b'b' * block + b'c' * 31
+        client = RangeClient(payload)
+        slow_started, later_started = threading.Event(), threading.Event()
+        state = {'active': 0, 'peak': 0}
+
+        class CountedResponse(Response):
+            def close(self):
+                if not self.closed:
+                    with client.lock:
+                        state['active'] -= 1
+                super().close()
+
+        def scheduling(request, start, end, attempt):
+            if request.get_header('If-match') is None:
+                return None
+            with client.lock:
+                state['active'] += 1
+                state['peak'] = max(state['peak'], state['active'])
+            reply = CountedResponse(206, payload[start:end + 1], [
+                ('Content-Range', 'bytes %d-%d/%d' % (start, end, len(payload))),
+                ('Content-Length', str(end - start + 1)), ('ETag', '"stable-object"')])
+            if start == 0:
+                slow_started.set()
+                # The first block remains slow until a fast worker starts block 3.
+                if not later_started.wait(5):
+                    reply.close()
+                    raise AssertionError('A fast worker did not take the next queued block')
+            elif start == block:
+                if not slow_started.wait(5):
+                    reply.close()
+                    raise AssertionError('First block was not started')
+            else:
+                later_started.set()
+            return reply
+
+        client.fault = scheduling
+        target = self.root / 'dynamic.zip'
+        expected = hashlib.sha256(payload).hexdigest()
+        with patch.object(fetcher, 'opener', return_value=client):
+            self.assertEqual(fetcher.download_parallel(SIGNED, target, expected, len(payload), 2), (expected, len(payload)))
+        self.assertTrue(later_started.is_set())
+        self.assertEqual(state, {'active': 0, 'peak': 2})
+        intervals = sorted(tuple(map(int, r.get_header('Range')[6:].split('-')))
+                           for r in client.requests if r.get_header('If-match'))
+        self.assertGreater(len(intervals), 2)
+        self.assertEqual(intervals, [(0, block - 1), (block, 2 * block - 1), (2 * block, len(payload) - 1)])
+        cursor = 0
+        for start, end in intervals:
+            self.assertEqual(start, cursor)  # No gap, overlap or duplicate task.
+            self.assertLessEqual(end - start + 1, block)
+            cursor = end + 1
+        self.assertEqual(cursor, len(payload))
+        self.assertEqual(hashlib.sha256(target.read_bytes()).hexdigest(), expected)
 
     def test_parallel_rejects_range_total_length_encoding_and_etag_changes(self):
         payload = b'0123456789' * 8
@@ -453,7 +509,7 @@ class FetchTests(unittest.TestCase):
                     return result
                 return Response(503)
         client.fault = fault
-        with patch.object(fetcher, 'opener', return_value=client):
+        with patch.object(fetcher, 'opener', return_value=client), patch.object(fetcher, 'RANGE_BLOCK_BYTES', 10):
             digest, length = fetcher.download_parallel(SIGNED, self.root / 'retry.zip', hashlib.sha256(payload).hexdigest(), len(payload), 8)
         self.assertEqual(length, len(payload))
         self.assertEqual((self.root / 'retry.zip').read_bytes(), payload)
