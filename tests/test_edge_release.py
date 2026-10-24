@@ -47,7 +47,7 @@ class EdgeTests(unittest.TestCase):
     def test_static_integrity_domain_and_filing(self):
         import hashlib
         commit = 'a' * 40
-        raw = {'index.html': b'https://www.leanschool.net/', 'site-filing.js': '辽ICP备123'.encode(),
+        raw = {'index.html': b'https://www.leanschool.net/', 'site-filing.js': (ROOT / 'web/creator/site-filing.js').read_bytes(),
                'city-vote/comments.js': b'hello', 'events/index.html': b'https://www.leanschool.net/events'}
         record = {'commit': commit, 'origin': release.ORIGIN,
                   'files': {name: {'sha256': hashlib.sha256(data).hexdigest(), 'bytes': len(data)} for name, data in raw.items()}}
@@ -61,7 +61,7 @@ class EdgeTests(unittest.TestCase):
                     archive.addfile(info, io.BytesIO(data))
             self.assertEqual(release.write_static(package, record, base / 'good'), 4)
             self.assertEqual((base / 'good/index.html').read_text(), release.ORIGIN + '/')
-            self.assertNotIn('ICP备', (base / 'good/site-filing.js').read_text())
+            self.assertEqual((base / 'good/site-filing.js').read_bytes(), raw['site-filing.js'])
             record['files']['index.html']['sha256'] = '0' * 64
             with self.assertRaises(ValueError):
                 release.write_static(package, record, base / 'bad')

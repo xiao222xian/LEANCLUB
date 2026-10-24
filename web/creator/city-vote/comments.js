@@ -11,19 +11,25 @@
   const cityNames = { shenzhen: '深圳', zhuhai: '珠海', guangzhou: '广州' };
   // Decorative prompts only: no invented authors, public posts or comment counts.
   const topics = [
-    '先动起来再说', '周末去操场走走？', '跑不快，慢慢来也行', '练完聊两句再走',
-    '一起拉伸，顺便放空', '今天练肩还是练背？', '新手从哪儿开始比较好？', '搭子嘛，节奏合得来就好',
-    '户外走走也算运动', '练完吃点什么？', '拍照留念，还是只管出汗？', '不用比，按自己的节奏',
-    '下班之后，来动一动', '夜跑一圈怎么样？', '球场见，还是操场见？', '周末晨练还是傍晚？',
-    '多走几步也不错', '想练得轻盈一点', '先把这周的运动安排上', '力量训练也可以慢慢来',
-    '一起运动，比一个人有意思', '练完一起喝杯咖啡？', '下一次见面，想玩什么？', '今天也给自己留点运动时间'
+    '深圳蹲一个', '广州这边集合', '珠海也别落下啊', '广深都能去',
+    '地铁能到就好', '离学校近点就好了', '蹲蹲', '来了来了',
+    '这个可以有', '有点想去', '+1', '哈哈哈哈',
+    '别早八就行', '周六下午可以', '下班局有没有', '等个具体时间',
+    '傍晚吧 没那么晒', '周日也行', '新手能跟上吗', '求个新手局',
+    '慢跑可以 快跑不行', '别一上来五公里啊', '散步组有吗哈哈', '体力一般 但想玩',
+    '社恐先探个头', '有没有同校的', '想找个练搭子', '一个人来也行吧',
+    '带朋友一起行不', '不会只有我零基础吧', '想练肩背+1', '不追求很大块',
+    '有点线条就满足了', '练腿先放一放哈哈', '有人教动作就好了', '拉伸算我一份',
+    '羽毛球可以安排', '飞盘也想试试', '户外局爱了', '下雨的话咋办',
+    '别安排太满', '晚上应该凉快点', '练完吃啥', '饭搭子顺便找了',
+    '水先带够', '防晒不能忘', '蹲个报名', '时间定了再约'
   ];
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const PAGE_SIZE = 20, MAX_VISIBLE = 100;
   let items = [], nextCursor = null, total = null, feedLoaded = false;
   let request = null, sending = false, loadPromise = null, feedSnapshot = '';
   let pollTimer = null, driftTimer = null, heroVisible = true, conversationVisible = false;
-  let laneReady = [0, 0], topicIndex = -1, commentIndex = 0, emitted = 0;
+  let laneReady = [0, 0], topicIndex = -1, topicQueue = [], commentIndex = 0, emitted = 0;
   let motionEnabled = true;
   try { motionEnabled = sessionStorage.getItem('leanclub-comment-motion') !== 'off'; } catch { /* Preference is optional. */ }
 
@@ -233,10 +239,20 @@
       let message, label;
       if (ambient) {
         const activeTopics = new Set([...band.children].map(node => node.dataset.topicIndex).filter(value => value !== undefined));
-        const availableTopics = topics.map((_, index) => index).filter(index => !activeTopics.has(String(index)));
-        const freshTopics = availableTopics.filter(index => index !== topicIndex);
-        const choices = freshTopics.length ? freshTopics : availableTopics;
-        topicIndex = choices[Math.floor(Math.random() * choices.length)];
+        // Play a shuffled round before recycling a phrase; toggling motion keeps the round.
+        if (!topicQueue.length) {
+          topicQueue = topics.map((_, index) => index);
+          for (let i = topicQueue.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [topicQueue[i], topicQueue[j]] = [topicQueue[j], topicQueue[i]];
+          }
+        }
+        const next = topicQueue.findIndex(index => index !== topicIndex && !activeTopics.has(String(index)));
+        if (next < 0) {
+          driftTimer = setTimeout(emitDrift, 2200);
+          return;
+        }
+        topicIndex = topicQueue.splice(next, 1)[0];
         pill.dataset.topicIndex = String(topicIndex);
         message = topics[topicIndex];
       } else {

@@ -83,14 +83,19 @@ const fill = (page, value = '周末一起练肩吧') => { page.elements['comment
   const ambientPill = empty.elements['danmaku-band'].children[0];
   assert.equal(ambientPill.children.length, 1, 'decorative prompt has no official badge or invented author');
   assert.equal(ambientPill.dataset.commentId, undefined, 'decorative prompt is never a public comment');
-  assert.ok(ambientPill.children[0].textContent.length > 2);
+  assert.ok(ambientPill.children[0].textContent.length >= 2);
   assert.equal(1260 / parseFloat(ambientPill.style['--drift-duration']), 68, 'desktop drift is moderately faster');
   const mobile = boot({ width: 390 }); await flush();
   assert.equal(650 / parseFloat(mobile.elements['danmaku-band'].children[0].style['--drift-duration']), 56, 'mobile keeps a readable, faster pace');
-  for (let i = 0; i < 30; i++) {
+  const round = [ambientPill.dataset.topicIndex];
+  for (let i = 0; i < 47; i++) {
     empty.elements['danmaku-band'].replaceChildren();
     empty.driftTick();
+    round.push(empty.elements['danmaku-band'].children[0].dataset.topicIndex);
   }
+  assert.equal(new Set(round).size, 48, 'a complete ambient round has no repeated phrase');
+  empty.elements['danmaku-band'].replaceChildren(); empty.driftTick();
+  assert.notEqual(empty.elements['danmaku-band'].children[0].dataset.topicIndex, round.at(-1), 'round boundary does not immediately repeat');
   assert.equal(empty.calls.filter(call => call.body).length, 0, 'ambient motion never writes fake posts');
   assert.equal(empty.elements['comment-total'].textContent, '0', 'ambient motion never inflates comment counts');
   assert.equal(empty.elements['comment-consent'].checked, false, 'public consent starts unchecked');

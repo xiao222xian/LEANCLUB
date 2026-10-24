@@ -72,8 +72,8 @@ def write_static(archive_path, record, stage):
                 raise ValueError('Source digest mismatch')
             if path.suffix in ('.html', '.js', '.json'):
                 data = data.replace(b'https://www.leanschool.net', ORIGIN.encode())
-            if name == 'site-filing.js':
-                data = b"(() => { function render() { const f = document.getElementById('site-filing'); if (f) { f.hidden = true; f.replaceChildren(); } delete document.body.dataset.siteFiling; } window.LeanSchoolFiling = { render }; render(); })();\n"
+            # Shared host-aware filing code hides unverified hosts itself.
+            # Do not fork the application JavaScript during edge deployment.
             target = stage / name
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(data)

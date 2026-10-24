@@ -1,4 +1,4 @@
-"""Small verified website delta for the approved school-data migration."""
+"""Small verified website delta on the registered shared origin."""
 import argparse
 import hashlib
 import json
@@ -97,9 +97,11 @@ def activate(manifest, destination):
     state = json.loads(STATE.read_text())
     state['commits']['website'] = manifest['commit']
     state['artifacts']['website.tar.gz'] = manifest['artifact']
-    state.update(publishedAtUtc=datetime.now(timezone.utc).isoformat(), schemaChanged=True,
-        databaseRestored=False, changed={'website': True, 'backend': False, 'adminUi': False},
-        manualMigration='campus-history-20261024')
+    state.update(publishedAtUtc=datetime.now(timezone.utc).isoformat(), schemaChanged=bool(manifest.get('schemaChanged', False)),
+        databaseRestored=False, changed={'website': True, 'backend': False, 'adminUi': False})
+    state.pop('manualMigration', None)
+    if manifest.get('manualMigration'):
+        state['manualMigration'] = manifest['manualMigration']
     temporary = STATE.with_suffix('.campus-next')
     temporary.write_text(json.dumps(state, indent=2))
     temporary.chmod(0o600)
