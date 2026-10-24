@@ -4,6 +4,7 @@ import json
 import io
 from pathlib import Path
 import subprocess
+import sys
 import tarfile
 import tempfile
 import unittest
@@ -111,6 +112,33 @@ DELETE FROM system_menu;"""
         self.assertNotIn('UPDATE system_users', sql)
         self.assertNotIn('ON DUPLICATE KEY', sql)
         self.assertNotIn('$2b$12$synthetic_hash', sql) # Hex encoding is SQL-safe, not encryption.
+
+    def test_bootstrap_accepts_16_character_password(self):
+        with tempfile.TemporaryDirectory() as temp:
+            password = Path(temp) / 'password.private'
+            output = Path(temp) / 'bootstrap.private.sql'
+            password.write_text('QaOnly7x9B2m4N6p', encoding='utf-8')
+            args = ['prepare-bootstrap.py', '--username', 'opsadmin',
+                    '--tenant-expiry', '2099-01-01', '--password-file', str(password),
+                    '--output', str(output)]
+            with patch.object(sys, 'argv', args), patch('builtins.print'):
+                bootstrap.main()
+            self.assertTrue(output.is_file())
+            self.assertNotIn(password.read_text(), output.read_text(encoding='utf-8'))
+
+    def test_bootstrap_rejects_non_16_character_password_before_sql(self):
+        for length in (15, 17, 32):
+            with self.subTest(length=length), tempfile.TemporaryDirectory() as temp:
+                password = Path(temp) / 'password.private'
+                output = Path(temp) / 'bootstrap.private.sql'
+                password.write_text(('QaOnly7x9B2m4N6p' * 2)[:length], encoding='utf-8')
+                args = ['prepare-bootstrap.py', '--username', 'opsadmin',
+                        '--tenant-expiry', '2099-01-01', '--password-file', str(password),
+                        '--output', str(output)]
+                with patch.object(sys, 'argv', args):
+                    with self.assertRaisesRegex(SystemExit, 'exactly 16'):
+                        bootstrap.main()
+                self.assertFalse(output.exists())
 
     def make_ui(self, directory, extra=None, html='<script src="/console/assets/main.js"></script>'):
         path = Path(directory) / 'ui.tar.gz'

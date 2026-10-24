@@ -13,6 +13,12 @@ def sql_string(value):
     # Hex literals avoid relying on SQL quote/backslash modes.
     return "CONVERT(X'" + value.encode('utf-8').hex() + "' USING utf8mb4)"
 
+def validate_password(password):
+    # AuthLoginReqVO caps passwords at 16 UTF-16 code units. ASCII avoids a
+    # Python code-point/Java UTF-16 mismatch while retaining the strongest length.
+    if not re.fullmatch(r'[\x21-\x7e]{16}', password) or len(set(password)) < 8:
+        raise ValueError('Use exactly 16 non-space printable ASCII characters with at least 8 distinct characters; the login API accepts at most 16')
+
 def render(username, password_hash, expiry, oauth_secret):
     s = sql_string
     return f'''-- Private initial bootstrap. Run only after empty-database/schema review.
@@ -53,8 +59,10 @@ def main():
     if date.fromisoformat(a.tenant_expiry) <= date.today():
         raise SystemExit('Tenant expiry must be in the future')
     password = a.password_file.read_text(encoding='utf-8').rstrip('\r\n') if a.password_file else getpass.getpass('New production administrator password: ')
-    if len(password) < 16 or len(password.encode()) > 72 or len(set(password)) < 8:
-        raise SystemExit('Use a unique password of at least 16 characters and at most 72 UTF-8 bytes')
+    try:
+        validate_password(password)
+    except ValueError as error:
+        raise SystemExit(str(error)) from None
     hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12)).decode()
     output = render(a.username, hashed, a.tenant_expiry, secrets.token_urlsafe(48))
     fd = os.open(a.output, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
