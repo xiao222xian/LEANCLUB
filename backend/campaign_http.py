@@ -155,6 +155,30 @@ class CampaignAPI:
         return data
 
     def get(self, handler, path):
+        if path == '/api/campaign/group-qr':
+            self.store.limit(handler.ip(), 'group-qr-read', 120, 60)
+            return handler.send_json(200, {'group': self.store.groups.active()})
+        if path == '/api/admin/group-qrs':
+            self.admin(handler)
+            return handler.send_json(200, self.store.groups.listing())
+        public_qr = re.fullmatch(r'/api/campaign/group-qr/([a-f0-9]{32})/([0-9]+)', path)
+        private_qr = re.fullmatch(r'/api/admin/group-qrs/([a-f0-9]{32})/image', path)
+        if public_qr or private_qr:
+            if private_qr:
+                self.admin(handler)
+            else:
+                self.store.limit(handler.ip(), 'group-qr-image', 120, 60)
+            raw = self.store.groups.media((private_qr or public_qr)[1], public_qr[2] if public_qr else None, private=bool(private_qr))
+            handler.send_response(200)
+            handler.send_header('Content-Type', 'image/png')
+            handler.send_header('Content-Length', str(len(raw)))
+            handler.send_header('Cache-Control', 'no-store')
+            handler.send_header('Content-Disposition', 'inline; filename="lean-school-group.png"')
+            handler.send_header('X-Content-Type-Options', 'nosniff')
+            handler.send_header('Cross-Origin-Resource-Policy', 'same-origin')
+            handler.end_headers()
+            handler.wfile.write(raw)
+            return
         if path == '/api/directory':
             self.store.limit(handler.ip(), 'directory-read', 180, 60)
             return handler.send_json(200, {'items': self.directory.listing()})
@@ -244,6 +268,12 @@ class CampaignAPI:
 
     def post(self, handler, path):
         self.require_origin(handler)
+        if path == '/api/admin/group-qrs':
+            session = self.admin(handler, writing=True)
+            return handler.send_json(200, self.store.groups.save(self.json_body(handler, 3 * 1024 * 1024), session['username']))
+        if path == '/api/campaign/group-qr/events':
+            self.store.limit(handler.ip(), 'group-qr-events', 60, 60)
+            return handler.send_json(200, self.store.groups.track(self.json_body(handler)))
         if path == '/api/admin/directory':
             session = self.admin(handler, writing=True)
             return handler.send_json(201, self.directory.create(self.json_body(handler, 3 * 1024 * 1024), session['username']))

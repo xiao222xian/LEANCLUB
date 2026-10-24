@@ -7,8 +7,12 @@
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#17191b">
   <title>内容管理 · LEAN SCHOOL</title>
+  <link rel="stylesheet" href="/group-invite.css?v=20261024-group1">
+  <link rel="stylesheet" href="/admin/groups.css?v=20261024-group1">
+  <script defer src="/group-invite.js?v=20261024-group1"></script>
+  <script defer src="/admin/groups.js?v=20261024-group1"></script>
   <link rel="stylesheet" href="/admin/style.css?v=20261023-events">
-  <link rel="stylesheet" href="/admin/schools.css?v=20261024-directory"><script defer src="/admin/schools.js?v=20261024-directory"></script><script src="/admin/app.js?v=20261024-directory" defer></script>
+  <link rel="stylesheet" href="/admin/schools.css?v=20261024-directory"><script defer src="/admin/schools.js?v=20261024-directory"></script><script src="/admin/app.js?v=20261024-group1" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳至主要内容</a>
@@ -64,7 +68,7 @@
     </header>
     <main id="main" class="main" tabindex="-1">
       <div class="page-heading"><div class="heading-copy"><h1>内容管理</h1></div><a class="button button-secondary" href="/schools" target="_blank" rel="noopener">查看网站 ↗</a></div>
-      <div class="tabs-row"><div class="tabs" role="tablist" aria-label="管理内容"><button type="button" id="tab-overview" role="tab" aria-controls="panel-overview" aria-selected="true" tabindex="0" data-panel="overview">数据概览</button><button type="button" id="tab-feedback" role="tab" aria-controls="panel-feedback" aria-selected="false" tabindex="-1" data-panel="feedback">意见箱<span id="feedback-unread" class="tab-count" aria-hidden="true" hidden></span></button><button type="button" id="tab-events" role="tab" aria-controls="panel-events" aria-selected="false" tabindex="-1" data-panel="events">活动报名</button><button type="button" id="tab-schools" role="tab" aria-controls="panel-schools" aria-selected="false" tabindex="-1" data-panel="schools">资料管理</button><button type="button" id="tab-posters" role="tab" aria-controls="panel-posters" aria-selected="false" tabindex="-1" data-panel="posters">城市海报</button><button type="button" id="tab-feishu" role="tab" aria-controls="panel-feishu" aria-selected="false" tabindex="-1" data-panel="feishu">飞书通知</button></div><span id="last-updated" class="last-updated">等待数据</span></div>
+      <div class="tabs-row"><div class="tabs" role="tablist" aria-label="管理内容"><button type="button" id="tab-overview" role="tab" aria-controls="panel-overview" aria-selected="true" tabindex="0" data-panel="overview">数据概览</button><button type="button" id="tab-feedback" role="tab" aria-controls="panel-feedback" aria-selected="false" tabindex="-1" data-panel="feedback">意见箱<span id="feedback-unread" class="tab-count" aria-hidden="true" hidden></span></button><button type="button" id="tab-events" role="tab" aria-controls="panel-events" aria-selected="false" tabindex="-1" data-panel="events">活动报名</button><button type="button" id="tab-schools" role="tab" aria-controls="panel-schools" aria-selected="false" tabindex="-1" data-panel="schools">资料管理</button><button type="button" id="tab-groups" role="tab" aria-controls="panel-groups" aria-selected="false" tabindex="-1" data-panel="groups">活动群</button><button type="button" id="tab-posters" role="tab" aria-controls="panel-posters" aria-selected="false" tabindex="-1" data-panel="posters">城市海报</button><button type="button" id="tab-feishu" role="tab" aria-controls="panel-feishu" aria-selected="false" tabindex="-1" data-panel="feishu">飞书通知</button></div><span id="last-updated" class="last-updated">等待数据</span></div>
       <div id="app-message" class="notice" role="status" hidden></div>
 
       <section id="panel-overview" role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
@@ -94,6 +98,19 @@
           </div>
         </div>
         <details class="definitions"><summary>统计口径</summary><p>投票数以服务器保存结果为准。浏览量按页面访问累计，独立浏览器以本站浏览器标识去重。每日统计使用北京时间。</p></details>
+      </section>
+
+      <section id="panel-groups" role="tabpanel" aria-labelledby="tab-groups" tabindex="0" hidden>
+        <div class="groups-heading"><div><h2>活动群</h2><p>投票后展示 · 同时启用一张二维码</p></div><button class="button button-primary" id="groups-add" type="button">＋ 添加二维码</button></div>
+        <p id="groups-message" class="notice" role="status" hidden></p>
+        <div class="groups-layout"><div><div id="groups-list" class="groups-list"></div><button type="button" class="text-button groups-refresh" id="groups-refresh">刷新</button><details class="groups-metrics-note"><summary>统计口径</summary><p>展示与保存点击为页面操作次数，不代表实际入群人数。</p></details></div>
+          <aside class="groups-editor" id="group-editor" hidden><form id="group-editor-form"><h3 id="group-editor-title">添加二维码</h3>
+            <label class="group-upload"><span id="group-upload-icon" class="group-upload-icon" aria-hidden="true">＋</span><img id="group-editor-image" alt="二维码预览" hidden><span id="group-upload-label">上传二维码</span><small>PNG / JPG · 2MB 以内</small><input id="group-file" type="file" accept="image/png,image/jpeg" aria-label="上传或替换活动群二维码"></label>
+            <label for="group-label">内部备注</label><input id="group-label" required maxlength="60" placeholder="例如：广州活动群 01">
+            <label for="group-expires">失效时间 · 选填</label><input id="group-expires" type="datetime-local">
+            <div class="groups-editor-actions"><button type="button" id="group-editor-cancel" class="text-button">取消</button><button type="submit" class="button button-primary">保存</button></div>
+          </form></aside>
+        </div>
       </section>
 
       <section id="panel-schools" role="tabpanel" aria-labelledby="tab-schools" tabindex="0" hidden>

@@ -457,6 +457,7 @@
     else if (mobile.matches) tabs.find(t => t.dataset.tab === active)?.focus({ preventScroll: true });
     else infoButton.focus({ preventScroll: true });
     if (confirmDialog.returnValue !== 'saved') announce(chosen ? `已返回选择，仍保留${names[chosen]}。` : '已返回选择，尚未投票。');
+    else window.dispatchEvent(new Event('lean:vote-saved'));
   });
   document.querySelector('#retry-connection').addEventListener('click', loadCampaign);
   // Both public comments and private feedback share the campaign visitor cookie.

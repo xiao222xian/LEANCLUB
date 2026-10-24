@@ -24,6 +24,7 @@ from campaign_feishu import FeishuNotifications
 from campaign_feedback import CampaignFeedback
 from campaign_comments import CampaignComments
 from campaign_events import CampaignEvents
+from campaign_groups import CampaignGroups
 from store import Problem
 
 CITIES = (('shenzhen', '深圳'), ('zhuhai', '珠海'), ('guangzhou', '广州'))
@@ -177,6 +178,7 @@ class CampaignStore:
         self.feedback = CampaignFeedback(self)
         self.comments = CampaignComments(self)
         self.events = CampaignEvents(self)
+        self.groups = CampaignGroups(self)
 
     @contextmanager
     def connect(self):

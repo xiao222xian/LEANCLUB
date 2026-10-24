@@ -1,0 +1,20 @@
+.group-invite{box-sizing:border-box;border:0;border-radius:28px;padding:34px 36px 28px;width:min(400px,calc(100% - 32px));max-height:calc(100dvh - 32px);margin:auto;overflow:auto;background:#fff;color:#202723;box-shadow:0 24px 90px #091c2233;text-align:center;font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif}
+.group-invite::backdrop{background:rgb(13 28 24 / 55%);backdrop-filter:blur(7px)}
+.group-invite[open]{animation:group-enter .22s ease-out}
+.group-invite .group-close{position:absolute;right:16px;top:16px;display:grid;place-items:center;width:36px;height:36px;border:0;border-radius:50%;background:#f4f6f4;color:#48554b;font:26px/1 Arial;cursor:pointer}
+.group-invite .group-brand{display:flex;justify-content:center;align-items:center;gap:8px;margin:4px 0 24px;font-size:11px;font-weight:750;letter-spacing:1px}
+.group-invite .group-brand img{width:26px;height:22px;object-fit:contain;filter:brightness(0)}
+.group-invite .group-title{font-size:34px;font-weight:700;letter-spacing:-1.3px;line-height:1.25;margin:0;color:#202723}
+.group-invite .group-subtitle{color:#808780;font-size:13px;line-height:1.6;margin:12px 0 24px}
+.group-invite .group-qr-frame{width:228px;max-width:100%;aspect-ratio:1;margin:0 auto 24px;box-sizing:border-box;padding:8px;border:1px solid #e8eee9;border-radius:14px;background:#fff}
+.group-invite .group-qr-image{display:block;width:100%;height:100%;object-fit:contain;border-radius:0}
+.group-invite .group-save{box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:10px;min-height:48px;border-radius:30px;background:#98e5b9;text-decoration:none;color:#153d2c;font-size:14px;font-weight:600;border:0;cursor:pointer}
+.group-invite .group-save:hover{background:#83dbab}
+.group-invite .group-preview-label{position:absolute;top:26px;left:24px;color:#818b84;font-size:11px}
+.group-invite [hidden]{display:none!important}
+.group-invite :focus-visible{outline:2px solid #267247;outline-offset:4px}
+.group-invite-entry{font:inherit;display:inline-flex;align-items:center;gap:8px;border:1px solid #ffffff48;color:#fff;background:#ffffff0e;border-radius:24px;padding:9px 15px;cursor:pointer;white-space:nowrap}
+.group-invite-entry[hidden]{display:none!important}
+@keyframes group-enter{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:600px){.group-invite{width:calc(100% - 20px);max-width:420px;margin:auto auto max(10px,env(safe-area-inset-bottom));padding:30px 30px 24px;border-radius:26px}.group-invite .group-brand{margin-bottom:20px}.group-invite .group-title{font-size:32px}.group-invite .group-subtitle{margin:10px 0 20px}.group-invite .group-qr-frame{width:212px;margin-bottom:20px}.group-invite .group-save{min-height:48px}.group-invite-entry{font-size:11px;padding:8px 12px}}
+@media(prefers-reduced-motion:reduce){.group-invite[open]{animation:none}}
