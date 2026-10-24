@@ -1,0 +1,330 @@
+{
+  "updatedAt": "2026-10-24",
+  "status": "publish-and-noop-verified",
+  "build": {
+    "runId": 40056397838,
+    "attempt": 1,
+    "conclusion": "success",
+    "artifactId": 12545742030,
+    "zipBytes": 624810844,
+    "zipSha256": "05e3e4a4d3d110f6b1ab6a9e2ab90faa110b4143d9e383d298fd7da12cae80e9"
+  },
+  "maintenance": {
+    "runId": 40069121141,
+    "jobId": 120798538026,
+    "commit": "1f0547c7a928d55f791fbe1c5140e6b34d2fc357",
+    "conclusion": "success",
+    "toolsCommit": "5ac6d1b39b391d038e1813ca28a142c0eacd99bd",
+    "linuxTests": 88,
+    "productionUnchanged": true,
+    "applicationPublished": false,
+    "temporarySecretDeletedAnd404Confirmed": true
+  },
+  "plan": {
+    "runId": 40074280787,
+    "conclusion": "success",
+    "receipt": {
+      "ok": true,
+      "buildRunId": 40056397838,
+      "attempt": 1,
+      "mode": "plan",
+      "commits": {
+        "website": "c5d3a4bd5f84bf8eadc9bf3c914bdee2bd826d46",
+        "backend": "e278c8747575d047721d3ee622c6015abf16d8a8",
+        "adminUi": "77b400e7fd755a4d96016338822f5ef052d1af16"
+      },
+      "result": {
+        "ok": true,
+        "mode": "plan",
+        "runId": "40056397838",
+        "commits": {
+          "website": "c5d3a4bd5f84bf8eadc9bf3c914bdee2bd826d46",
+          "backend": "e278c8747575d047721d3ee622c6015abf16d8a8",
+          "adminUi": "77b400e7fd755a4d96016338822f5ef052d1af16"
+        },
+        "changed": {
+          "website": true,
+          "backend": true,
+          "adminUi": true
+        },
+        "deployed": false,
+        "schemaCompatible": true,
+        "databaseRestored": false
+      }
+    }
+  },
+  "productionBefore": {
+    "website": "1a4ba54b47018e3ed78b013a66f8ac4840b59ca9",
+    "backend": "d5ff0bb3af7683fb4fd1565aed1c58956aca3e6c",
+    "adminUi": "8554101037814965582590b88867e1883352cf0d"
+  },
+  "externalBefore": {
+    "checkedAtUtc": "2026-10-24T14:22:32.894094+08:00",
+    "base": "https://boji.tensorbot.xyz",
+    "ok": true,
+    "checks": [
+      {
+        "name": "homepage",
+        "ok": true,
+        "status": 200
+      },
+      {
+        "name": "console",
+        "ok": true,
+        "status": 200
+      },
+      {
+        "name": "console-asset-links",
+        "ok": true
+      },
+      {
+        "name": "console-asset",
+        "path": "/console/assets/Editor-aqRZ8LyW.js",
+        "status": 200,
+        "ok": true
+      },
+      {
+        "name": "console-asset",
+        "path": "/console/assets/IconSelect-znrlX5Nw.css",
+        "status": 200,
+        "ok": true
+      },
+      {
+        "name": "/app-api/leanclub/site/published",
+        "status": 200,
+        "applicationCode": 0,
+        "ok": true
+      },
+      {
+        "name": "/admin-api/system/auth/get-permission-info",
+        "status": 200,
+        "applicationCode": 401,
+        "ok": true
+      },
+      {
+        "name": "website-health",
+        "status": 200,
+        "ok": true
+      },
+      {
+        "name": "/v3/api-docs",
+        "status": 404,
+        "ok": true
+      },
+      {
+        "name": "/actuator/health",
+        "status": 404,
+        "ok": true
+      },
+      {
+        "name": "/console/assets/daily-release-missing.js",
+        "status": 404,
+        "ok": true
+      }
+    ],
+    "scope": "Read-only public HTTP and bounded assets; no interactive login or write flows."
+  },
+  "limits": [
+    "No interactive administrator login or business writes in this acceptance.",
+    "New-domain public access and ICP filing are a separate pending item.",
+    "No deliberately induced production failure or rollback drill was performed; recovery paths have regression coverage."
+  ],
+  "prepublishIndependent": {
+    "ok": true,
+    "productionUnchanged": true,
+    "certificatesUnchanged": true,
+    "privateConfigurationUnchanged": true,
+    "schemaUnchanged": true
+  },
+  "candidatePartRecovery": {
+    "ok": true,
+    "candidatePartsReused": 69,
+    "downloadedBytes": 45996892,
+    "zipBytes": 624810844,
+    "zipSha256": "05e3e4a4d3d110f6b1ab6a9e2ab90faa110b4143d9e383d298fd7da12cae80e9",
+    "cachePath": "/var/lib/leanschool/releases/zip-cache/12545742030-05e3e4a4d3d110f6b1ab6a9e2ab90faa110b4143d9e383d298fd7da12cae80e9.zip",
+    "applicationPublished": false,
+    "scope": "One-time recovery of candidate bytes, authenticated by the full GitHub ZIP digest; not an automatic partial-download resume feature."
+  },
+  "failedPlans": [
+    {
+      "runId": 40057651101,
+      "reason": "Intentionally stopped during download to adjust timeout; no publication."
+    },
+    {
+      "runId": 40058666408,
+      "errorCode": "BUILD_FETCH_FAILED",
+      "published": false
+    },
+    {
+      "runId": 40069469354,
+      "errorCode": "BUILD_FETCH_TIMEOUT",
+      "published": false
+    }
+  ],
+  "publish": {
+    "runId": 40074361422,
+    "conclusion": "success",
+    "publishedAtUtc": "2026-10-24T07:32:21.680082+00:00",
+    "receipt": {
+      "ok": true,
+      "buildRunId": 40056397838,
+      "attempt": 1,
+      "mode": "publish",
+      "commits": {
+        "website": "c5d3a4bd5f84bf8eadc9bf3c914bdee2bd826d46",
+        "backend": "e278c8747575d047721d3ee622c6015abf16d8a8",
+        "adminUi": "77b400e7fd755a4d96016338822f5ef052d1af16"
+      },
+      "result": {
+        "ok": true,
+        "mode": "publish",
+        "deployed": true,
+        "changed": {
+          "website": true,
+          "backend": true,
+          "adminUi": true
+        },
+        "runId": "40056397838",
+        "backup": "/var/backups/leanschool-daily/20261024T073024Z-fad70a1b5f834893baf67fdc5776dbde",
+        "databaseRestored": false,
+        "verification": "Strict server-local TLS, services and read-only APIs; external access not implied."
+      }
+    }
+  },
+  "noop": {
+    "runId": 40074617715,
+    "conclusion": "success",
+    "receipt": {
+      "ok": true,
+      "buildRunId": 40056397838,
+      "attempt": 1,
+      "mode": "publish",
+      "commits": {
+        "website": "c5d3a4bd5f84bf8eadc9bf3c914bdee2bd826d46",
+        "backend": "e278c8747575d047721d3ee622c6015abf16d8a8",
+        "adminUi": "77b400e7fd755a4d96016338822f5ef052d1af16"
+      },
+      "result": {
+        "ok": true,
+        "mode": "publish",
+        "changed": {
+          "website": false,
+          "backend": false,
+          "adminUi": false
+        },
+        "deployed": false,
+        "reason": "All active artifact versions already match.",
+        "databaseRestored": false
+      }
+    },
+    "independent": {
+      "ok": true,
+      "mode": "noop-verify",
+      "schemaUnchanged": true,
+      "certificatesUnchanged": true,
+      "privateConfigurationUnchanged": true,
+      "servicePidsUnchanged": true,
+      "versionLinksUnchanged": true,
+      "currentRecordUnchanged": true,
+      "backupSetUnchanged": true
+    }
+  },
+  "cacheMaintenance": {
+    "toolsCommit": "7bc41194449ec38682791acf15c1398d13b48c16",
+    "linuxTests": 98,
+    "productionUnchanged": true,
+    "applicationPublished": false,
+    "downloadTimeoutMinutes": 90,
+    "clientTimeoutMinutes": 110,
+    "workflowTimeoutMinutes": 120,
+    "archiveSha256": "0c06b4595af49e7f6313b1870e634305b3d989a9e0982a368fc74ab53892ba9e"
+  },
+  "postpublishIndependent": {
+    "ok": true,
+    "mode": "postpublish",
+    "schemaUnchanged": true,
+    "certificatesUnchanged": true,
+    "privateConfigurationUnchanged": true,
+    "activeVersionsMatch": true,
+    "commits": {
+      "website": "c5d3a4bd5f84bf8eadc9bf3c914bdee2bd826d46",
+      "backend": "e278c8747575d047721d3ee622c6015abf16d8a8",
+      "adminUi": "77b400e7fd755a4d96016338822f5ef052d1af16"
+    },
+    "backup": "/var/backups/leanschool-daily/20261024T073024Z-fad70a1b5f834893baf67fdc5776dbde",
+    "backupBytes": {
+      "mysql.sql": 2950167,
+      "website.sqlite3": 512000
+    },
+    "preservedConfigurationCount": 15,
+    "localTlsAndReadOnlyApis": true,
+    "infrastructurePidsUnchanged": true
+  },
+  "externalAfter": {
+    "checkedAtUtc": "2026-10-24T07:32:49.009214+00:00",
+    "base": "https://boji.tensorbot.xyz",
+    "ok": true,
+    "checks": [
+      {
+        "name": "homepage",
+        "ok": true,
+        "status": 200
+      },
+      {
+        "name": "console",
+        "ok": true,
+        "status": 200
+      },
+      {
+        "name": "console-asset-links",
+        "ok": true
+      },
+      {
+        "name": "console-asset",
+        "path": "/console/assets/index-BsXnT6gq.js",
+        "status": 200,
+        "ok": true
+      },
+      {
+        "name": "console-asset",
+        "path": "/console/assets/index-D0ybTtN9.css",
+        "status": 200,
+        "ok": true
+      },
+      {
+        "name": "/app-api/leanclub/site/published",
+        "status": 200,
+        "applicationCode": 0,
+        "ok": true
+      },
+      {
+        "name": "/admin-api/system/auth/get-permission-info",
+        "status": 200,
+        "applicationCode": 401,
+        "ok": true
+      },
+      {
+        "name": "website-health",
+        "status": 200,
+        "ok": true
+      },
+      {
+        "name": "/v3/api-docs",
+        "status": 404,
+        "ok": true
+      },
+      {
+        "name": "/actuator/health",
+        "status": 404,
+        "ok": true
+      },
+      {
+        "name": "/console/assets/daily-release-missing.js",
+        "status": 404,
+        "ok": true
+      }
+    ],
+    "scope": "Read-only public HTTP and bounded assets; no interactive login or write flows."
+  }
+}
