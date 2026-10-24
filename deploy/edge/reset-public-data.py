@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import sqlite3
 import subprocess
+import sys
 
 TABLES = ('campaign_vote_ips', 'campaign_votes', 'campaign_page_events', 'campaign_comments')
 PARTIAL = {
@@ -55,14 +56,16 @@ def main():
     try:
         with sqlite3.connect('/var/lib/bojizhuye/clubs.sqlite3') as db:
             db.execute('PRAGMA foreign_keys=ON')
-            with sqlite3.connect(backup / 'before.sqlite3') as saved:
-                db.backup(saved)
-                if saved.execute('PRAGMA integrity_check').fetchone() != ('ok',):
-                    raise ValueError('Backup integrity failed')
+            if '--no-backup' not in sys.argv:
+                with sqlite3.connect(backup / 'before.sqlite3') as saved:
+                    db.backup(saved)
+                    if saved.execute('PRAGMA integrity_check').fetchone() != ('ok',):
+                        raise ValueError('Backup integrity failed')
             db.execute('BEGIN IMMEDIATE')
             result = reset(db)
             db.commit()
-            result.update({'ok': True, 'backup': str(backup), 'sharedDomains': ['boji.tensorbot.xyz', 'leanmuscleclub.com']})
+            result.update({'ok': True, 'record': str(backup), 'databaseBackupCreated': '--no-backup' not in sys.argv,
+                           'sharedDomains': ['boji.tensorbot.xyz', 'leanmuscleclub.com']})
             (backup / 'result.json').write_text(json.dumps(result, indent=2))
             print(json.dumps(result))
     finally:

@@ -91,7 +91,7 @@ def symlink(target, destination):
     os.replace(temporary, destination)
 
 
-def deploy(record_path, config_dir):
+def deploy(record_path, config_dir, skip_data_backup=False):
     if os.geteuid() != 0 or not CONFIG.is_file() or not (BASE / 'current').is_symlink():
         raise ValueError('Expected registered edge host and root access')
     record = json.loads(record_path.read_text())
@@ -107,15 +107,17 @@ def deploy(record_path, config_dir):
     if PROXY.exists():
         shutil.copy2(PROXY, backup / 'proxy.conf')
     api_path = Path('/srv/leanmuscleclub-api/current').resolve(strict=True)
-    with tarfile.open(backup / 'previous-code.tar.gz', 'w:gz') as archive:
-        archive.add(previous, arcname='web', recursive=True)
-        archive.add(api_path, arcname='api', recursive=True)
+    if not skip_data_backup:
+        with tarfile.open(backup / 'previous-code.tar.gz', 'w:gz') as archive:
+            archive.add(previous, arcname='web', recursive=True)
+            archive.add(api_path, arcname='api', recursive=True)
     certificate = Path('/etc/letsencrypt/live/leanmuscleclub.com')
     cert_hashes = {}
     for name in ('fullchain.pem', 'privkey.pem'):
         raw = (certificate / name).read_bytes()
-        (backup / name).write_bytes(raw)
-        (backup / name).chmod(0o600)
+        if not skip_data_backup:
+            (backup / name).write_bytes(raw)
+            (backup / name).chmod(0o600)
         cert_hashes[name] = hashlib.sha256(raw).digest()
     (backup / 'previous.json').write_text(json.dumps({'web': str(previous), 'api': str(api_path)}))
     url = 'https://codeload.github.com/xiao222xian/LEANCLUB/tar.gz/' + record['commit']
@@ -134,10 +136,11 @@ def deploy(record_path, config_dir):
     was_active = subprocess.run(['systemctl', 'is-active', '--quiet', 'leanmuscleclub-api']).returncode == 0
     try:
         run(['systemctl', 'stop', 'leanmuscleclub-api'])
-        with sqlite3.connect('/var/lib/leanmuscleclub/clubs.sqlite3') as source, sqlite3.connect(backup / 'legacy.sqlite3') as dest:
-            source.backup(dest)
-            if dest.execute('PRAGMA integrity_check').fetchone() != ('ok',):
-                raise ValueError('Legacy database backup invalid')
+        if not skip_data_backup:
+            with sqlite3.connect('/var/lib/leanmuscleclub/clubs.sqlite3') as source, sqlite3.connect(backup / 'legacy.sqlite3') as dest:
+                source.backup(dest)
+                if dest.execute('PRAGMA integrity_check').fetchone() != ('ok',):
+                    raise ValueError('Legacy database backup invalid')
         shutil.copyfile(config_dir / 'edge-proxy.conf', PROXY)
         shutil.copyfile(config_dir / 'edge.nginx.conf', CONFIG)
         run(['nginx', '-t'])
@@ -182,10 +185,11 @@ if __name__ == '__main__':
     d = sub.add_parser('deploy')
     d.add_argument('--manifest', type=Path, required=True)
     d.add_argument('--config-dir', type=Path, required=True)
+    d.add_argument('--skip-data-backup', action='store_true', help='Explicit operator opt-out; retain previous release and rollback config only.')
     args = parser.parse_args()
     if args.action == 'manifest':
         result = manifest(args.root, args.commit)
         args.output.write_text(json.dumps(result, indent=2), encoding='utf-8')
         print(json.dumps({'commit': args.commit, 'files': len(result['files'])}))
     else:
-        deploy(args.manifest, args.config_dir)
+        deploy(args.manifest, args.config_dir, args.skip_data_backup)

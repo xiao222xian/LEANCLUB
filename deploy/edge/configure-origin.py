@@ -54,7 +54,7 @@ def main(source):
         run(['systemctl', 'restart', 'bojizhuye', 'bojizhuye-public-gateway'])
         run(['systemctl', 'reload', 'nginx'])
         for domain in ('boji.tensorbot.xyz', 'www.leanschool.net'):
-            code = run(['curl', '-sS', '--retry', '4', '--retry-connrefused', '--retry-delay', '1',
+            code = run(['curl', '--noproxy', '*', '--max-time', '15', '-sS', '--retry', '4', '--retry-connrefused', '--retry-delay', '1',
                         '-o', '/dev/null', '-w', '%{http_code}', '--resolve', domain + ':443:127.0.0.1',
                         'https://' + domain + '/api/club/health'])
             if code != '200':
