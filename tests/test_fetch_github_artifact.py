@@ -11,6 +11,7 @@ from pathlib import Path
 import stat
 import tarfile
 import tempfile
+import threading
 import unittest
 from unittest.mock import patch
 import urllib.error
@@ -137,6 +138,32 @@ class FakeAPI:
         if suffix == '/actions/artifacts/456':
             return self.item
         raise AssertionError('Unexpected metadata path')
+
+
+class RangeClient:
+    """Thread-safe synthetic object storage, including retryable and invalid responses."""
+    def __init__(self, payload, fault=None):
+        self.payload, self.fault = payload, fault
+        self.requests, self.attempts = [], {}
+        self.lock = threading.Lock()
+
+    def open(self, request, timeout):
+        interval = request.get_header('Range')
+        start, end = map(int, interval.removeprefix('bytes=').split('-'))
+        with self.lock:
+            self.requests.append(request)
+            self.attempts[interval] = self.attempts.get(interval, 0) + 1
+            attempt = self.attempts[interval]
+        if self.fault:
+            result = self.fault(request, start, end, attempt)
+            if result is not None:
+                return result
+        return self.result(start, end)
+
+    def result(self, start, end, **changes):
+        headers = {'Content-Range': 'bytes %d-%d/%d' % (start, end, len(self.payload)),
+                   'Content-Length': str(end - start + 1), 'ETag': '"stable-object"'} | changes
+        return Response(206, self.payload[start:end + 1], list(headers.items()))
 
 
 class FetchTests(unittest.TestCase):
@@ -377,6 +404,90 @@ class FetchTests(unittest.TestCase):
         self.assertEqual(stdout.getvalue(), '')
         self.assertNotIn(TOKEN, stderr.getvalue())
         self.assertNotIn('signature=', stderr.getvalue())
+
+    def test_parallel_ranges_reassemble_exact_zip_and_isolate_credentials(self):
+        payload = zip_bytes(bundle())
+        api, _ = self.clients(payload)
+        ranged = RangeClient(payload)
+        self.args.download_workers = 8
+        clients = iter([api])
+        with patch.object(fetcher, 'opener', side_effect=lambda: next(clients, ranged)):
+            report = fetcher.fetch(self.args, TOKEN)
+        self.assertEqual(report['zipSha256'], hashlib.sha256(payload).hexdigest())
+        self.assertEqual({p.name for p in self.args.output.iterdir()}, fetcher.FILES)
+        self.assertEqual(len(ranged.requests), 9)
+        covered = []
+        for request in ranged.requests:
+            self.assertEqual(request.get_method(), 'GET')
+            self.assertIsNone(request.get_header('Authorization'))
+            self.assertIsNone(request.get_header('Cookie'))
+            self.assertIsNone(request.get_header('Referer'))
+            self.assertEqual(request.get_header('Accept-encoding'), 'identity')
+            if request.get_header('If-match'):
+                self.assertEqual(request.get_header('If-match'), '"stable-object"')
+                start, end = map(int, request.get_header('Range')[6:].split('-'))
+                covered.extend(range(start, end + 1))
+        self.assertEqual(sorted(covered), list(range(len(payload))))
+        self.assertEqual(list(self.root.iterdir()), [self.args.output])
+
+    def test_parallel_rejects_range_total_length_encoding_and_etag_changes(self):
+        payload = b'0123456789' * 8
+        changes = [{'Content-Range': 'bytes 1-10/80'}, {'Content-Range': 'bytes 0-9/81'},
+                   {'Content-Length': '100'}, {'ETag': '"different"'}, {'ETag': 'W/"stable-object"'},
+                   {'Content-Encoding': 'gzip'}]
+        for index, change in enumerate(changes):
+            client = RangeClient(payload)
+            client.fault = lambda req, start, end, n: client.result(start, end, **change) if req.get_header('If-match') else None
+            with self.subTest(change=change), patch.object(fetcher, 'opener', return_value=client), self.assertRaises(fetcher.FetchError):
+                fetcher.download_parallel(SIGNED, self.root / ('bad%d.zip' % index), '0' * 64, len(payload), 8)
+        self.assertEqual(list(self.root.iterdir()), [])
+
+    def test_parallel_range_transient_and_truncated_response_retry_is_bounded(self):
+        payload = b'0123456789' * 8
+        client = RangeClient(payload)
+        def fault(request, start, end, attempt):
+            if request.get_header('If-match') and attempt == 1:
+                if start == 0:
+                    result = client.result(start, end)
+                    result.truncate(2)
+                    return result
+                return Response(503)
+        client.fault = fault
+        with patch.object(fetcher, 'opener', return_value=client):
+            digest, length = fetcher.download_parallel(SIGNED, self.root / 'retry.zip', hashlib.sha256(payload).hexdigest(), len(payload), 8)
+        self.assertEqual(length, len(payload))
+        self.assertEqual((self.root / 'retry.zip').read_bytes(), payload)
+        self.assertEqual(set(client.attempts.values()), {1, 2})
+        # A permanently failing probe has exactly three attempts, without creating output.
+        client = RangeClient(payload, lambda *_: Response(503))
+        with patch.object(fetcher, 'opener', return_value=client), self.assertRaisesRegex(fetcher.FetchError, 'three attempts'):
+            fetcher.download_parallel(SIGNED, self.root / 'failed.zip', digest, len(payload), 8)
+        self.assertEqual(len(client.requests), 3)
+        self.assertFalse((self.root / 'failed.zip').exists())
+
+    def test_parallel_rejects_ignored_range_or_unsafe_redirect_without_fallback(self):
+        for result in (Response(200, b'not-ranged'), Response(302, headers=[('Location', 'http://example.invalid/a')])):
+            client = QueueClient([result])
+            with patch.object(fetcher, 'opener', return_value=client), self.assertRaises(fetcher.FetchError):
+                fetcher.download_parallel(SIGNED, self.root / 'rejected.zip', '0' * 64, 80, 8)
+            self.assertEqual(len(client.requests), 1)
+        client = QueueClient([Response(302, headers=[('Location', SIGNED + '-hop')]),
+                              Response(206, b'x', [('Content-Range', 'bytes 0-0/80'), ('Content-Length', '1'), ('ETag', '"tag"')])])
+        with patch.object(fetcher, 'opener', return_value=client):
+            with fetcher.range_response(SIGNED, 0, 0) as result:
+                self.assertEqual(result.code, 206)
+        self.assertTrue(all(request.get_header('Authorization') is None for request in client.requests))
+        self.assertTrue(all(request.get_header('Range') == 'bytes=0-0' for request in client.requests))
+
+    def test_parallel_final_digest_mismatch_cannot_publish_release(self):
+        payload = zip_bytes(bundle())
+        api, _ = self.clients(payload, digest='sha256:' + '0' * 64)
+        ranged = RangeClient(payload)
+        self.args.download_workers = 8
+        clients = iter([api])
+        with patch.object(fetcher, 'opener', side_effect=lambda: next(clients, ranged)), self.assertRaisesRegex(fetcher.FetchError, 'ZIP size or SHA-256'):
+            fetcher.fetch(self.args, TOKEN)
+        self.assertEqual(list(self.root.iterdir()), [])
 
 
 if __name__ == '__main__':

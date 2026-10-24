@@ -5,7 +5,9 @@ stdin: {"username": "Git credential username", "password": "access token"}.
 Credentials and signed URLs stay in memory. This tool only makes GET requests.
 """
 import argparse
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import hashlib
+import http.client
 import ipaddress
 import json
 import os
@@ -15,6 +17,7 @@ import stat
 import sys
 import tarfile
 import tempfile
+import threading
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -195,6 +198,140 @@ def download(url, target, expected_digest):
     raise FetchError('Artifact download exceeded the redirect limit.')
 
 
+class RangeRetry(FetchError):
+    """A bounded retry is safe for a transport failure, never for invalid content."""
+
+
+def range_response(url, start, end, etag=None):
+    client = opener()  # Each attempt owns a credential-free client.
+    headers = {'Accept': 'application/octet-stream', 'Accept-Encoding': 'identity',
+               'User-Agent': USER_AGENT, 'Range': 'bytes=%d-%d' % (start, end)}
+    if etag:
+        headers['If-Match'] = etag
+    for _ in range(4):
+        request = urllib.request.Request(https_download_url(url), method='GET', headers=headers)
+        try:
+            result = response(client, request)
+        except FetchError:
+            raise RangeRetry('Range request transport failed; details withheld.') from None
+        if result.code in (301, 302, 303, 307, 308):
+            locations = result.headers.get_all('Location', [])
+            result.close()
+            if len(locations) != 1:
+                raise FetchError('Ambiguous artifact range redirect.')
+            url = locations[0]
+            continue
+        if result.code != 206:
+            status = result.code
+            result.close()
+            if status in (408, 429, 500, 502, 503, 504):
+                raise RangeRetry('Artifact range request temporarily failed.')
+            raise FetchError('Range download requires HTTP 206; received HTTP %d.' % status)
+        return result
+    raise FetchError('Artifact range download exceeded the redirect limit.')
+
+
+def range_headers(result, start, end, total, etag=None):
+    def single(name):
+        values = result.headers.get_all(name, [])
+        if len(values) != 1:
+            raise FetchError('Range response requires unique range, length and ETag headers.')
+        return values[0]
+
+    if single('Content-Range') != 'bytes %d-%d/%d' % (start, end, total):
+        raise FetchError('Artifact Content-Range differs from the requested interval or total size.')
+    if single('Content-Length') != str(end - start + 1):
+        raise FetchError('Artifact range length does not match its requested interval.')
+    current = single('ETag')
+    if not re.fullmatch(r'"[\x21\x23-\x7e]{1,256}"', current) or (etag is not None and current != etag):
+        raise FetchError('Artifact range requires an unchanged strong ETag.')
+    encodings = result.headers.get_all('Content-Encoding', [])
+    if encodings not in ([], ['identity']):
+        raise FetchError('Artifact range must use identity content encoding.')
+    return current
+
+
+def download_parallel(url, target, expected_digest, expected_size, workers):
+    """Strict optional range mode. Only a fully hashed ZIP reaches extraction."""
+    if type(workers) is not int or not 2 <= workers <= 16 or not 0 < expected_size <= MAX_DOWNLOAD:
+        raise FetchError('Parallel download requires 2-16 workers and a bounded artifact size.')
+    if target.exists() or target.is_symlink():
+        raise FetchError('Parallel download target already exists.')
+    url = https_download_url(url)
+    cancelled = threading.Event()
+
+    def attempt(operation):
+        for index in range(3):
+            if cancelled.is_set():
+                raise FetchError('Parallel artifact download cancelled.')
+            try:
+                return operation()
+            except (RangeRetry, OSError, http.client.HTTPException):
+                if index == 2:
+                    raise FetchError('Artifact range failed after three attempts; details withheld.') from None
+                cancelled.wait(0.5 * (index + 1))
+
+    def probe():
+        with range_response(url, 0, 0) as result:
+            stamp = range_headers(result, 0, 0, expected_size)
+            if len(result.read(2)) != 1:
+                raise RangeRetry('Artifact range probe was truncated or oversized.')
+            return stamp
+
+    etag = attempt(probe)
+    count = min(workers, expected_size)
+    intervals = [(i * expected_size // count, (i + 1) * expected_size // count - 1) for i in range(count)]
+    with tempfile.TemporaryDirectory(prefix='.artifact-parts-', dir=target.parent) as part_dir:
+        parts = [Path(part_dir) / str(i) for i in range(count)]
+
+        def part(index):
+            start, end = intervals[index]
+
+            def receive():
+                with range_response(url, start, end, etag) as result:
+                    range_headers(result, start, end, expected_size, etag)
+                    # A retried piece always replaces its own incomplete temporary file.
+                    with parts[index].open('wb') as output:
+                        parts[index].chmod(0o600)
+                        received = 0
+                        while True:
+                            if cancelled.is_set():
+                                raise FetchError('Parallel artifact download cancelled.')
+                            chunk = result.read(min(1024 * 1024, end - start + 2 - received))
+                            if not chunk:
+                                break
+                            received += len(chunk)
+                            if received > end - start + 1:
+                                raise FetchError('Artifact range sent more bytes than requested.')
+                            output.write(chunk)
+                        if received != end - start + 1:
+                            raise RangeRetry('Artifact range stream was truncated.')
+            return attempt(receive)
+
+        with ThreadPoolExecutor(max_workers=count, thread_name_prefix='artifact-range') as pool:
+            futures = [pool.submit(part, i) for i in range(count)]
+            try:
+                for future in as_completed(futures):
+                    future.result()
+            except Exception:
+                cancelled.set()
+                for future in futures:
+                    future.cancel()
+                raise
+        digest, received = hashlib.sha256(), 0
+        with target.open('xb') as output:
+            target.chmod(0o600)
+            for path in parts:
+                with path.open('rb') as source:
+                    for chunk in iter(lambda: source.read(1024 * 1024), b''):
+                        output.write(chunk)
+                        digest.update(chunk)
+                        received += len(chunk)
+        if received != expected_size or digest.hexdigest() != expected_digest:
+            raise FetchError('Parallel ZIP size or SHA-256 differs from GitHub artifact metadata.')
+        return digest.hexdigest(), received
+
+
 def extract_code_zip(archive_path, directory):
     hashes = {}
     with zipfile.ZipFile(archive_path) as archive:
@@ -294,8 +431,13 @@ def fetch(args, token):
     artifact, attempt = artifact_for_run(api, args.run_id, args.artifact_name, args.expected_workflow_sha)
     with tempfile.TemporaryDirectory(prefix='.leanschool-artifact-', dir=output.parent) as temporary:
         temporary = Path(temporary)
-        zip_hash, zip_bytes = download(api.get('/actions/artifacts/%d/zip' % artifact['id'], redirect=True),
-                                       temporary / 'artifact.zip', artifact['digest'].removeprefix('sha256:'))
+        url = api.get('/actions/artifacts/%d/zip' % artifact['id'], redirect=True)
+        target, digest = temporary / 'artifact.zip', artifact['digest'].removeprefix('sha256:')
+        workers = getattr(args, 'download_workers', 1)
+        if workers == 1:
+            zip_hash, zip_bytes = download(url, target, digest)
+        else:
+            zip_hash, zip_bytes = download_parallel(url, target, digest, artifact['size_in_bytes'], workers)
         directory = temporary / 'release'
         hashes = extract_code_zip(temporary / 'artifact.zip', directory)
         commits = verify_bundle(directory, hashes, args.run_id, attempt, args.expected_workflow_sha)
@@ -314,6 +456,8 @@ def main():
     parser.add_argument('--artifact-name', required=True)
     parser.add_argument('--expected-workflow-sha', required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--download-workers', type=int, choices=range(1, 17), default=1,
+                        help='1 preserves streaming mode; 2-16 enables strictly verified parallel HTTP ranges')
     args = parser.parse_args()
     if (not 0 < args.run_id < 10**20 or not re.fullmatch(r'[a-f0-9]{40}', args.expected_workflow_sha)
             or not re.fullmatch(r'leanschool-release-[1-9][0-9]*-[1-9][0-9]*', args.artifact_name)):
