@@ -9,7 +9,15 @@
   const list = byId('comment-list'), more = byId('comment-more'), refresh = byId('comment-refresh');
   const band = byId('danmaku-band'), toggle = byId('danmaku-toggle');
   const cityNames = { shenzhen: '深圳', zhuhai: '珠海', guangzhou: '广州' };
-  const topics = ['薄肌有很多种，你喜欢哪一种？', '第一次见面，想一起练什么？', '校园操场，还是周末城市漫游？', '不卷体型，一起养成运动习惯。', '练完之后，想喝咖啡还是吃饭？', '新手也能一起玩，你想提议什么？'];
+  // Decorative prompts only: no invented authors, public posts or comment counts.
+  const topics = [
+    '先动起来再说', '周末去操场走走？', '跑不快，慢慢来也行', '练完聊两句再走',
+    '一起拉伸，顺便放空', '今天练肩还是练背？', '新手从哪儿开始比较好？', '搭子嘛，节奏合得来就好',
+    '户外走走也算运动', '练完吃点什么？', '拍照留念，还是只管出汗？', '不用比，按自己的节奏',
+    '下班之后，来动一动', '夜跑一圈怎么样？', '球场见，还是操场见？', '周末晨练还是傍晚？',
+    '多走几步也不错', '想练得轻盈一点', '先把这周的运动安排上', '力量训练也可以慢慢来',
+    '一起运动，比一个人有意思', '练完一起喝杯咖啡？', '下一次见面，想玩什么？', '今天也给自己留点运动时间'
+  ];
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const PAGE_SIZE = 20, MAX_VISIBLE = 100;
   let items = [], nextCursor = null, total = null, feedLoaded = false;
@@ -218,19 +226,19 @@
     if (lane >= 0 && band.children.length < 6) {
       const activeComments = new Set([...band.children].map(node => node.dataset.commentId).filter(Boolean));
       const publicPool = feedLoaded ? items.slice(0, 40).filter(item => !activeComments.has(item.id)) : [];
-      const official = publicPool.length === 0 || emitted % 3 === 0;
-      const pill = text('div', '', `danmaku-pill${official ? ' is-official' : ''}`);
+      const ambient = publicPool.length === 0 || emitted % 3 === 0;
+      const pill = text('div', '', 'danmaku-pill');
       pill.dataset.lane = String(lane);
       pill.style.top = `${lane * 40}px`;
       let message, label;
-      if (official) {
+      if (ambient) {
         const activeTopics = new Set([...band.children].map(node => node.dataset.topicIndex).filter(value => value !== undefined));
         const availableTopics = topics.map((_, index) => index).filter(index => !activeTopics.has(String(index)));
         const freshTopics = availableTopics.filter(index => index !== topicIndex);
         const choices = freshTopics.length ? freshTopics : availableTopics;
         topicIndex = choices[Math.floor(Math.random() * choices.length)];
         pill.dataset.topicIndex = String(topicIndex);
-        label = '官方话题'; message = topics[topicIndex];
+        message = topics[topicIndex];
       } else {
         const comment = publicPool[commentIndex++ % publicPool.length];
         pill.dataset.commentId = comment.id;
@@ -238,18 +246,19 @@
         message = comment.content.replace(/\s+/g, ' ');
       }
       const compact = [...message];
-      pill.append(text('span', label, 'danmaku-label'), text('span', compact.length > 44 ? compact.slice(0, 44).join('') + '…' : message));
+      if (label) pill.append(text('span', label, 'danmaku-label'));
+      pill.append(text('span', compact.length > 44 ? compact.slice(0, 44).join('') + '…' : message));
       band.append(pill);
       const width = pill.getBoundingClientRect().width || 250;
       const distance = band.clientWidth + width + 20;
-      const speed = 48;
+      const speed = band.clientWidth <= 600 ? 56 : 68;
       pill.style.setProperty('--drift-distance', `${-distance}px`);
       pill.style.setProperty('--drift-duration', `${distance / speed}s`);
       laneReady[lane] = now + (width + 80) / speed * 1000;
       pill.addEventListener('animationend', () => pill.remove(), { once: true });
       emitted++;
     }
-    driftTimer = setTimeout(emitDrift, 3000);
+    driftTimer = setTimeout(emitDrift, 2200);
   }
   function syncMotion() {
     clearDrift();

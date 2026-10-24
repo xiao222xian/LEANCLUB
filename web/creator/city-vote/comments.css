@@ -16,7 +16,6 @@ body[data-site-filing=vote] .site-filing--vote{position:static;inset:auto;paddin
 .danmaku-pill{position:absolute;top:0;left:100%;display:inline-flex;align-items:center;gap:8px;max-width:min(420px,84vw);height:32px;padding:0 13px;border:1px solid #ffffff35;border-radius:20px;background:#071016aa;backdrop-filter:blur(8px);color:#fffef8;font-size:11px;letter-spacing:.015em;white-space:nowrap;box-shadow:0 2px 14px #0002;animation:comment-drift var(--drift-duration,18s) linear both}
 .danmaku-pill>span:last-child{overflow:hidden;text-overflow:ellipsis}
 .danmaku-pill .danmaku-label{flex:none;color:#dfff00;font-size:9px;letter-spacing:.06em}
-.danmaku-pill.is-official{border-color:#dfff004d;background:#0e1915b3}
 @keyframes comment-drift{to{transform:translateX(var(--drift-distance,-1600px))}}
 /* A quiet editorial space underneath the campaign photographs. */
 .conversation{max-width:1120px;margin:0 auto;padding:58px 48px 34px;background:var(--ink);scroll-margin-top:20px}

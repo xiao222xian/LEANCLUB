@@ -7,7 +7,7 @@ class Element {
   constructor(id = '') {
     this.id = id; this.children = []; this.handlers = {}; this.attributes = {}; this.dataset = {};
     this.value = ''; this.checked = false; this.hidden = false; this.disabled = false;
-    this.style = { setProperty() {} }; this.clientWidth = 1000;
+    this.style = { setProperty(key, value) { this[key] = value; } }; this.clientWidth = 1000;
     this.classList = { toggle() {} };
   }
   set textContent(value) { this._text = value; this.children = []; }
@@ -34,6 +34,7 @@ function boot(options = {}) {
   const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
   assert.equal(ids.length, new Set(ids).size, 'unique DOM ids');
   const elements = Object.fromEntries(ids.map(id => [id, new Element(id)]));
+  elements['danmaku-band'].clientWidth = options.width || 1000;
   const form = elements['comment-form']; form.selected = new Element();
   form.controls = ['comment-content', 'comment-nickname', 'comment-consent', 'comment-submit', 'comment-private'].map(id => elements[id]);
   form.reset = () => { form.controls.forEach(node => { node.value = ''; node.checked = false; }); form.selected.value = ''; };
@@ -65,7 +66,7 @@ function boot(options = {}) {
   return { elements, calls, timers, document, listeners, motion, storage, observe: entries => observer(entries), context,
     driftTick() {
       clock += 10000;
-      const timer = [...timers].find(([, value]) => value.ms === 3000);
+      const timer = [...timers].find(([, value]) => value.ms === 2200);
       assert.ok(timer, 'drift scheduler is running');
       timers.delete(timer[0]); timer[1].fn();
     }
@@ -79,7 +80,19 @@ const fill = (page, value = '周末一起练肩吧') => { page.elements['comment
   assert.equal(empty.elements['comment-list'].children.length, 0, 'no seeded fake comments');
   assert.equal(empty.elements['comment-total'].textContent, '0', 'heading count comes from the public response');
   assert.equal(empty.elements['comment-total'].attributes['aria-label'], '0 条留言');
-  assert.equal(empty.elements['danmaku-band'].children[0].children[0].textContent, '官方话题', 'decorative text explicitly labeled');
+  const ambientPill = empty.elements['danmaku-band'].children[0];
+  assert.equal(ambientPill.children.length, 1, 'decorative prompt has no official badge or invented author');
+  assert.equal(ambientPill.dataset.commentId, undefined, 'decorative prompt is never a public comment');
+  assert.ok(ambientPill.children[0].textContent.length > 2);
+  assert.equal(1260 / parseFloat(ambientPill.style['--drift-duration']), 68, 'desktop drift is moderately faster');
+  const mobile = boot({ width: 390 }); await flush();
+  assert.equal(650 / parseFloat(mobile.elements['danmaku-band'].children[0].style['--drift-duration']), 56, 'mobile keeps a readable, faster pace');
+  for (let i = 0; i < 30; i++) {
+    empty.elements['danmaku-band'].replaceChildren();
+    empty.driftTick();
+  }
+  assert.equal(empty.calls.filter(call => call.body).length, 0, 'ambient motion never writes fake posts');
+  assert.equal(empty.elements['comment-total'].textContent, '0', 'ambient motion never inflates comment counts');
   assert.equal(empty.elements['comment-consent'].checked, false, 'public consent starts unchecked');
   empty.elements['comment-content'].value = '一起运动';
   await empty.elements['comment-form'].fire('submit');
@@ -143,7 +156,10 @@ const fill = (page, value = '周末一起练肩吧') => { page.elements['comment
   assert.equal(visiblePills.length, 6, 'lane scheduler retains its six-pill cap');
   assert.equal(visiblePills.filter(node => node.dataset.commentId === '3').length, 1, 'one real comment never repeats concurrently');
   const visibleTopics = visiblePills.filter(node => node.dataset.topicIndex !== undefined).map(node => node.dataset.topicIndex);
-  assert.equal(visibleTopics.length, new Set(visibleTopics).size, 'official topics do not repeat concurrently either');
+  assert.equal(visibleTopics.length, new Set(visibleTopics).size, 'ambient prompts do not repeat concurrently either');
+  const realPill = visiblePills.find(node => node.dataset.commentId === '3');
+  assert.equal(realPill.children[0].textContent, '留言 · 深圳', 'real comments retain their source');
+  assert.equal(realPill.children[1].textContent, '一起去运动吧', 'real comment text is unchanged');
   visiblePills.find(node => node.dataset.commentId === '3').remove();
   visiblePills.find(node => node.dataset.topicIndex !== undefined).remove();
   for (let i = 0; i < 3; i++) sparse.driftTick();
@@ -165,7 +181,7 @@ const fill = (page, value = '周末一起练肩吧') => { page.elements['comment
   assert.ok(paged.timers.size < 5, 'bounded timers');
   paged.document.visibilityState = 'hidden'; paged.listeners.visibilitychange();
   assert.equal(paged.elements['danmaku-band'].children.length, 0);
-  assert.equal([...paged.timers.values()].filter(timer => [30000, 3000].includes(timer.ms)).length, 0, 'hidden page stops polling and motion');
+  assert.equal([...paged.timers.values()].filter(timer => [30000, 2200].includes(timer.ms)).length, 0, 'hidden page stops polling and motion');
   paged.document.visibilityState = 'visible';
   paged.observe([{ target: paged.elements['vote-hero'], isIntersecting: false }, { target: paged.elements.conversation, isIntersecting: true }]);
   assert.equal(paged.elements['danmaku-band'].children.length, 0, 'offscreen photo stops motion');
