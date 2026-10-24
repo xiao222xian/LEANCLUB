@@ -11,6 +11,7 @@ from campaign_feedback import validate as validate_feedback
 from campaign_comments import validate as validate_comment
 from events_http import EventsAPI
 from store import Problem
+from club_management import ClubManagement
 
 VISITOR_COOKIE = 'lean_visitor'
 SESSION_COOKIE = 'lean_admin'
@@ -30,6 +31,7 @@ class CampaignAPI:
         self.local_setup = allow_local_setup and parsed.hostname in ('127.0.0.1', 'localhost', '::1')
         self.allowed_origins = {configured}
         self.events = EventsAPI(self)
+        self.clubs = ClubManagement(store) if store is not None else None
         if self.local_setup:
             # The explicit loopback launcher serves these names on the same port.
             # Production keeps the single configured origin.
@@ -151,6 +153,20 @@ class CampaignAPI:
         return data
 
     def get(self, handler, path):
+        if path == '/api/admin/schools' or path.startswith('/api/admin/schools/'):
+            self.admin(handler)
+            if path == '/api/admin/schools':
+                return handler.send_json(200, self.clubs.listing())
+            if path == '/api/admin/schools/history':
+                query = parse_qs(urlsplit(handler.path).query)
+                page = query.get('page', ['1'])[0]
+                if not re.fullmatch(r'[1-9][0-9]{0,5}', page):
+                    raise Problem(400, '页码无效。')
+                return handler.send_json(200, self.clubs.history(int(page)))
+            match = re.fullmatch(r'/api/admin/schools/([A-Za-z0-9_-]{1,80})', path)
+            if match:
+                return handler.send_json(200, self.clubs.detail(match[1]))
+            raise Problem(404, '学校接口不存在。')
         if self.events.matches(path):
             return self.events.get(handler, path)
         if path == '/api/campaign/comments':
@@ -212,6 +228,19 @@ class CampaignAPI:
 
     def post(self, handler, path):
         self.require_origin(handler)
+        match = re.fullmatch(r'/api/admin/schools/([A-Za-z0-9_-]{1,80})(/qr)?', path)
+        if match:
+            session = self.admin(handler, writing=True)
+            if match[2]:
+                revision = handler.headers.get('X-Club-Revision', '')
+                if not re.fullmatch(r'[1-9][0-9]{0,9}', revision):
+                    raise Problem(400, '资料版本无效。')
+                raw = self.read_body(handler, 2 * 1024**2)
+                qr = self.clubs.image(raw, handler.headers.get('Content-Type', '').split(';')[0])
+                result = self.clubs.save(match[1], {'revision': int(revision)}, session['username'], qr=qr)
+            else:
+                result = self.clubs.save(match[1], self.json_body(handler), session['username'])
+            return handler.send_json(200, result)
         if self.events.matches(path):
             return self.events.post(handler, path)
         if path == '/api/campaign/comments':

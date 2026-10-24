@@ -35,7 +35,7 @@ ROUTES = {
     "/check-in": "/check-in/index.html",
     "/check-in/": "/check-in/index.html",
 }
-REQUEST_HEADERS = {"content-type", "origin", "referer", "sec-fetch-site", "cookie", "x-csrf-token", "accept"}
+REQUEST_HEADERS = {"content-type", "origin", "referer", "sec-fetch-site", "cookie", "x-csrf-token", "x-club-revision", "accept"}
 RESPONSE_HEADERS = {
     "content-type", "cache-control", "x-content-type-options", "set-cookie",
     "content-disposition", "etag", "last-modified", "vary", "retry-after",

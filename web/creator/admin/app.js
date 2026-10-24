@@ -73,7 +73,7 @@
     const controller = new AbortController();
     const timer = window.setTimeout(() => controller.abort(), options.file ? 60000 : 25000);
     const method = options.method || 'GET';
-    const headers = { Accept: 'application/json' };
+    const headers = { Accept: 'application/json', ...(options.headers || {}) };
     let body;
     if (method !== 'GET') {
       headers['X-CSRF-Token'] = state.csrf;
@@ -122,6 +122,7 @@
   }
 
   function clearProtectedContent() {
+    window.LeanSchoolAdmin?.reset();
     resetEvents();
     for (const record of state.posters.values()) releaseDraft(record);
     state.posters.clear();
@@ -261,12 +262,11 @@
     message($('#auth-error'), '');
     $('#auth-view').hidden = true;
     $('#admin-view').hidden = false;
-    selectPanel('overview', false);
+    selectPanel(location.hash === '#schools' ? 'schools' : 'overview', false);
     loadStats();
     window.clearInterval(state.feedbackTimer);
     state.feedbackTimer = window.setInterval(refreshFeedbackBadge, 30000);
     refreshFeedbackBadge(true);
-    document.title = '数据概览 · LEAN SCHOOL';
   }
 
   function validateStats(data) {
@@ -356,7 +356,7 @@
       if (active && focus) tab.focus();
     }
     for (const panel of $$('[role="tabpanel"]')) panel.hidden = panel.id !== `panel-${name}`;
-    document.title = `${({ posters: '城市海报', overview: '数据概览', feedback: '意见箱', events: '活动报名', feishu: '飞书通知' })[name]} · LEAN SCHOOL`;
+    document.title = `${({ schools: '学校社群', posters: '城市海报', overview: '数据概览', feedback: '意见箱', events: '活动报名', feishu: '飞书通知' })[name]} · LEAN SCHOOL`;
     if (name === 'posters' && !state.postersLoaded && !state.postersLoading) loadPosters();
     if (name === 'overview') refreshVisibleStats();
     if (name === 'feedback' && !state.feedback && !state.feedbackLoading) loadFeedback();
@@ -364,6 +364,7 @@
     state.feishuTimer = null;
     if (name === 'feishu') loadFeishu();
     if (name === 'events') loadEvents();
+    if (name === 'schools') window.LeanSchoolAdmin?.load();
   }
   for (const tab of $$('[role="tab"]')) {
     tab.addEventListener('click', () => selectPanel(tab.dataset.panel));
@@ -1288,5 +1289,6 @@
   $('#registrations-prev').addEventListener('click', () => { if (!eventState.registrationLoading && eventState.page > 1) { eventState.page--; loadRegistrations(); } });
   $('#registrations-next').addEventListener('click', () => { if (!eventState.registrationLoading && eventState.page < eventState.pages) { eventState.page++; loadRegistrations(); } });
 
+  window.LeanSchoolAdmin?.init(api);
   loadSession();
 })();

@@ -60,10 +60,20 @@
     detail.append(title, place, save, status, body);
     if (!panel.open) panel.showModal();
     try {
-      const clubs = await api('/leanclub/club/list?schoolId=' + encodeURIComponent(school.id));
+      const [clubs, legacy] = await Promise.all([
+        api('/leanclub/club/list?schoolId=' + encodeURIComponent(school.id)),
+        fetch('/api/club/schools', { cache: 'no-store', signal: AbortSignal.timeout(10000) }).then(r => r.ok ? r.json() : { published: [] }).catch(() => ({ published: [] }))
+      ]);
       if (current !== detailVersion || !panel.open) return;
       body.replaceChildren();
+      const existing = (legacy.published || []).filter(c => String(c.schoolId) === String(school.id));
+      existing.forEach(club => {
+        const card = node('article', 'portal-club-detail');
+        card.append(node('span', 'lc-campus-badge', '社群榜单'), node('h3', '', club.name), node('p', '', '社群规模 ' + Number(club.count).toLocaleString('zh-CN')));
+        const link = node('a', 'portal-apply-link', '联系社群 / 查看二维码 ↗'); link.href = '/schools?club=' + encodeURIComponent(club.id); card.append(link); body.append(card);
+      });
       if (!Array.isArray(clubs) || !clubs.length) {
+        if (existing.length) return;
         const empty = node('div', 'portal-club-empty');
         empty.append(node('h3', '', '本校暂未开通'), node('p', '', '你仍然可以保存学校、参加开放活动，或申请发起本校俱乐部。'));
         const apply = node('a', 'portal-apply-link', '申请发起 ↗'); apply.href = '/join?schoolId=' + encodeURIComponent(school.id) + '&schoolName=' + encodeURIComponent(school.name);

@@ -11,6 +11,8 @@ def enrich_schools(published):
         item = dict(club)
         metadata = METADATA.get(club['id'])
         if metadata and metadata['name'] == club['name']:
-            item.update({key: metadata[key] for key in ('en', 'region', 'alias')})
+            for key in ('en', 'region', 'alias'):
+                if item.get(key) is None:
+                    item[key] = metadata[key]
         result.append(item)
     return result

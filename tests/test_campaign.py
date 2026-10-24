@@ -315,6 +315,7 @@ class CampaignHTTPTests(unittest.TestCase):
         status, result, headers = self.request('GET', '/api/campaign')
         self.assertEqual(status, 200)
         self.assertIsNone(result['vote'])
+
         self.assertEqual(len(result['cities']), 3)
         self.assertEqual(result['cities'][2]['positionX'], 65)
         cookie = next(value for key, value in headers if key == 'Set-Cookie')
@@ -325,6 +326,27 @@ class CampaignHTTPTests(unittest.TestCase):
             self.assertEqual(self.request('POST', '/api/campaign/vote', {'city': city})[0], 200)
         self.assertEqual(self.request('GET', '/api/campaign')[1]['vote'], {'city': 'zhuhai'})
         self.assertEqual(self.store.stats()['totalVotes'], 1)
+
+
+    def test_school_admin_requires_session_csrf_and_current_revision(self):
+        directory = Store(str(self.store.path), [])
+        saved = directory.save({'school': '测试大学', 'contact': '测试联系', 'count': 15, 'consent': True}, '192.0.2.1')
+        path = '/api/admin/schools/' + saved['id']
+        for endpoint in ['/api/admin/schools', path, '/api/admin/schools/history']:
+            self.assertEqual(self.request('GET', endpoint)[0], 401)
+        self.setup_admin()
+        status, detail, _ = self.request('GET', path)
+        self.assertEqual(status, 200)
+        self.assertNotIn('edit_hash', detail['club'])
+        body = {k: detail['club'][k] for k in ('name', 'contact', 'count', 'en', 'region', 'alias', 'revision', 'schoolId')}
+        body.update(count=25, visible=False, removeQr=False)
+        self.assertEqual(self.request('POST', path, body)[0], 403)
+        self.assertEqual(self.request('POST', path, body, {'X-CSRF-Token': self.csrf, 'Origin': 'https://foreign.test'})[0], 403)
+        self.assertEqual(self.request('POST', path, body, {'X-CSRF-Token': self.csrf})[0], 200)
+        self.assertEqual(directory.summary(), [])
+        self.assertEqual(self.request('POST', path, body, {'X-CSRF-Token': self.csrf})[0], 409)
+        headers = {'X-CSRF-Token': self.csrf, 'Content-Type': 'image/png', 'X-Club-Revision': '2'}
+        self.assertEqual(self.request('POST', path + '/qr', headers=headers, raw=png(64,64))[0], 200)
 
     def test_anonymous_admin_access_origin_and_csrf_protection(self):
         for path in ('/api/admin/stats', '/api/admin/posters'):
