@@ -1,0 +1,7 @@
+/* Only the two approved masthead positions use the new lockup. */
+.masthead .wordmark.lean-brand{display:flex;align-items:center;flex:0 0 auto;width:200px;min-height:44px;padding:0;line-height:1;letter-spacing:0}
+.masthead .wordmark.lean-brand>img{display:block;width:100%;height:auto;max-width:none;object-fit:contain}
+.masthead .wordmark.lean-brand--vote{width:180px}
+.masthead .wordmark.lean-brand:focus-visible{outline:2px solid #95e5b6;outline-offset:5px;border-radius:3px}
+@media(max-width:760px){.masthead .wordmark.lean-brand{width:150px}.masthead .wordmark.lean-brand--vote{width:148px}}
+@media(max-width:360px){.masthead .wordmark.lean-brand{width:132px}.masthead .wordmark.lean-brand--vote{width:136px}}
