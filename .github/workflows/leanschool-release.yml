@@ -102,7 +102,7 @@ jobs:
       - name: Checkout fixed admin source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: 7cef74247e7eeda7f96bb1366033fada9e419623
+          ref: 8554101037814965582590b88867e1883352cf0d
           path: admin-ui
           persist-credentials: false
       - name: Set up fixed Node
@@ -119,12 +119,6 @@ jobs:
           npm install --global pnpm@10.30.0 --ignore-scripts
           test "$(pnpm --version)" = '10.30.0'
           pnpm install --frozen-lockfile --registry=https://registry.npmmirror.com
-      - name: Check types and production route isolation
-        working-directory: admin-ui
-        run: |
-          set -euo pipefail
-          node --max_old_space_size=6144 ./node_modules/vue-tsc/bin/vue-tsc.js --noEmit
-          node scripts/check-console-deployment.mjs
       - name: Build console within runner memory budget
         working-directory: admin-ui
         env:
@@ -132,6 +126,13 @@ jobs:
         run: |
           set -euo pipefail
           node --max_old_space_size=6144 ./node_modules/vite/bin/vite.js build --mode leanschool
+      - name: Check generated types and production route isolation
+        working-directory: admin-ui
+        run: |
+          set -euo pipefail
+          test -s src/types/auto-imports.d.ts
+          test -s src/types/auto-components.d.ts
+          node --max_old_space_size=6144 ./node_modules/vue-tsc/bin/vue-tsc.js --noEmit
           node scripts/check-console-deployment.mjs --built
       - name: Package only the console build
         run: |

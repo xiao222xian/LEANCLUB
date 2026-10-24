@@ -140,6 +140,8 @@ class ReleasePackageTests(unittest.TestCase):
         self.assertEqual(text.count('persist-credentials: false'), 6)
         self.assertIn('--max_old_space_size=6144', text)
         self.assertNotIn('--max_old_space_size=8192', text)
+        self.assertLess(text.index('Build console within runner memory budget'),
+                        text.index('Check generated types and production route isolation'))
 
 
 if __name__ == '__main__':

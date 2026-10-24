@@ -13,7 +13,7 @@ import tarfile
 COMMITS = {
     'website': '1a4ba54b47018e3ed78b013a66f8ac4840b59ca9',
     'backend': 'd5ff0bb3af7683fb4fd1565aed1c58956aca3e6c',
-    'adminUi': '7cef74247e7eeda7f96bb1366033fada9e419623',
+    'adminUi': '8554101037814965582590b88867e1883352cf0d',
 }
 TOOLS = {'java': 'Temurin 25.0.5+8', 'maven': '3.9.7', 'node': '24.20.0', 'pnpm': '10.30.0'}
 ARTIFACTS = {'yudao-server.jar', 'java-release.json', 'console.tar.gz', 'website.tar.gz'}
