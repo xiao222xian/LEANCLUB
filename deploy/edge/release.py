@@ -11,6 +11,7 @@ import shutil
 import sqlite3
 import subprocess
 import tarfile
+import time
 import urllib.request
 
 PREFIX = 'web/creator/'
@@ -135,8 +136,8 @@ def deploy(record_path, config_dir, skip_data_backup=False):
     old_proxy = PROXY.read_bytes() if PROXY.exists() else None
     was_active = subprocess.run(['systemctl', 'is-active', '--quiet', 'leanmuscleclub-api']).returncode == 0
     try:
-        run(['systemctl', 'stop', 'leanmuscleclub-api'])
         if not skip_data_backup:
+            run(['systemctl', 'stop', 'leanmuscleclub-api'])
             with sqlite3.connect('/var/lib/leanmuscleclub/clubs.sqlite3') as source, sqlite3.connect(backup / 'legacy.sqlite3') as dest:
                 source.backup(dest)
                 if dest.execute('PRAGMA integrity_check').fetchone() != ('ok',):
@@ -147,10 +148,14 @@ def deploy(record_path, config_dir, skip_data_backup=False):
         symlink(stage, BASE / 'current')
         run(['systemctl', 'reload', 'nginx'])
         for path in ('/', '/api/club/health', '/app-api/leanclub/site/capabilities', '/console/'):
-            status = run(['curl', '-sS', '-o', '/dev/null', '-w', '%{http_code}', '--max-time', '20',
-                          '--resolve', 'leanmuscleclub.com:443:127.0.0.1', ORIGIN + path])
-            if status != '200':
-                raise ValueError('Post-release HTTP check failed')
+            for attempt in range(5):
+                status = run(['curl', '--noproxy', '*', '-sS', '-o', '/dev/null', '-w', '%{http_code}', '--max-time', '20',
+                              '--resolve', 'leanmuscleclub.com:443:127.0.0.1', ORIGIN + path])
+                if status == '200':
+                    break
+                time.sleep(1)
+            else:
+                raise ValueError('Post-release HTTP check failed: ' + path + ' status=' + status)
         for name, digest in cert_hashes.items():
             if hashlib.sha256((certificate / name).read_bytes()).digest() != digest:
                 raise ValueError('Certificate unexpectedly changed')
@@ -166,7 +171,7 @@ def deploy(record_path, config_dir, skip_data_backup=False):
         if was_active:
             run(['systemctl', 'start', 'leanmuscleclub-api'])
         raise
-    run(['systemctl', 'disable', 'leanmuscleclub-api'])
+    run(['systemctl', 'disable', '--now', 'leanmuscleclub-api'])
     result = {'ok': True, 'commit': record['commit'], 'origin': ORIGIN, 'files': count,
               'backup': str(backup), 'release': str(stage), 'sharedBackend': '152.136.108.87',
               'certificatesUnchanged': True, 'legacyApiStopped': True}
