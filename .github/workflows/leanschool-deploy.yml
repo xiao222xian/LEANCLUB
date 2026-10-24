@@ -1,0 +1,40 @@
+name: Publish LEAN SCHOOL production
+on:
+  workflow_dispatch:
+    inputs:
+      build_run_id:
+        description: 'Successful Build LEAN SCHOOL release run ID'
+        required: true
+        type: string
+      mode:
+        description: 'plan validates only; publish updates production'
+        required: true
+        type: choice
+        default: plan
+        options: [plan, publish]
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: leanschool-production-release
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: github.repository == 'papaoo/bojizhuye' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    environment: production
+    steps:
+      - name: Checkout release client at this workflow commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Validate selected build and request server release
+        env:
+          BUILD_RUN_ID: ${{ inputs.build_run_id }}
+          RELEASE_MODE: ${{ inputs.mode }}
+          GH_TOKEN: ${{ github.token }}
+          DEPLOY_SSH_KEY: ${{ secrets.LEANSCHOOL_DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.LEANSCHOOL_DEPLOY_KNOWN_HOSTS }}
+        run: python3 deploy/ci/publish-via-ssh.py
