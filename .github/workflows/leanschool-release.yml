@@ -1,13 +1,31 @@
-name: Build fixed LEAN SCHOOL release
+name: Build LEAN SCHOOL release
 
 on:
+  push:
+    branches: [main, platform/backend, platform/admin-ui]
   workflow_dispatch:
+    inputs:
+      website_ref:
+        description: Website main branch or complete commit SHA
+        default: main
+        required: true
+        type: string
+      backend_ref:
+        description: Backend platform/backend branch or complete commit SHA
+        default: platform/backend
+        required: true
+        type: string
+      admin_ui_ref:
+        description: Console platform/admin-ui branch or complete commit SHA
+        default: platform/admin-ui
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: leanschool-fixed-release
+  group: leanschool-build-${{ github.ref }}
   cancel-in-progress: false
 
 defaults:
@@ -15,8 +33,78 @@ defaults:
     shell: bash
 
 jobs:
+  resolve:
+    if: github.repository == 'papaoo/bojizhuye'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      website: ${{ steps.resolve.outputs.website }}
+      backend: ${{ steps.resolve.outputs.backend }}
+      adminUi: ${{ steps.resolve.outputs.adminUi }}
+      toolsCommit: ${{ steps.resolve.outputs.toolsCommit }}
+    steps:
+      - name: Checkout controlled main tools
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && github.sha || 'main' }}
+          path: ci
+          persist-credentials: false
+      - name: Resolve source versions once
+        id: resolve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          WORKFLOW_EVENT: ${{ github.event_name }}
+          WORKFLOW_REF: ${{ github.ref }}
+          WORKFLOW_SHA: ${{ github.sha }}
+          WEBSITE_REF: ${{ inputs.website_ref || 'main' }}
+          BACKEND_REF: ${{ inputs.backend_ref || 'platform/backend' }}
+          ADMIN_UI_REF: ${{ inputs.admin_ui_ref || 'platform/admin-ui' }}
+        run: |
+          set -euo pipefail
+          python3 ci/deploy/ci/resolve-release.py \
+            --repository "$REPOSITORY" --event "$WORKFLOW_EVENT" \
+            --workflow-ref "$WORKFLOW_REF" --workflow-sha "$WORKFLOW_SHA" \
+            --tools-commit "$(git -C ci rev-parse HEAD)" \
+            --website-ref "$WEBSITE_REF" --backend-ref "$BACKEND_REF" --admin-ui-ref "$ADMIN_UI_REF" \
+            --output "$RUNNER_TEMP/resolved-release.json" --github-output "$GITHUB_OUTPUT"
+          python3 -m unittest discover -s ci/tests -p test_ci_release.py
+          python3 -m unittest discover -s ci/tests -p test_ci_resolve.py
+          python3 -c 'import json,os; r=json.load(open(os.environ["RUNNER_TEMP"]+"/resolved-release.json")); open(os.environ["GITHUB_STEP_SUMMARY"],"a").write("## Resolved source commits\n\n"+"\n".join("- "+k+": `"+v+"`" for k,v in r["commits"].items())+"\n\nThis run builds code only. Production publication is a separate manual workflow.\n")'
+      - name: Upload immutable resolution
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: leanschool-resolution-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/resolved-release.json
+          if-no-files-found: error
+          retention-days: 3
+
+  website:
+    needs: resolve
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout resolved website
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.resolve.outputs.website }}
+          persist-credentials: false
+      - name: Set up fixed Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24.20.0'
+          architecture: x64
+          package-manager-cache: false
+      - name: Check website Python and client behavior
+        run: |
+          set -euo pipefail
+          python3 -m venv "$RUNNER_TEMP/website-venv"
+          "$RUNNER_TEMP/website-venv/bin/pip" install --disable-pip-version-check -r requirements.txt
+          "$RUNNER_TEMP/website-venv/bin/python" -m unittest discover -s tests -p 'test_*.py'
+          node --test tests/*.cjs
+
   backend:
-    if: github.repository == 'papaoo/bojizhuye' && github.ref == 'refs/heads/main'
+    needs: resolve
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     env:
@@ -25,13 +113,13 @@ jobs:
       - name: Checkout workflow tools
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ needs.resolve.outputs.toolsCommit }}
           path: ci
           persist-credentials: false
-      - name: Checkout fixed backend source
+      - name: Checkout resolved backend source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: d5ff0bb3af7683fb4fd1565aed1c58956aca3e6c
+          ref: ${{ needs.resolve.outputs.backend }}
           path: backend
           persist-credentials: false
       - name: Download verified Java and Maven distributions
@@ -56,12 +144,23 @@ jobs:
           cache: maven
           cache-dependency-path: backend/**/pom.xml
       - name: Check tools and packaging safeguards
+        env:
+          BACKEND_COMMIT: ${{ needs.resolve.outputs.backend }}
         run: |
           set -euo pipefail
           grep -F 'JAVA_RUNTIME_VERSION="25.0.5+8-LTS"' "$JAVA_HOME/release"
           mvn --version | grep -F 'Apache Maven 3.9.7'
           python3 -m unittest discover -s ci/tests -p test_ci_release.py
-          test "$(git -C backend rev-parse HEAD)" = 'd5ff0bb3af7683fb4fd1565aed1c58956aca3e6c'
+          test "$(git -C backend rev-parse HEAD)" = "$BACKEND_COMMIT"
+      - name: Test Lean School contracts with isolated H2 and mocks
+        working-directory: backend
+        run: |
+          set -euo pipefail
+          mvn --settings "$GITHUB_WORKSPACE/ci/deploy/ci/maven-settings.xml" \
+            --batch-mode --no-transfer-progress -pl yudao-module-leanclub -am \
+            -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false \
+            '-Dtest=TenantSqlBoundaryTest,SiteServiceTest,SiteContentPolicyTest,PublicBoundaryTest,PaymentContractTest,LocalPaymentBindingServiceTest,MemberOrdersSignerTest,MemberOrderServiceTest,MemberOrderInputTest,OperationsSignerTest,LeanClubOperationsServiceTest,BoundedBodySubscriberTest,AppLeanClubOrderControllerTest' test
+          python3 -c 'import pathlib,xml.etree.ElementTree as E; r=[E.parse(p).getroot() for p in pathlib.Path("yudao-module-leanclub/target/surefire-reports").glob("TEST-*.xml")]; assert len(r)>=13 and sum(int(x.attrib["tests"]) for x in r)>0; assert all(int(x.attrib.get("errors",0))+int(x.attrib.get("failures",0))==0 for x in r)'
       - name: Build all reviewed modules
         working-directory: backend
         run: |
@@ -89,20 +188,20 @@ jobs:
           retention-days: 1
 
   admin-ui:
-    if: github.repository == 'papaoo/bojizhuye' && github.ref == 'refs/heads/main'
+    needs: resolve
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
       - name: Checkout workflow tools
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ needs.resolve.outputs.toolsCommit }}
           path: ci
           persist-credentials: false
-      - name: Checkout fixed admin source
+      - name: Checkout resolved admin source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: 8554101037814965582590b88867e1883352cf0d
+          ref: ${{ needs.resolve.outputs.adminUi }}
           path: admin-ui
           persist-credentials: false
       - name: Set up fixed Node
@@ -135,9 +234,11 @@ jobs:
           node --max_old_space_size=6144 ./node_modules/vue-tsc/bin/vue-tsc.js --noEmit
           node scripts/check-console-deployment.mjs --built
       - name: Package only the console build
+        env:
+          ADMIN_UI_COMMIT: ${{ needs.resolve.outputs.adminUi }}
         run: |
           python3 ci/deploy/ci/package-public-release.py console \
-            --source admin-ui --output "$RUNNER_TEMP/console-artifact"
+            --source admin-ui --source-commit "$ADMIN_UI_COMMIT" --output "$RUNNER_TEMP/console-artifact"
       - name: Upload only the console archive
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -148,21 +249,20 @@ jobs:
           retention-days: 1
 
   package:
-    if: github.repository == 'papaoo/bojizhuye' && github.ref == 'refs/heads/main'
-    needs: [backend, admin-ui]
+    needs: [resolve, website, backend, admin-ui]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - name: Checkout workflow tools
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ needs.resolve.outputs.toolsCommit }}
           path: ci
           persist-credentials: false
-      - name: Checkout fixed website source
+      - name: Checkout resolved website source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: 1a4ba54b47018e3ed78b013a66f8ac4840b59ca9
+          ref: ${{ needs.resolve.outputs.website }}
           path: website
           persist-credentials: false
       - name: Download this run's backend artifact
@@ -175,14 +275,17 @@ jobs:
         with:
           name: leanschool-console-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/console-artifact
+      - name: Download this run's immutable source resolution
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: leanschool-resolution-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/resolution
       - name: Verify and assemble code-only release
-        env:
-          TOOLS_COMMIT: ${{ github.sha }}
         run: |
           set -euo pipefail
           python3 ci/deploy/ci/package-public-release.py bundle --website website \
             --backend "$RUNNER_TEMP/backend-artifact" --console "$RUNNER_TEMP/console-artifact" \
-            --output "$RUNNER_TEMP/leanschool-release" --tools-commit "$TOOLS_COMMIT" \
+            --output "$RUNNER_TEMP/leanschool-release" --resolution "$RUNNER_TEMP/resolution/resolved-release.json" \
             --run-id "$GITHUB_RUN_ID" --run-attempt "$GITHUB_RUN_ATTEMPT"
           cd "$RUNNER_TEMP/leanschool-release"
           sha256sum --check --strict SHA256SUMS

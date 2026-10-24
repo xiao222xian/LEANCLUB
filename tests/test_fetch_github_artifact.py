@@ -78,6 +78,23 @@ def bundle():
     return files
 
 
+def daily_bundle(**changes):
+    """A platform/backend push builds sources with separate controlled-main tools."""
+    files = bundle()
+    files['console.tar.gz'] = tar_bytes([
+        ('console/index.html', b'<script src="/console/assets/a.js"></script>', tarfile.REGTYPE),
+        ('console/assets/a.js', b'public code', tarfile.REGTYPE)], COMMITS['adminUi'])
+    manifest = json.loads(files['release-manifest.json'])
+    manifest.update({'workflowSha': COMMITS['backend'], 'workflowEvent': 'push',
+                     'workflowRef': 'refs/heads/platform/backend',
+                     'sourceRefs': {'website': 'main', 'backend': COMMITS['backend'], 'adminUi': 'platform/admin-ui'},
+                     'branchHeads': dict(COMMITS), 'artifacts': hashes({name: files[name] for name in fetcher.CODE})})
+    manifest.update(changes)
+    files['release-manifest.json'] = metadata(manifest)
+    checksum_file(files)
+    return files
+
+
 def zip_bytes(files):
     result = io.BytesIO()
     with zipfile.ZipFile(result, 'w', zipfile.ZIP_DEFLATED) as archive:
@@ -380,12 +397,77 @@ class FetchTests(unittest.TestCase):
         with self.assertRaisesRegex(fetcher.FetchError, 'Java release stamp'):
             self.verify(files)
 
-    def verify(self, files):
+    def test_legacy_manifest_without_daily_metadata_remains_compatible(self):
+        files = bundle()
+        manifest = json.loads(files['release-manifest.json'])
+        self.assertNotIn('workflowSha', manifest)
+        self.assertEqual(manifest['toolsCommit'], SHA)
+        self.assertEqual(self.verify(files), COMMITS)
+
+    def test_platform_push_allows_different_workflow_and_tools_with_console_provenance(self):
+        files = daily_bundle()
+        manifest = json.loads(files['release-manifest.json'])
+        self.assertNotEqual(manifest['workflowSha'], manifest['toolsCommit'])
+        self.assertEqual(self.verify(files, COMMITS['backend']), COMMITS)
+
+    def test_daily_manifest_rejects_invalid_event_ref_sha_or_tools_version(self):
+        cases = [{'workflowEvent': 'pull_request'}, {'workflowEvent': None},
+                 {'workflowRef': 'refs/heads/arbitrary'}, {'workflowRef': 'refs/tags/main'},
+                 {'workflowRef': 'refs/heads/platform/admin-ui'},
+                 {'workflowSha': 'e' * 40}, {'workflowSha': None},
+                 {'toolsCommit': 'main'}, {'toolsCommit': 'c' * 39}]
+        for changes in cases:
+            with self.subTest(changes=changes), self.assertRaises(fetcher.FetchError):
+                self.verify(daily_bundle(**changes), COMMITS['backend'])
+
+    def test_manual_daily_build_must_use_main_workflow(self):
+        files = daily_bundle(workflowEvent='workflow_dispatch', workflowRef='refs/heads/main')
+        self.assertEqual(self.verify(files, COMMITS['backend']), COMMITS)
+        files = daily_bundle(workflowEvent='workflow_dispatch', workflowRef='refs/heads/platform/backend')
+        with self.assertRaises(fetcher.FetchError):
+            self.verify(files, COMMITS['backend'])
+
+    def test_main_push_tools_must_match_event_commit(self):
+        files = daily_bundle(workflowRef='refs/heads/main', workflowSha=COMMITS['website'])
+        with self.assertRaisesRegex(fetcher.FetchError, 'Push source commit drifted'):
+            self.verify(files, COMMITS['website'])
+        files = daily_bundle(workflowRef='refs/heads/main', workflowSha=COMMITS['website'], toolsCommit=COMMITS['website'])
+        self.assertEqual(self.verify(files, COMMITS['website']), COMMITS)
+
+    def test_daily_resolution_rejects_wrong_component_refs_and_branch_heads(self):
+        refs = {'website': 'main', 'backend': COMMITS['backend'], 'adminUi': 'platform/admin-ui'}
+        cases = [{'sourceRefs': None}, {'sourceRefs': []}, {'sourceRefs': {'website': 'main'}},
+                 {'sourceRefs': refs | {'extra': 'main'}},
+                 {'sourceRefs': refs | {'adminUi': 'main'}},
+                 {'sourceRefs': refs | {'adminUi': 'refs/heads/platform/admin-ui'}},
+                 {'sourceRefs': refs | {'adminUi': 'https://github.com/other/repo'}},
+                 {'sourceRefs': refs | {'adminUi': 'e' * 40}},
+                 {'branchHeads': None}, {'branchHeads': []}, {'branchHeads': {'website': COMMITS['website']}},
+                 {'branchHeads': COMMITS | {'extra': 'f' * 40}},
+                 {'branchHeads': COMMITS | {'adminUi': 'e' * 40}},
+                 {'branchHeads': COMMITS | {'adminUi': 'short'}},
+                 {'branchHeads': COMMITS | {'adminUi': 123}}]
+        for changes in cases:
+            with self.subTest(changes=changes), self.assertRaises(fetcher.FetchError):
+                self.verify(daily_bundle(**changes), COMMITS['backend'])
+
+    def test_daily_console_provenance_cannot_be_missing_or_different(self):
+        for comment in (None, 'e' * 40):
+            files = daily_bundle()
+            files['console.tar.gz'] = tar_bytes([('console/index.html', b'html', tarfile.REGTYPE)], comment)
+            manifest = json.loads(files['release-manifest.json'])
+            manifest['artifacts'] = hashes({name: files[name] for name in fetcher.CODE})
+            files['release-manifest.json'] = metadata(manifest)
+            checksum_file(files)
+            with self.subTest(comment=comment), self.assertRaisesRegex(fetcher.FetchError, 'Console source provenance'):
+                self.verify(files, COMMITS['backend'])
+
+    def verify(self, files, expected_sha=SHA):
         directory = self.root / 'verify'
         directory.mkdir(exist_ok=True)
         for name, data in files.items():
             (directory / name).write_bytes(data)
-        return fetcher.verify_bundle(directory, hashes(files), RUN, ATTEMPT, SHA)
+        return fetcher.verify_bundle(directory, hashes(files), RUN, ATTEMPT, expected_sha)
 
     def test_credential_input_and_failure_reporting_do_not_echo_secrets(self):
         self.assertEqual(fetcher.credential(io.StringIO(json.dumps({'username': 'x-access-token', 'password': TOKEN}))), TOKEN)

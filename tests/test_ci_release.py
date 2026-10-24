@@ -46,9 +46,11 @@ class ReleasePackageTests(unittest.TestCase):
         ui_sha = repository(self.ui, {'.gitignore': 'dist-leanschool/\n'})
         site_sha = repository(self.site, {f'{d}/file.txt': 'source' for d in ('backend', 'web', 'scripts', 'deploy')} | {'requirements.txt': 'example==1\n'})
         self.commits = {'website': site_sha, 'backend': 'b' * 40, 'adminUi': ui_sha}
-        self.override = patch.dict(ci.COMMITS, self.commits)
-        self.override.start()
-        self.addCleanup(self.override.stop)
+        self.resolution = {'format': 1, 'repository': 'https://github.com/papaoo/bojizhuye',
+                           'workflowEvent': 'push', 'workflowRef': 'refs/heads/platform/backend',
+                           'workflowSha': 'b' * 40, 'toolsCommit': 'c' * 40,
+                           'commits': dict(self.commits), 'branchHeads': dict(self.commits),
+                           'sourceRefs': {'website': 'main', 'backend': 'b' * 40, 'adminUi': 'platform/admin-ui'}}
         dist = self.ui / 'dist-leanschool'
         (dist / 'assets').mkdir(parents=True)
         (dist / 'index.html').write_text('<script src="/console/assets/app.js"></script>', encoding='utf-8')
@@ -62,10 +64,10 @@ class ReleasePackageTests(unittest.TestCase):
                 archive.writestr(f'BOOT-INF/lib/yudao-module-{module}-1.jar', b'placeholder')
         (self.backend / 'java-release.json').write_text(json.dumps({'sourceCommit': 'b' * 40, 'artifact': ci.preflight.inspect_jar(jar)}), encoding='utf-8')
         self.console = self.root / 'console-artifact'
-        ci.package_console(self.ui, self.console)
+        ci.package_console(self.ui, self.console, self.commits['adminUi'])
 
     def bundle(self):
-        ci.package_bundle(self.site, self.backend, self.console, self.root / 'release', 'c' * 40, '123', '1')
+        ci.package_bundle(self.site, self.backend, self.console, self.root / 'release', self.resolution, '123', '1')
         return self.root / 'release'
 
     def test_bundle_roundtrip_has_exact_allowlist_and_git_provenance(self):
@@ -74,9 +76,13 @@ class ReleasePackageTests(unittest.TestCase):
         manifest = json.loads((output / 'release-manifest.json').read_text())
         self.assertFalse(manifest['privateInitIncluded'])
         self.assertEqual(manifest['toolsCommit'], 'c' * 40)
+        self.assertEqual(manifest['workflowSha'], self.commits['backend'])
+        self.assertNotEqual(manifest['workflowSha'], manifest['toolsCommit'])
+        self.assertEqual(manifest['commits'], self.commits)
         with tarfile.open(output / 'website.tar.gz') as archive:
             self.assertEqual(archive.pax_headers['comment'], self.commits['website'])
         with tarfile.open(output / 'console.tar.gz') as archive:
+            self.assertEqual(archive.pax_headers['comment'], self.commits['adminUi'])
             self.assertTrue(all(m.isfile() and m.mode == 0o644 and m.name.startswith('console/') for m in archive.getmembers()))
         for line in (output / 'SHA256SUMS').read_text().splitlines():
             checksum, name = line.split('  ', 1)
@@ -103,7 +109,7 @@ class ReleasePackageTests(unittest.TestCase):
             item = self.ui / 'dist-leanschool' / name
             item.write_text('synthetic')
             with self.assertRaisesRegex(ValueError, 'Forbidden'):
-                ci.package_console(self.ui, self.root / 'unexpected')
+                ci.package_console(self.ui, self.root / 'unexpected', self.commits['adminUi'])
             item.unlink()
 
     def test_archive_path_traversal_and_duplicate_are_rejected(self):
@@ -120,13 +126,42 @@ class ReleasePackageTests(unittest.TestCase):
     def test_missing_console_static_file_is_rejected(self):
         (self.ui / 'dist-leanschool/assets/app.js').unlink()
         with self.assertRaisesRegex(ValueError, 'missing or out-of-prefix'):
-            ci.package_console(self.ui, self.root / 'bad-console')
+            ci.package_console(self.ui, self.root / 'bad-console', self.commits['adminUi'])
 
-    def test_workflow_is_manual_read_only_guarded_and_actions_pinned(self):
+    def test_wrong_backend_version_rejected(self):
+        self.resolution['commits']['backend'] = 'd' * 40
+        self.resolution['branchHeads']['backend'] = 'd' * 40
+        self.resolution['sourceRefs']['backend'] = 'd' * 40
+        self.resolution['workflowSha'] = 'd' * 40
+        with self.assertRaisesRegex(ValueError, 'mismatch'):
+            self.bundle()
+
+    def test_wrong_console_version_rejected(self):
+        self.resolution['commits']['adminUi'] = 'd' * 40
+        self.resolution['branchHeads']['adminUi'] = 'd' * 40
+        with self.assertRaisesRegex(ValueError, 'Console archive source commit mismatch'):
+            self.bundle()
+
+    def test_push_sha_cannot_drift(self):
+        self.resolution['workflowSha'] = 'e' * 40
+        with self.assertRaisesRegex(ValueError, 'Push event source version drifted'):
+            self.bundle()
+
+    def test_resolution_rejects_wrong_origin_or_components(self):
+        cases = [('repository', 'https://github.com/other/repo'), ('workflowRef', 'refs/heads/other'),
+                 ('workflowEvent', 'pull_request'), ('workflowSha', 'abc'),
+                 ('toolsCommit', 'main'), ('commits', {'website': 'd' * 40}),
+                 ('sourceRefs', {**self.resolution['sourceRefs'], 'backend': 'main'})]
+        for key, value in cases:
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                ci.validate_resolution({**self.resolution, key: value})
+
+    def test_workflow_auto_builds_only_allowed_branches_and_actions_pinned(self):
         text = (ROOT / '.github/workflows/leanschool-release.yml').read_text()
         self.assertIn('  workflow_dispatch:', text)
-        self.assertNotRegex(text, r'(?m)^  (push|pull_request|schedule|workflow_run):')
-        self.assertEqual(text.count("if: github.repository == 'papaoo/bojizhuye'"), 3)
+        self.assertIn('    branches: [main, platform/backend, platform/admin-ui]', text)
+        self.assertNotRegex(text, r'(?m)^  (pull_request|pull_request_target|schedule|workflow_run):')
+        self.assertEqual(text.count("if: github.repository == 'papaoo/bojizhuye'"), 1)
         self.assertIn('  contents: read', text)
         self.assertNotIn('secrets.', text)
         self.assertNotIn('private-init', text)
@@ -137,7 +172,13 @@ class ReleasePackageTests(unittest.TestCase):
         verified = json.loads((ROOT / 'deploy/ci/actions.lock.json').read_text())['actions']
         self.assertEqual(set(uses), {name + '@' + meta['sha'] for name, meta in verified.items()})
         self.assertTrue(all(int(days) <= 3 for days in re.findall(r'retention-days:\s*(\d+)', text)))
-        self.assertEqual(text.count('persist-credentials: false'), 6)
+        self.assertEqual(text.count('persist-credentials: false'), 8)
+        self.assertIn("github.event_name == 'push' && github.ref == 'refs/heads/main' && github.sha || 'main'", text)
+        self.assertEqual(text.count('ref: ${{ needs.resolve.outputs.toolsCommit }}'), 3)
+        self.assertIn('needs: [resolve, website, backend, admin-ui]', text)
+        self.assertIn('--resolution "$RUNNER_TEMP/resolution/resolved-release.json"', text)
+        self.assertIn('-Dsurefire.failIfNoSpecifiedTests=false', text)
+        self.assertIn('LocalPaymentBindingServiceTest', text)
         self.assertIn('--max_old_space_size=6144', text)
         self.assertNotIn('--max_old_space_size=8192', text)
         self.assertLess(text.index('Build console within runner memory budget'),

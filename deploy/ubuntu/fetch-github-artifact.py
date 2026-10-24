@@ -364,7 +364,7 @@ def extract_code_zip(archive_path, directory):
     return hashes
 
 
-def check_tar(path, website_sha=None):
+def check_tar(path, website_sha=None, console_sha=None):
     seen, regular, total = set(), set(), 0
     with tarfile.open(path, 'r:gz') as archive:
         for item in archive:
@@ -393,12 +393,16 @@ def check_tar(path, website_sha=None):
                 raise FetchError('Website Git provenance or required files do not match.')
         elif 'console/index.html' not in seen:
             raise FetchError('Console archive is missing its production entry point.')
+        elif console_sha and archive.pax_headers.get('comment') != console_sha:
+            raise FetchError('Console source provenance does not match the release.')
 
 
 def verify_bundle(directory, hashes, run_id, attempt, expected_sha):
     manifest = json.loads((directory / 'release-manifest.json').read_text(encoding='utf-8'))
     if (manifest.get('format') != 1 or manifest.get('repository') != 'https://github.com/' + REPOSITORY
-            or manifest.get('toolsCommit') != expected_sha or manifest.get('runId') != str(run_id)
+            or manifest.get('workflowSha', manifest.get('toolsCommit')) != expected_sha
+            or not isinstance(manifest.get('toolsCommit'), str)
+            or not re.fullmatch('[a-f0-9]{40}', manifest['toolsCommit']) or manifest.get('runId') != str(run_id)
             or manifest.get('runAttempt') != str(attempt) or manifest.get('privateInitIncluded') is not False
             or manifest.get('state') != 'cloud-built-not-deployed'):
         raise FetchError('Release manifest does not match this code-only workflow run.')
@@ -420,7 +424,26 @@ def verify_bundle(directory, hashes, run_id, attempt, expected_sha):
     if (java.get('sourceCommit') != commits['backend'] or java.get('artifact', {}).get('sha256') != hashes['yudao-server.jar']['sha256']
             or java.get('artifact', {}).get('bytes') != hashes['yudao-server.jar']['bytes']):
         raise FetchError('Java release stamp does not match the downloaded JAR.')
-    check_tar(directory / 'console.tar.gz')
+    if 'workflowSha' in manifest:
+        branches = {'website': 'main', 'backend': 'platform/backend', 'adminUi': 'platform/admin-ui'}
+        refs, heads = manifest.get('sourceRefs', {}), manifest.get('branchHeads', {})
+        if (manifest.get('workflowEvent') not in ('push', 'workflow_dispatch')
+                or manifest.get('workflowRef') not in {'refs/heads/' + b for b in branches.values()}
+                or (manifest.get('workflowEvent') == 'workflow_dispatch' and manifest.get('workflowRef') != 'refs/heads/main')
+                or not isinstance(refs, dict) or not isinstance(heads, dict)
+                or set(refs) != set(branches) or set(heads) != set(branches)):
+            raise FetchError('Daily build source resolution is invalid.')
+        for key, branch in branches.items():
+            if (not isinstance(heads[key], str) or not re.fullmatch('[a-f0-9]{40}', heads[key])
+                    or not isinstance(refs[key], str)
+                    or (refs[key] != branch and not re.fullmatch('[a-f0-9]{40}', refs[key]))
+                    or commits[key] != (heads[key] if refs[key] == branch else refs[key])):
+                raise FetchError('Daily build resolved commits differ.')
+        if manifest['workflowEvent'] == 'push':
+            key = next(k for k, b in branches.items() if manifest['workflowRef'] == 'refs/heads/' + b)
+            if commits[key] != expected_sha or (key == 'website' and manifest['toolsCommit'] != expected_sha):
+                raise FetchError('Push source commit drifted.')
+    check_tar(directory / 'console.tar.gz', console_sha=commits['adminUi'] if 'workflowSha' in manifest else None)
     check_tar(directory / 'website.tar.gz', commits['website'])
     return commits
 
