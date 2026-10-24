@@ -35,6 +35,8 @@ server {
     location = /city-vote/ { try_files /city-vote/index.html =404; }
     location = /admin { try_files /admin/index.html =404; }
     location = /admin/ { try_files /admin/index.html =404; }
+    location = /legacy-admin { try_files /admin/index.html =404; }
+    location = /legacy-admin/ { try_files /admin/index.html =404; }
     location = /events { try_files /events/index.html =404; }
     location = /events/ { try_files /events/index.html =404; }
     location = /ticket { try_files /ticket/index.html =404; }
