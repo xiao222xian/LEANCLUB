@@ -156,6 +156,21 @@ class CampaignAPI:
         return data
 
     def get(self, handler, path):
+        if path == '/api/campaign/presentation':
+            # Public visual metadata only: never create or read a visitor/session.
+            group = self.store.groups.active()
+            ttl = 15
+            if group and group.get('expiresAt'):
+                ttl = max(0, min(ttl, int(group['expiresAt'] - self.store.clock())))
+            raw = json.dumps({'cities': self.store.cities(), 'group': group}, ensure_ascii=False).encode('utf-8')
+            handler.send_response(200)
+            handler.send_header('Content-Type', 'application/json; charset=utf-8')
+            handler.send_header('Content-Length', str(len(raw)))
+            handler.send_header('Cache-Control', f'public, max-age={ttl}, must-revalidate')
+            handler.send_header('X-Content-Type-Options', 'nosniff')
+            handler.end_headers()
+            handler.wfile.write(raw)
+            return
         if path == '/api/campaign/group-qr':
             self.store.limit(handler.ip(), 'group-qr-read', 120, 60)
             return handler.send_json(200, {'group': self.store.groups.active()})

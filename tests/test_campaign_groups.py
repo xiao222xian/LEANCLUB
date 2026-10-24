@@ -100,5 +100,24 @@ class GroupQRTests(unittest.TestCase):
         self.assertIn(('Cache-Control', 'public, max-age=7, must-revalidate'), self.request('GET', public['imageUrl'])[2])
         self.assertIn(('Cache-Control', 'no-store'), self.request('GET', '/api/admin/group-qrs/' + group_id + '/image')[2])
 
+    def test_visual_bootstrap_is_public_cookie_free_and_expiry_bounded(self):
+        status, public, headers = self.request('GET', '/api/campaign/presentation')
+        self.assertEqual(status, 200)
+        self.assertEqual(set(public), {'cities', 'group'})
+        self.assertFalse(any(key.lower() == 'set-cookie' for key, _ in headers))
+        self.assertIn(('Cache-Control', 'public, max-age=15, must-revalidate'), headers)
+        self.setup_admin()
+        now = int(self.store.clock()); self.store.clock = lambda: now
+        group_id = self.add(expiresAt=now + 6)
+        self.write(action='activate', id=group_id)
+        status, public, headers = self.request('GET', '/api/campaign/presentation')
+        self.assertEqual(public['group']['id'], group_id)
+        self.assertNotIn('label', public['group'])
+        self.assertFalse(any(key.lower() == 'set-cookie' for key, _ in headers))
+        self.assertIn(('Cache-Control', 'public, max-age=6, must-revalidate'), headers)
+        self.write(action='disable')
+        self.assertIsNone(self.request('GET', '/api/campaign/presentation')[1]['group'])
+        self.assertIn(('Cache-Control', 'no-store'), self.request('GET', '/api/campaign')[2])
+
 
 if __name__ == '__main__': unittest.main()

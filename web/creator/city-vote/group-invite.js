@@ -38,7 +38,7 @@
     const started = revision;
     const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 5000);
     try {
-      const response = await fetch('/api/campaign/group-qr', { credentials: 'same-origin', cache: 'no-store', signal: controller.signal });
+      const response = await fetch('/api/campaign/presentation', { credentials: 'omit', cache: 'default', priority: 'high', signal: controller.signal });
       if (!response.ok) throw new Error('unavailable');
       const group = (await response.json()).group;
       return started === revision ? accept(group) : lastGroup;

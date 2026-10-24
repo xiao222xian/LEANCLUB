@@ -44,6 +44,7 @@
   let feedbackSaved = false;
   let feedbackDraftStarted = false;
   let feedbackRequest = null;
+  let posterConfig = [], preloadTimer, posterRevision = 0;
 
   function announce(message) { status.textContent = message; }
   function notify(message, isError = false) {
@@ -145,6 +146,8 @@
   }
   function applyPosters(config) {
     if (!Array.isArray(config)) throw new Error('海报配置暂时无法读取，请重试。');
+    posterConfig = config;
+    const revision = ++posterRevision;
     for (const item of config) {
       if (!cities.includes(item.id)) continue;
       const panel = panels.find(p => p.dataset.city === item.id);
@@ -152,18 +155,37 @@
       const image = panel.querySelector('.city-photo');
       const full = safeImagePath(item.posterUrl);
       const small = safeImagePath(item.posterMobileUrl);
-      if (full) {
-        const sources = small ? `${small} 640w, ${full} 941w` : '';
+      if (full && (!mobile.matches || item.id === active)) {
+        // A high-DPR phone must not download three desktop posters off screen.
+        const sources = !mobile.matches && small ? `${small} 640w, ${full} 941w` : '';
+        const source = mobile.matches && small ? small : full;
         image.fetchPriority = item.id === active ? 'high' : 'low';
-        image.loading = item.id === active || !mobile.matches ? 'eager' : 'lazy';
+        image.loading = 'eager';
         if (image.getAttribute('srcset') !== sources) image.setAttribute('srcset', sources);
-        if (image.getAttribute('src') !== full) image.src = full;
+        if (image.getAttribute('src') !== source) image.src = source;
       }
       const x = Number(item.positionX), y = Number(item.positionY);
       if (Number.isFinite(x) && x >= 0 && x <= 100) panel.style.setProperty('--poster-x', `${x}%`);
       if (Number.isFinite(y) && y >= 0 && y <= 100) panel.style.setProperty('--poster-y', `${y}%`);
       if (!item.isDefault) image.alt = `${names[item.id]}线下活动海报`;
     }
+    clearTimeout(preloadTimer);
+    const selected = panels.find(p => p.dataset.city === active).querySelector('.city-photo');
+    // Only warm other cities after the visible poster and QR have finished.
+    Promise.allSettled([selected.decode(), window.LeanCampaignQRWarmup?.promise]).then(() => {
+      if (revision !== posterRevision || !mobile.matches || navigator.connection?.saveData || /(^|-)2g$/.test(navigator.connection?.effectiveType || '')) return;
+      preloadTimer = setTimeout(async () => {
+        for (const city of posterConfig) {
+          if (revision !== posterRevision || !mobile.matches) return;
+          if (city.id === active) continue;
+          const image = panels.find(p => p.dataset.city === city.id)?.querySelector('.city-photo');
+          const source = safeImagePath(city.posterMobileUrl);
+          if (!image || !source || image.getAttribute('src') === source) continue;
+          image.fetchPriority = 'low'; image.removeAttribute('srcset'); image.src = source;
+          try { await image.decode(); } catch { /* A switch or retry can load it later. */ }
+        }
+      }, 1800);
+    });
   }
 
   function recordPageView() {
@@ -221,6 +243,7 @@
     const previous = panels.find(panel => panel.dataset.city === active);
     const focusInside = previous.contains(document.activeElement);
     active = city;
+    if (posterConfig.length) applyPosters(posterConfig);
     const image = panels.find(p => p.dataset.city === city).querySelector('.city-photo');
     image.loading = 'eager'; image.fetchPriority = 'high';
     pending = null;
@@ -424,6 +447,7 @@
     gesture = null;
     const focus = document.activeElement;
     render();
+    if (posterConfig.length) applyPosters(posterConfig);
     if (mobile.matches && focus.closest('.city[inert]')) tabs.find(t => t.dataset.tab === active).focus({ preventScroll: true });
     else if (!mobile.matches && focus.closest('.city-switcher')) panels.find(p => p.dataset.city === active).querySelector('[data-vote]').focus({ preventScroll: true });
   });
@@ -479,5 +503,11 @@
   window.addEventListener('pageshow', event => { if (event.persisted) loadCampaign(); });
   render();
   requestAnimationFrame(() => stage.classList.add('is-ready'));
+  window.LeanCampaignPresentation?.then(data => {
+    // The personalized response always wins if it arrived first.
+    if (ready || !data) return;
+    applyPosters(data.cities);
+    window.dispatchEvent(new CustomEvent('lean:campaign-ready', { detail: { group: data.group } }));
+  }).catch(() => {});
   loadCampaign();
 })();

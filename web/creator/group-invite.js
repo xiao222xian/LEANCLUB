@@ -28,9 +28,15 @@
     item.promise = (async () => {
       const timer = setTimeout(() => item.controller.abort(), 15000);
       try {
-        const response = await fetch(url.href, { credentials: 'same-origin', cache: 'default', signal: item.controller.signal });
-        if (!response.ok) throw new Error('image unavailable');
-        const blob = await response.blob();
+        const warmup = window.LeanCampaignQRWarmup;
+        const warm = warmup?.url === url.href ? await warmup.promise : null;
+        let blob = warm && Date.now() - warm.loadedAt < 30000 ? warm.blob : null;
+        if (prepared !== item || item.controller.signal.aborted) throw new Error('image changed');
+        if (!blob) {
+          const response = await fetch(url.href, { credentials: 'same-origin', cache: 'default', priority: 'high', signal: item.controller.signal });
+          if (!response.ok) throw new Error('image unavailable');
+          blob = await response.blob();
+        }
         if (blob.type !== 'image/png' || prepared !== item) throw new Error('image unavailable');
         item.objectUrl = URL.createObjectURL(blob);
         const decoded = new Image(); decoded.src = item.objectUrl;

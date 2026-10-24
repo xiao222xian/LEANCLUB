@@ -15,6 +15,8 @@ from pathlib import Path
 import re
 import secrets
 import sqlite3
+import tempfile
+import threading
 import time
 import uuid
 import warnings
@@ -34,7 +36,8 @@ SESSION_AGE = 8 * 3600
 SHANGHAI = timezone(timedelta(hours=8))
 MAX_POSTER_BYTES = 8 * 1024 * 1024
 MAX_PIXELS = 24_000_000
-MEDIA_NAME = re.compile(r'[a-f0-9]{32}(?:-640)?\.webp')
+MEDIA_NAME = re.compile(r'[a-f0-9]{32}(?:-640(?:-v2)?)?\.webp')
+MOBILE_MEDIA_LOCK = threading.Lock()
 USERNAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9_.-]{2,39}')
 EMAIL_LOCAL = re.compile(r"[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*")
 EMAIL_LABEL = re.compile(r'[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?')
@@ -356,7 +359,7 @@ class CampaignStore:
             result.append({
                 'id': city, 'name': name,
                 'posterUrl': '/api/media/' + row['desktop'] if row and row['desktop'] else '/city-vote/assets/alan-v1/%s.webp' % city,
-                'posterMobileUrl': '/api/media/' + row['mobile'] if row and row['mobile'] else '/city-vote/assets/alan-v1/%s-640.webp' % city,
+                'posterMobileUrl': '/api/media/' + row['mobile'].replace('-640.webp', '-640-v2.webp') if row and row['mobile'] else '/city-vote/assets/alan-v1/%s-640.webp' % city,
                 'positionX': row['x'] if row else (65 if city == 'guangzhou' else 50),
                 'positionY': row['y'] if row else (0 if city == 'zhuhai' else 45),
                 'isDefault': not row or not row['desktop'], 'updatedAt': iso(row['updated']) if row else None,
@@ -446,6 +449,29 @@ class CampaignStore:
         if not MEDIA_NAME.fullmatch(name):
             raise Problem(404, '图片不存在。')
         target = self.media_dir / name
+        if name.endswith('-640-v2.webp') and not target.exists():
+            # Derive once from the immutable upload. Existing image URLs stay intact.
+            with MOBILE_MEDIA_LOCK:
+                if not target.exists():
+                    source = self.media_dir / name.replace('-640-v2.webp', '-640.webp')
+                    if not source.is_file() or source.is_symlink():
+                        raise Problem(404, '图片不存在。')
+                    with Image.open(source) as image:
+                        output = io.BytesIO()
+                        image.save(output, format='WEBP', quality=78, method=6)
+                    raw = output.getvalue()
+                    original = source.read_bytes()
+                    if len(raw) > len(original):
+                        raw = original
+                    temporary = None
+                    try:
+                        with tempfile.NamedTemporaryFile(dir=self.media_dir, suffix='.tmp', delete=False) as file:
+                            temporary = Path(file.name)
+                            file.write(raw)
+                        os.replace(temporary, target)
+                    finally:
+                        if temporary and temporary.exists():
+                            temporary.unlink()
         if not target.is_file() or target.is_symlink():
             raise Problem(404, '图片不存在。')
         return target.read_bytes()
