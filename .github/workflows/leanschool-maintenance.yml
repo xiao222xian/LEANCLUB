@@ -1,0 +1,26 @@
+name: Maintain LEAN SCHOOL release tools
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: leanschool-production-release
+  cancel-in-progress: false
+jobs:
+  maintain:
+    if: github.repository == 'papaoo/bojizhuye' && github.event.repository.private == true && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: production
+    steps:
+      - name: Checkout maintenance client at this workflow commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install the fixed reviewed release tools
+        env:
+          LEANSCHOOL_MAINTENANCE_SSH_PASSWORD: ${{ secrets.LEANSCHOOL_MAINTENANCE_SSH_PASSWORD }}
+          LEANSCHOOL_DEPLOY_KNOWN_HOSTS: ${{ secrets.LEANSCHOOL_DEPLOY_KNOWN_HOSTS }}
+        run: python3 deploy/ci/install-release-tools-via-ssh.py
