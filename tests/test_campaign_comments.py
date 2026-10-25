@@ -1,13 +1,16 @@
 """Public opt-in comments on disposable databases; no real messages or users."""
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+import json
 import sys
 import tempfile
 import unittest
 import uuid
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'backend'))
 from campaign import CampaignStore
+from campaign_feishu import DeliveryFailure
 from store import Problem
 import test_campaign as http_support
 
@@ -54,6 +57,7 @@ class CommentsStoreTests(unittest.TestCase):
             self.assertEqual(db.execute('SELECT COUNT(*) FROM campaign_feishu_outbox').fetchone()[0], 0)
 
     def test_idempotency_conflict_and_concurrent_replay(self):
+        self.store.notifications.save({'enabled': True, 'webhook': 'https://open.feishu.cn/open-apis/bot/v2/hook/synthetic-test-hook-0001'})
         body = data()
         with ThreadPoolExecutor(max_workers=6) as pool:
             results = list(pool.map(lambda _: self.submit(body), range(8)))
@@ -63,8 +67,50 @@ class CommentsStoreTests(unittest.TestCase):
             self.assert_problem(409, self.submit, body | {field: value})
         with self.store.connect() as db:
             self.assertEqual(db.execute("SELECT COUNT(*) FROM campaign_rate_events WHERE kind='comments-visitor'").fetchone()[0], 1)
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM campaign_feishu_outbox WHERE kind='comment'").fetchone()[0], 1)
         other = self.submit(body | {'content': '另一合成访客评论'}, self.store.visitor(None)[0])
         self.assertNotEqual(other['item']['id'], results[0]['item']['id'])
+
+    def test_comment_notification_survives_restart_and_sends_plain_text(self):
+        self.store.notifications.save({'enabled': True, 'webhook': 'https://open.feishu.cn/open-apis/bot/v2/hook/synthetic-test-hook-0001'})
+        body = data(content='<at id=all>合成测试</at> **不执行标记**', nickname='合成<昵称>')
+        self.submit(body)
+        self.submit(body)
+        reopened = CampaignStore(self.path, clock=lambda: self.now)
+        captured = []
+        self.assertTrue(reopened.notifications.deliver_one(lambda url, payload: captured.append(payload)))
+        card = captured[0]['card']
+        self.assertEqual(card['header']['subtitle']['content'], '收到一条公开留言')
+        elements = card['body']['elements']
+        self.assertEqual(elements[0]['text']['content'], body['nickname'] + ' · 深圳')
+        self.assertEqual(elements[1]['text'], {'tag': 'plain_text', 'content': body['content'], 'text_size': 'normal'})
+        with reopened.connect() as db:
+            events = db.execute('SELECT kind,status,attempts,snapshot FROM campaign_feishu_outbox').fetchall()
+        self.assertEqual(len(events), 1)
+        self.assertEqual(tuple(events[0])[:3], ('comment', 'sent', 1))
+        self.assertEqual(set(json.loads(events[0]['snapshot'])), {'content', 'nickname'})
+
+    def test_notification_retry_preserves_comment_and_pause_does_not_backfill(self):
+        settings = {'enabled': False, 'webhook': 'https://open.feishu.cn/open-apis/bot/v2/hook/synthetic-test-hook-0001'}
+        self.store.notifications.save(settings)
+        self.submit()
+        self.store.notifications.save(settings | {'enabled': True})
+        self.assertIsNone(self.store.notifications.settings()['lastDelivery'])
+        self.submit(data(content='合成网络失败测试'))
+        def reject(url, payload):
+            raise DeliveryFailure('合成暂时失败')
+        self.store.notifications.deliver_one(reject)
+        self.assertEqual(self.store.comments.public_list()['total'], 2)
+        self.assertEqual(self.store.notifications.settings()['lastDelivery']['status'], 'retrying')
+        self.now += 6
+        self.store.notifications.deliver_one(lambda url, payload: None)
+        self.assertEqual(self.store.notifications.settings()['lastDelivery']['status'], 'sent')
+
+    def test_comment_and_notification_are_atomic(self):
+        with patch.object(self.store.notifications, 'enqueue', side_effect=RuntimeError('synthetic queue failure')):
+            with self.assertRaises(RuntimeError):
+                self.submit()
+        self.assertEqual(self.store.comments.public_list()['total'], 0)
 
     def test_opt_in_and_text_validation(self):
         invalid = [{'publishConsent': False}, {'publishConsent': 1}, {'publishConsent': None},

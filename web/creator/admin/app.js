@@ -774,7 +774,7 @@
     const labels = { pending: '等待发送', sending: '正在发送', retrying: '等待自动重试', sent: '已发送', failed: '发送失败', cancelled: '已取消' };
     $('#feishu-delivery-state').textContent = delivery ? labels[delivery.status] || '等待更新' : '暂无记录';
     $('#feishu-delivery-state').dataset.status = delivery?.status || '';
-    const type = ({ test: '测试消息', summary: '当前票数汇总', change: '历史改投通知', new: '新增投票通知', feedback: '新增意见通知' })[delivery?.kind] || '活动通知';
+    const type = ({ test: '测试消息', summary: '当前票数汇总', change: '历史改投通知', new: '新增投票通知', feedback: '私密留言通知', comment: '公开留言通知' })[delivery?.kind] || '活动通知';
     const time = formatDate(delivery?.sentAt || delivery?.createdAt);
     $('#feishu-delivery-detail').textContent = delivery ? `${type}${time ? ` · ${time}` : ''}${delivery.error ? ` · ${delivery.error}` : ''}` : '保存配置后，可发送测试消息确认连接。';
     const pending = count(settings.pendingCount), failed = count(settings.failedCount);

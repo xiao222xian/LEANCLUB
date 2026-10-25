@@ -102,6 +102,8 @@ class CampaignComments:
             comment_id = uuid.uuid4().hex
             db.execute('''INSERT INTO campaign_comments(id,visitor,request_id,content,nickname,city,publish_consent,created)
                 VALUES(?,?,?,?,?,?,1,?)''', (comment_id, visitor, request_id, content, nickname, city, now))
+            self.store.notifications.enqueue(db, 'comment', city, None, now,
+                                             snapshot={'content': content, 'nickname': nickname})
             for key, kind in ((visitor, 'comments-visitor'), (ip_key, 'comments-ip')):
                 db.execute('INSERT INTO campaign_rate_events VALUES(?,?,?)', (key, kind, now))
             row = db.execute('SELECT * FROM campaign_comments WHERE id=?', (comment_id,)).fetchone()

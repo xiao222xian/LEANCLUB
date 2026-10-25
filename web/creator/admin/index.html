@@ -12,7 +12,7 @@
   <script defer src="/group-invite.js?v=20261025-mobile3"></script>
   <script defer src="/admin/groups.js?v=20261024-group1"></script>
   <link rel="stylesheet" href="/admin/style.css?v=20261023-events">
-  <link rel="stylesheet" href="/admin/schools.css?v=20261024-directory"><script defer src="/admin/schools.js?v=20261024-directory"></script><script src="/admin/app.js?v=20261024-group1" defer></script>
+  <link rel="stylesheet" href="/admin/schools.css?v=20261024-directory"><script defer src="/admin/schools.js?v=20261024-directory"></script><script src="/admin/app.js?v=20261025-comment-notify" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳至主要内容</a>
@@ -163,7 +163,7 @@
         <div id="feishu-content" class="notification-grid" hidden>
           <form id="feishu-form" class="panel notification-settings" autocomplete="off">
             <div class="panel-heading"><h2>飞书群机器人</h2><span id="feishu-connection" class="connection-badge">未连接</span></div>
-            <label class="notification-toggle" for="feishu-enabled"><span>新增投票与意见<small>新票附城市票数，新意见附提交内容</small></span><input id="feishu-enabled" type="checkbox" role="switch"><span class="switch-track" aria-hidden="true"></span></label>
+            <label class="notification-toggle" for="feishu-enabled"><span>投票与留言通知<small>新增投票、公开留言、私密留言</small></span><input id="feishu-enabled" type="checkbox" role="switch"><span class="switch-track" aria-hidden="true"></span></label>
             <div class="field"><label for="feishu-webhook">Webhook 地址</label><input id="feishu-webhook" type="password" autocomplete="new-password" spellcheck="false" autocapitalize="none" maxlength="512" placeholder="粘贴飞书机器人的 Webhook" aria-describedby="feishu-webhook-hint"><span id="feishu-webhook-hint" class="field-hint">飞书群设置 / 群机器人 / 添加自定义机器人</span></div>
             <div class="field"><label for="feishu-secret">签名密钥 <span class="optional-label">可选</span></label><input id="feishu-secret" type="password" autocomplete="new-password" spellcheck="false" maxlength="512" placeholder="机器人开启签名校验时填写" aria-describedby="feishu-secret-hint"><span id="feishu-secret-hint" class="field-hint">未开启签名校验可留空</span><label id="feishu-clear-secret-wrap" class="check-label" for="feishu-clear-secret" hidden><input id="feishu-clear-secret" type="checkbox">移除已保存的签名密钥</label></div>
             <div class="notification-actions"><button id="feishu-save" type="submit" class="button button-primary">保存设置</button><button id="feishu-test" type="button" class="button button-secondary" disabled>发送测试消息</button></div>
