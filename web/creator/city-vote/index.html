@@ -9,12 +9,12 @@
   <meta name="robots" content="noindex,nofollow">
   <title>第一站，你来定。— LEAN SCHOOL</title>
   <link rel="icon" type="image/svg+xml" href="/assets/brand/leanschool-icon-v1.svg?v=20261025-size2">
-  <link rel="stylesheet" href="/city-vote/style.css?v=20261023-events-v1">
+  <link rel="stylesheet" href="/city-vote/style.css?v=20261025-nav2">
   <link rel="stylesheet" href="/group-invite.css?v=20261025-mobile3">
   <script src="/group-invite.js?v=20261025-mobile3" defer></script>
-  <script src="/city-vote/group-invite.js?v=20261025-mobile3" defer></script>
-  <script src="/city-vote/app.js?v=20261025-mobile3" defer></script>
-  <script src="/city-vote/comments.js?v=20261024-comments-v3" defer></script>
+  <script src="/city-vote/group-invite.js?v=20261025-nav2" defer></script>
+  <script src="/city-vote/app.js?v=20261025-nav1" defer></script>
+  <script src="/city-vote/comments.js?v=20261025-nav1" defer></script>
 <link rel="stylesheet" href="/site-filing.css?v=20261023-icp1">
   <link rel="stylesheet" href="/city-vote/comments.css?v=20261024-comments-v2">
   <link rel="canonical" href="https://www.leanschool.net/city-vote">
@@ -30,15 +30,15 @@
 <script defer src="/site-filing.js?v=20261024-host"></script></head>
 <body data-site-filing="vote">
   <div class="vote-hero" id="vote-hero">
-  <header class="masthead">
-    <h1>第一站，你来定。</h1>
-    <a class="wordmark lean-brand lean-brand--vote" href="/" aria-label="薄肌学院首页"><img src="/assets/brand/leanschool-horizontal-v1.svg?v=20261025-size2" alt="LeanSchool" width="1280" height="220" decoding="async"></a>
-    <nav class="top-nav" aria-label="页面导航">
-      <button class="idea-entry" type="button" id="open-feedback" aria-haspopup="dialog" aria-controls="feedback-dialog"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 4.5h14v11H12l-5 4v-4H5z"/><path d="M9 9.5h6M9 12h3"/></svg><span>有个想法</span></button>
-      <a class="event-entry" href="/events">线下见</a>
-      <button class="text-link" type="button" id="open-info">关于这次见面</button>
-      <a class="home-link" href="/">主站</a>
-    </nav>
+  <header class="vote-header">
+    <a class="vote-home vote-header-button" href="/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 5-7 7 7 7M5 12h15"/></svg><span>返回首页</span></a>
+    <a class="vote-logo" href="/" aria-label="薄肌学院首页"><img src="/assets/brand/leanschool-horizontal-v1.svg?v=20261025-size2" alt="LeanSchool" width="1280" height="220" decoding="async"></a>
+    <button class="vote-private vote-header-button" type="button" id="open-feedback" aria-haspopup="dialog" aria-controls="feedback-dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></svg><span>私密留言</span></button>
+    <div class="vote-tools">
+      <button type="button" id="open-info" aria-haspopup="dialog" aria-controls="info-dialog">活动说明 <span aria-hidden="true">↗</span></button>
+      <h1>第一站，你来定。</h1>
+      <button id="danmaku-toggle" type="button" aria-pressed="true" aria-label="关闭弹幕">弹幕 <span aria-hidden="true">开</span></button>
+    </div>
   </header>
 
   <div class="stage" id="stage" role="region" aria-label="选择首次线下活动的城市">
@@ -81,10 +81,9 @@
   </div>
 
   <div class="danmaku-band" id="danmaku-band" aria-hidden="true"></div>
-  <div class="conversation-entry">
-    <button class="group-invite-entry" id="open-group-invite" type="button" aria-haspopup="dialog" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h6v6H3zm12 0h6v6h-6zM3 15h6v6H3zm12 0h3v3h-3zm3 3h3v3h-3zM12 3v3m0 6h3m-3 3v6m6-9h3"/></svg><span class="group-entry-label">加入活动微信群</span><span class="group-entry-arrow" aria-hidden="true">↗</span></button>
-    <a href="#conversation">一起聊聊 <span aria-hidden="true">↘</span></a>
-    <button id="danmaku-toggle" type="button" aria-pressed="true" aria-label="关闭弹幕">弹幕 <span aria-hidden="true">开</span></button>
+  <div class="vote-actions">
+    <button class="group-invite-entry" id="open-group-invite" type="button" aria-label="加入活动微信群" aria-haspopup="dialog" hidden><span class="group-entry-label">加入微信群</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h6v6H3zm12 0h6v6h-6zM3 15h6v6H3zm12 0h3v3h-3zm3 3h3v3h-3zM12 3v3m0 6h3m-3 3v6m6-9h3"/></svg></button>
+    <a class="conversation-jump" id="conversation-jump" href="#conversation"><span>公开留言</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v17m-7-7 7 7 7-7"/></svg></a>
   </div>
 
   <nav class="city-switcher" aria-label="浏览候选城市">
@@ -97,9 +96,9 @@
   <p class="page-note" id="page-note">首次线下 · 城市征集</p>
   </div>
 
-  <main class="conversation" id="conversation" aria-labelledby="conversation-title">
+  <main class="conversation" id="conversation" aria-labelledby="conversation-title" tabindex="-1">
     <div class="conversation-heading">
-      <div class="conversation-title"><h2 id="conversation-title">留言</h2><span id="comment-total"></span></div>
+      <div class="conversation-title"><h2 id="conversation-title">公开留言</h2><span id="comment-total"></span></div>
       <button id="comment-refresh" type="button" aria-label="刷新公开留言">刷新 <span aria-hidden="true">↻</span></button>
     </div>
     <div class="conversation-grid">
@@ -127,7 +126,7 @@
             <button id="comment-submit" class="comment-submit" type="submit"><span>发布</span><span aria-hidden="true">↗</span></button>
           </div>
           <p id="comment-form-message" class="comment-form-message" role="status" aria-live="polite" hidden></p>
-          <p class="comment-privacy"><span>请勿留下联系方式。</span><button id="comment-private" type="button">私密意见 ↗</button></p>
+          <p class="comment-privacy"><span>请勿留下联系方式。</span><button id="comment-private" type="button">私密留言 ↗</button></p>
         </form>
       </section>
       <section class="comment-wall" aria-labelledby="comment-wall-title">
@@ -162,11 +161,11 @@
 
   <dialog class="feedback-dialog" id="feedback-dialog" aria-labelledby="feedback-title">
     <div class="feedback-art" aria-hidden="true"><img id="feedback-photo" alt=""></div>
-    <button class="feedback-close" id="close-feedback" type="button" aria-label="关闭意见箱"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+    <button class="feedback-close" id="close-feedback" type="button" aria-label="关闭私密留言"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
     <div class="feedback-shell">
-      <div class="feedback-brand"><img src="/city-vote/assets/lean-emblem.svg?v=20261023-leanschool" alt="" width="36" height="24"><span>LEAN SCHOOL <i>/</i> 意见箱 · 仅团队查看</span></div>
+      <div class="feedback-brand"><img src="/city-vote/assets/lean-emblem.svg?v=20261023-leanschool" alt="" width="36" height="24"><span>LEAN SCHOOL <i>/</i> 仅团队可见</span></div>
       <div id="feedback-compose">
-        <h2 id="feedback-title" tabindex="-1">下一次见面，<br><em>听你的。</em></h2>
+        <h2 id="feedback-title" tabindex="-1">私密留言</h2>
         <form id="feedback-form" novalidate>
           <fieldset class="feedback-categories" id="feedback-categories">
             <legend class="sr-only">想聊些什么</legend>
@@ -175,8 +174,8 @@
             <label><input type="radio" name="category" value="other" checked><span>其他想法</span></label>
           </fieldset>
           <div class="feedback-writing">
-            <label class="sr-only" for="feedback-content">你的建议或想法，5 到 1000 字</label>
-            <textarea id="feedback-content" name="content" rows="4" minlength="5" maxlength="1000" placeholder="想怎么玩、练什么，或任何一个新点子…" aria-describedby="feedback-count feedback-error" required></textarea>
+            <label class="sr-only" for="feedback-content">留言内容，5 到 1000 字</label>
+            <textarea id="feedback-content" name="content" rows="4" minlength="5" maxlength="1000" placeholder="想告诉我们什么？" aria-describedby="feedback-count feedback-error" required></textarea>
             <span class="feedback-count" id="feedback-count">0 / 1000</span>
           </div>
           <fieldset class="feedback-cities" id="feedback-cities">
@@ -187,16 +186,14 @@
             <label><input type="radio" name="city" value="guangzhou"><span>广州</span></label>
           </fieldset>
           <p class="feedback-error" id="feedback-error" role="alert" hidden></p>
-          <button class="feedback-submit" id="feedback-submit" type="submit"><span>送出想法</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
-          <p class="feedback-privacy">匿名提交，仅团队查看并同步至运营群。</p>
+          <button class="feedback-submit" id="feedback-submit" type="submit"><span>发送留言</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-7-7 7 7-7 7"/></svg></button>
+          <p class="feedback-privacy">仅团队可见，不会出现在公开留言或弹幕。</p>
         </form>
       </div>
       <div class="feedback-success" id="feedback-success" hidden>
         <div class="idea-received" aria-hidden="true"><svg viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="46"/><circle cx="50" cy="50" r="36"/><path d="m34 50 11 11 22-23"/></svg></div>
-        <p class="feedback-success-kicker">IDEA RECEIVED</p>
-        <h2 id="feedback-success-title" tabindex="-1">你的想法，<br>收到了。</h2>
-        <p>一起把下一次见面变得更好。</p>
-        <button class="feedback-submit" id="feedback-done" type="button">回到现场</button>
+        <h2 id="feedback-success-title" tabindex="-1">留言已收到</h2>
+        <button class="feedback-submit" id="feedback-done" type="button">返回投票</button>
       </div>
     </div>
   </dialog>
@@ -207,6 +204,7 @@
     <h2 id="info-title">一起练。<br>一起见。</h2>
     <p>第一站，由你来定。<br>时间与场地，确定后公布。</p>
     <p class="info-footnote">我们用必要的 Cookie 记住选择并统计访问。<br>海报为薄肌主题概念影像。</p>
+    <a class="info-events" href="/events">查看线下活动 <span aria-hidden="true">↗</span></a>
     <button class="close-button" type="button" id="close-info">回到现场</button>
   </dialog>
 

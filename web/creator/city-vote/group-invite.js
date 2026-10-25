@@ -2,6 +2,7 @@
   'use strict';
   const entry = document.querySelector('#open-group-invite');
   const label = entry.querySelector('.group-entry-label');
+  const entryLabel = label.textContent;
   const memory = new Set();
   let busy = false, expiryTimer, pending, activeImage, lastGroup, checkedAt = 0, revision = 0;
   const key = g => 'lean-group-seen:' + g.id + ':' + g.imageVersion;
@@ -60,7 +61,7 @@
       });
       if (opened) { mark(selected); track(selected, 'view'); }
     } catch { label.textContent = '点此重试'; }
-    finally { busy = false; entry.disabled = false; entry.removeAttribute('aria-busy'); label.textContent = '加入活动微信群'; }
+    finally { busy = false; entry.disabled = false; entry.removeAttribute('aria-busy'); label.textContent = entryLabel; }
   }
   entry.addEventListener('click', () => open());
   for (const event of ['pointerenter', 'focus']) entry.addEventListener(event, () => { if (Date.now() - checkedAt >= 20000) current().catch(() => {}); });

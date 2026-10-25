@@ -181,7 +181,7 @@
       nickname.setAttribute('aria-invalid', 'true'); nickname.focus(); return;
     }
     if (!payload.publishConsent) {
-      setFormMessage('请先同意公开展示，或选择「私密意见」。', true);
+      setFormMessage('请先同意公开展示，或选择「私密留言」。', true);
       consent.focus(); return;
     }
     const fingerprint = JSON.stringify(payload);

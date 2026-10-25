@@ -349,7 +349,7 @@
     const length = [...payload.content].length;
     const nonWhitespaceLength = [...payload.content.replace(/\s/g, '')].length;
     if (nonWhitespaceLength < 5 || length > 1000) {
-      feedbackError.textContent = nonWhitespaceLength < 5 ? '再多聊一点吧，至少写 5 个字。' : '想法很丰富，先精简到 1000 字以内吧。';
+      feedbackError.textContent = nonWhitespaceLength < 5 ? '请至少填写 5 个字。' : '留言请控制在 1000 字以内。';
       feedbackError.hidden = false;
       feedbackContent.setAttribute('aria-invalid', 'true');
       feedbackContent.focus();
@@ -394,13 +394,13 @@
     } catch (error) {
       feedbackError.textContent = error.message;
       feedbackError.hidden = false;
-      if (!feedbackDialog.open) notify('想法暂未确认送达，内容已保留在意见箱。', true);
+      if (!feedbackDialog.open) notify('留言暂未确认送达，内容已保留。', true);
     } finally {
       feedbackSending = false;
       feedbackForm.setAttribute('aria-busy', 'false');
       for (const control of feedbackForm.querySelectorAll('input,textarea,button')) control.disabled = false;
       feedbackSubmit.classList.remove('is-busy');
-      feedbackSubmit.querySelector('span').textContent = feedbackError.hidden ? '送出想法' : '重新送出';
+      feedbackSubmit.querySelector('span').textContent = feedbackError.hidden ? '发送留言' : '重新送出';
     }
   }
 
@@ -466,7 +466,7 @@
     updateFeedbackCount();
     feedbackContent.removeAttribute('aria-invalid');
     feedbackError.hidden = true;
-    feedbackSubmit.querySelector('span').textContent = '送出想法';
+    feedbackSubmit.querySelector('span').textContent = '发送留言';
   });
   document.querySelector('#close-feedback').addEventListener('click', () => feedbackDialog.close());
   document.querySelector('#feedback-done').addEventListener('click', () => feedbackDialog.close());
