@@ -124,6 +124,7 @@
   function clearProtectedContent() {
     window.LeanSchoolAdmin?.reset();
     window.LeanGroupAdmin?.reset();
+    window.LeanCommentAdmin?.reset();
     resetEvents();
     for (const record of state.posters.values()) releaseDraft(record);
     state.posters.clear();
@@ -263,7 +264,7 @@
     message($('#auth-error'), '');
     $('#auth-view').hidden = true;
     $('#admin-view').hidden = false;
-    selectPanel(['schools', 'groups'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'overview', false);
+    selectPanel(['schools', 'groups', 'comments'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'overview', false);
     loadStats();
     window.clearInterval(state.feedbackTimer);
     state.feedbackTimer = window.setInterval(refreshFeedbackBadge, 30000);
@@ -357,7 +358,7 @@
       if (active && focus) tab.focus();
     }
     for (const panel of $$('[role="tabpanel"]')) panel.hidden = panel.id !== `panel-${name}`;
-    document.title = `${({ groups: '活动群', schools: '资料管理', posters: '城市海报', overview: '数据概览', feedback: '意见箱', events: '活动报名', feishu: '飞书通知' })[name]} · LEAN SCHOOL`;
+    document.title = `${({ comments: '公开留言', groups: '活动群', schools: '资料管理', posters: '城市海报', overview: '数据概览', feedback: '意见箱', events: '活动报名', feishu: '飞书通知' })[name]} · LEAN SCHOOL`;
     if (name === 'posters' && !state.postersLoaded && !state.postersLoading) loadPosters();
     if (name === 'overview') refreshVisibleStats();
     if (name === 'feedback' && !state.feedback && !state.feedbackLoading) loadFeedback();
@@ -367,6 +368,7 @@
     if (name === 'events') loadEvents();
     if (name === 'schools') window.LeanSchoolAdmin?.load();
     if (name === 'groups') window.LeanGroupAdmin?.load();
+    if (name === 'comments') window.LeanCommentAdmin?.load();
   }
   for (const tab of $$('[role="tab"]')) {
     tab.addEventListener('click', () => selectPanel(tab.dataset.panel));
@@ -1136,7 +1138,7 @@
   }
   $('#refresh-posters').addEventListener('click', loadPosters);
   window.addEventListener('beforeunload', event => {
-    if (!eventState.dirty && !eventState.busy && !state.feishuDirty && !state.feishuBusy && ![...state.posters.values()].some(record => record.file || focusChanged(record) || record.busy)) return;
+    if (!window.LeanCommentAdmin?.dirty() && !eventState.dirty && !eventState.busy && !state.feishuDirty && !state.feishuBusy && ![...state.posters.values()].some(record => record.file || focusChanged(record) || record.busy)) return;
     event.preventDefault();
     event.returnValue = '';
   });
@@ -1293,5 +1295,6 @@
 
   window.LeanSchoolAdmin?.init(api);
   window.LeanGroupAdmin?.init(api);
+  window.LeanCommentAdmin?.init(api);
   loadSession();
 })();

@@ -49,7 +49,9 @@ class CommentsStoreTests(unittest.TestCase):
         self.assertEqual(self.store.comments.public_list()['items'], [])
         receipt = self.submit()
         item = self.store.comments.public_list()['items'][0]
-        self.assertEqual(set(item), {'id', 'content', 'nickname', 'city', 'createdAt'})
+        self.assertEqual(set(item), {'id', 'content', 'nickname', 'city', 'createdAt', 'reply',
+                                    'rootId', 'parentId', 'replyToName', 'replyToOfficial',
+                                    'replies', 'replyCount', 'repliesNextCursor'})
         self.assertEqual(item['id'], receipt['item']['id'])
         self.assertEqual(self.store.feedback.list()['total'], 1)
         with self.store.connect() as db:
@@ -201,7 +203,8 @@ class CommentsStoreTests(unittest.TestCase):
         first, second = self.store.comments.list(), self.store.comments.list(page=2)
         self.assertEqual((first['total'], first['pageSize'], first['totalPages']), (25, 20, 2))
         self.assertEqual(len(second['items']), 5)
-        self.assertEqual(set(first['items'][0]), {'id', 'content', 'nickname', 'city', 'createdAt', 'status'})
+        self.assertEqual(set(first['items'][0]), {'id', 'content', 'nickname', 'city', 'createdAt', 'status', 'reply', 'replyRevision',
+                                                'rootId', 'parentId', 'replyToName', 'replyToOfficial', 'parentContent'})
         selected = first['items'][0]['id']
         self.store.comments.set_status(selected, 'hidden')
         self.assertEqual(self.store.comments.list('hidden')['total'], 1)
@@ -213,6 +216,221 @@ class CommentsStoreTests(unittest.TestCase):
         for item_id, status in [('bad', 'visible'), (selected, 'all'), (selected, None)]:
             self.assert_problem(400, self.store.comments.set_status, item_id, status)
         self.assert_problem(404, self.store.comments.set_status, '0' * 32, 'hidden')
+
+    def test_reply_create_edit_withdraw_persist_and_never_becomes_a_comment(self):
+        original = self.submit()['item']
+        saved = self.store.comments.set_reply(original['id'], {'content': '周末见！\n<svg onload=alert(1)>', 'revision': 0})['item']
+        self.assertEqual(saved['replyRevision'], 1)
+        self.assertEqual(saved['reply']['content'], '周末见！\n<svg onload=alert(1)>')
+        self.assertEqual(CampaignStore(self.path).comments.public_list()['items'][0]['reply'], saved['reply'])
+        self.now += 60
+        updated = self.store.comments.set_reply(original['id'], {'content': '时间确定后会在这里回复。', 'revision': 1})['item']
+        self.assertEqual(updated['replyRevision'], 2)
+        self.assertNotEqual(saved['reply']['updatedAt'], updated['reply']['updatedAt'])
+        public = self.store.comments.public_list()
+        self.assertEqual(public['total'], 1)
+        self.assertEqual(public['items'][0]['createdAt'], original['createdAt'])
+        self.assertNotIn('replyRevision', public['items'][0])
+        self.assertEqual(self.store.comments.list(reply='unreplied')['total'], 0)
+        self.assertEqual(self.store.comments.list(reply='replied')['total'], 1)
+        withdrawn = self.store.comments.set_reply(original['id'], {'content': None, 'revision': 2})['item']
+        self.assertIsNone(withdrawn['reply'])
+        self.assertEqual(withdrawn['replyRevision'], 3)
+        self.assertIsNone(CampaignStore(self.path).comments.public_list()['items'][0]['reply'])
+        self.assertEqual(self.store.comments.list(reply='unreplied')['total'], 1)
+        with self.store.connect() as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM campaign_feishu_outbox').fetchone()[0], 0)
+
+    def test_hidden_comment_reply_is_admin_only_until_restored(self):
+        item = self.submit()['item']
+        self.store.comments.set_reply(item['id'], {'content': '合成主办方回复', 'revision': 0})
+        self.store.comments.set_status(item['id'], 'hidden')
+        self.assertEqual(self.store.comments.public_list()['items'], [])
+        self.assertIsNotNone(self.store.comments.list('hidden')['items'][0]['reply'])
+        self.store.comments.set_status(item['id'], 'visible')
+        self.assertEqual(self.store.comments.public_list()['items'][0]['reply']['content'], '合成主办方回复')
+
+    def test_reply_retries_and_concurrent_edit_cannot_overwrite(self):
+        item = self.submit()['item']
+        body = {'content': '合成回复甲', 'revision': 0}
+        saved = self.store.comments.set_reply(item['id'], body)
+        self.assertEqual(self.store.comments.set_reply(item['id'], body), saved)
+        self.assert_problem(409, self.store.comments.set_reply, item['id'], {'content': '合成旧版本修改', 'revision': 0})
+        def edit(content):
+            try:
+                self.store.comments.set_reply(item['id'], {'content': content, 'revision': 1})
+                return 200
+            except Problem as error:
+                return error.status
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            self.assertEqual(sorted(pool.map(edit, ['合成回复乙', '合成回复丙'])), [200, 409])
+        self.assert_problem(409, self.store.comments.set_reply, item['id'], {'content': None, 'revision': 1})
+        self.assertEqual(self.store.comments.list()['items'][0]['replyRevision'], 2)
+
+    def test_reply_validation_and_existing_database_migration(self):
+        item = self.submit()['item']
+        for body in ({}, {'content': '合成', 'revision': True}, {'content': '合成', 'revision': -1},
+                     {'content': '合成', 'revision': 0, 'extra': 1}, {'content': '', 'revision': 0},
+                     {'content': ' \n ', 'revision': 0}, {'content': 12, 'revision': 0},
+                     {'content': '字' * 501, 'revision': 0}, {'content': 'a\x00b', 'revision': 0}):
+            self.assert_problem(400, self.store.comments.set_reply, item['id'], body)
+        self.assert_problem(400, self.store.comments.set_reply, 'bad', {'content': '合成', 'revision': 0})
+        self.assert_problem(404, self.store.comments.set_reply, '0' * 32, {'content': '合成', 'revision': 0})
+        self.assert_problem(400, self.store.comments.list, 'all', 1, 'bad')
+        # Recreate the legacy table shape, preserving a pre-existing public comment.
+        with self.store.connect() as db:
+            for column in ('reply_content', 'reply_updated', 'reply_revision'):
+                db.execute('ALTER TABLE campaign_comments DROP COLUMN ' + column)
+        reopened = CampaignStore(self.path)
+        migrated = reopened.comments.list()['items'][0]
+        self.assertEqual(migrated['id'], item['id'])
+        self.assertIsNone(migrated['reply'])
+        self.assertEqual(migrated['replyRevision'], 0)
+        reopened.comments.set_reply(item['id'], {'content': '迁移后回复', 'revision': 0})
+        self.assertEqual(reopened.comments.public_list()['total'], 1)
+
+    def test_real_replies_stay_in_thread_and_admin_has_context(self):
+        root = self.submit(data(nickname='合成发起人'))['item']
+        child = self.submit(data(parentId=root['id'], nickname='合成参与人'))['item']
+        grandchild = self.submit(data(parentId=child['id'], content='合成继续讨论'))['item']
+        self.assertEqual((root['rootId'], root['parentId'], root['replyToName']), (root['id'], None, None))
+        self.assertEqual((child['rootId'], child['parentId'], child['replyToName']), (root['id'], root['id'], '合成发起人'))
+        self.assertEqual((grandchild['rootId'], grandchild['parentId'], grandchild['replyToName']), (root['id'], child['id'], '合成参与人'))
+        admin = {item['id']: item for item in self.store.comments.list()['items']}
+        self.assertEqual(admin[grandchild['id']]['parentContent'], child['content'])
+        self.assertNotIn('parentContent', grandchild)
+        self.assertNotIn('replyRevision', grandchild)
+        public = self.store.comments.public_list()
+        self.assertEqual(public['total'], 1)
+        self.assertEqual(public['items'][0]['replyCount'], 2)
+        self.assertEqual({item['id'] for item in public['items'][0]['replies']}, {child['id'], grandchild['id']})
+        self.assertNotIn('parentContent', public['items'][0]['replies'][0])
+        self.assertEqual(self.store.comments.list()['total'], 3)
+        self.assertEqual(CampaignStore(self.path).comments.public_replies(root['id'])['total'], 2)
+
+    def test_replying_to_official_reply_and_withdrawn_target(self):
+        root = self.submit()['item']
+        official = {'content': '合成主办方回复', 'revision': 0}
+        self.assert_problem(409, self.submit, data(parentId=root['id'], replyToOfficial=True))
+        self.store.comments.set_reply(root['id'], official)
+        child = self.submit(data(parentId=root['id'], replyToOfficial=True))['item']
+        self.assertEqual((child['replyToName'], child['replyToOfficial']), ('薄肌学院', True))
+        admin = {item['id']: item for item in self.store.comments.list()['items']}
+        self.assertEqual(admin[child['id']]['parentContent'], official['content'])
+        self.store.comments.set_reply(child['id'], {'content': '合成楼内主办方回复', 'revision': 0})
+        grandchild = self.submit(data(parentId=child['id'], replyToOfficial=True))['item']
+        self.assertEqual((grandchild['rootId'], grandchild['replyToName']), (root['id'], '薄肌学院'))
+        self.store.comments.set_reply(root['id'], {'content': None, 'revision': 1})
+        self.assert_problem(409, self.submit, data(parentId=root['id'], replyToOfficial=True))
+        self.assertEqual(self.store.comments.public_replies(root['id'])['total'], 2)
+
+    def test_reply_target_validation_and_no_official_impersonation(self):
+        root = self.submit()['item']
+        invalid = [{'parentId': ''}, {'parentId': 123}, {'parentId': []}, {'parentId': 'missing'},
+                   {'replyToOfficial': True}, {'replyToOfficial': 1}, {'replyToOfficial': None},
+                   {'parentId': root['id'], 'rootId': '0' * 32}, {'author': 'official'}, {'official': True}]
+        for body in invalid:
+            self.assert_problem(400, self.submit, data(**body))
+        for nickname in ('薄肌学院', 'LEAN SCHOOL', 'leanSchool', 'ＬＥＡＮ　ＳＣＨＯＯＬ', '薄肌\u200d学院'):
+            self.assert_problem(400, self.submit, data(nickname=nickname))
+        self.assert_problem(404, self.submit, data(parentId='0' * 32))
+        self.assertEqual(self.store.comments.list()['total'], 1)
+
+    def test_hidden_root_blocks_whole_thread_and_hidden_target_is_anonymous(self):
+        root = self.submit(data(nickname='合成根昵称'))['item']
+        child = self.submit(data(parentId=root['id'], nickname='隐藏后不可泄漏的合成昵称'))['item']
+        self.store.comments.set_reply(child['id'], {'content': '合成官方内容', 'revision': 0})
+        grandchild_body = data(parentId=child['id'])
+        grandchild = self.submit(grandchild_body)['item']
+        official_child = self.submit(data(parentId=child['id'], replyToOfficial=True))['item']
+        self.store.comments.set_status(child['id'], 'hidden')
+        page = self.store.comments.public_replies(root['id'])
+        self.assertEqual({item['id'] for item in page['items']}, {grandchild['id'], official_child['id']})
+        self.assertTrue(all(item['replyToName'] == '已隐藏的留言' for item in page['items']))
+        self.assertNotIn(child['nickname'], json.dumps(page, ensure_ascii=False))
+        replay = self.submit(grandchild_body)['item']
+        self.assertEqual(replay['replyToName'], '已隐藏的留言')
+        self.assertNotIn('parentContent', replay)
+        self.assert_problem(404, self.submit, data(parentId=child['id']))
+        self.store.comments.set_status(root['id'], 'hidden')
+        self.assertEqual(self.store.comments.public_list()['items'], [])
+        self.assert_problem(404, self.store.comments.public_replies, root['id'])
+        self.assert_problem(404, self.submit, data(parentId=grandchild['id']))
+        # Moderation retains every record and can still edit an official response.
+        self.assertEqual(self.store.comments.list()['total'], 4)
+        self.store.comments.set_reply(grandchild['id'], {'content': '合成后台处理', 'revision': 0})
+        self.store.comments.set_status(root['id'], 'visible')
+        self.assertEqual(self.store.comments.public_list()['items'][0]['replyCount'], 2)
+
+    def test_thread_cursor_preview_same_second_hidden_boundary_and_new_reply(self):
+        root = self.submit()['item']
+        created = [self.submit(data(parentId=root['id'], content='合成楼内回复%d' % index))['item'] for index in range(7)]
+        first = self.store.comments.public_list()['items'][0]
+        self.assertEqual((len(first['replies']), first['replyCount']), (3, 7))
+        self.assertIsNotNone(first['repliesNextCursor'])
+        ordered = sorted(item['id'] for item in created)
+        self.assertEqual([item['id'] for item in first['replies']], ordered[:3])
+        self.store.comments.set_status(first['replies'][-1]['id'], 'hidden')
+        self.now += 1
+        newest = self.submit(data(parentId=root['id']))['item']
+        second = self.store.comments.public_replies(root['id'], 2, first['repliesNextCursor'])
+        self.assertEqual([item['id'] for item in second['items']], ordered[3:5])
+        third = self.store.comments.public_replies(root['id'], 20, second['nextCursor'])
+        self.assertEqual([item['id'] for item in third['items']], ordered[5:] + [newest['id']])
+        self.assertFalse(third['hasMore'])
+        self.assertIsNone(third['nextCursor'])
+        self.assertEqual(third['total'], 7)
+        self.assert_problem(404, self.store.comments.public_replies, created[0]['id'])
+        self.assert_problem(400, self.store.comments.public_replies, 'bad')
+        self.assert_problem(400, self.store.comments.public_replies, root['id'], 51)
+        self.assert_problem(400, self.store.comments.public_replies, root['id'], 20, 'bad')
+
+    def test_reply_idempotency_target_conflict_atomic_notification_and_quotas(self):
+        root = self.submit()['item']
+        self.store.notifications.save({'enabled': True, 'webhook': 'https://open.feishu.cn/open-apis/bot/v2/hook/synthetic-test-hook-0001'})
+        body = data(parentId=root['id'])
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            results = list(pool.map(lambda _: self.submit(body), range(5)))
+        self.assertEqual(sum(not result['duplicate'] for result in results), 1)
+        self.assertEqual(len({result['item']['id'] for result in results}), 1)
+        self.store.comments.set_reply(root['id'], {'content': '合成官方回复', 'revision': 0})
+        self.assert_problem(409, self.submit, body | {'parentId': None})
+        self.assert_problem(409, self.submit, body | {'replyToOfficial': True})
+        with patch.object(self.store.notifications, 'enqueue', side_effect=RuntimeError('synthetic queue failure')):
+            with self.assertRaises(RuntimeError):
+                self.submit(data(parentId=root['id']))
+        self.assertEqual(self.store.comments.public_replies(root['id'])['total'], 1)
+        for _ in range(11):
+            self.submit(data(parentId=root['id']))
+        self.assert_problem(429, self.submit, data(parentId=root['id']))
+        self.assertTrue(self.submit(body)['duplicate'])
+        # Replies have an independent quota; root comments retain their original limit.
+        self.submit()
+        self.submit()
+        self.assert_problem(429, self.submit)
+        for index in range(48):
+            self.now += 601
+            self.submit(data(parentId=root['id']), ip='192.0.2.2')
+        self.now += 601
+        self.assert_problem(429, self.submit, data(parentId=root['id']))
+        with self.store.connect() as db:
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM campaign_feishu_outbox WHERE kind='comment'").fetchone()[0], 62)
+
+    def test_thread_schema_migrates_legacy_roots_without_losing_official_reply(self):
+        root = self.submit()['item']
+        self.store.comments.set_reply(root['id'], {'content': '合成已有官方回复', 'revision': 0})
+        with self.store.connect() as db:
+            db.execute('DROP INDEX campaign_comments_roots')
+            db.execute('DROP INDEX campaign_comments_thread')
+            for column in ('root_id', 'parent_id', 'reply_to_official'):
+                db.execute('ALTER TABLE campaign_comments DROP COLUMN ' + column)
+        reopened = CampaignStore(self.path, clock=lambda: self.now)
+        migrated = reopened.comments.public_list()['items'][0]
+        self.assertEqual((migrated['id'], migrated['rootId'], migrated['parentId']), (root['id'], root['id'], None))
+        self.assertEqual(migrated['reply']['content'], '合成已有官方回复')
+        self.assertEqual((migrated['replyCount'], migrated['replies']), (0, []))
+        reopened.comments.submit(self.visitor, '192.0.2.1', data(parentId=root['id']))
+        self.assertEqual(CampaignStore(self.path).comments.public_list()['items'][0]['replyCount'], 1)
 
 
 class CommentsHTTPTests(unittest.TestCase):
@@ -227,6 +445,32 @@ class CommentsHTTPTests(unittest.TestCase):
     setUp = http_support.CampaignHTTPTests.setUp
     tearDown = http_support.CampaignHTTPTests.tearDown
     request = http_support.CampaignHTTPTests.request
+    setup_admin = http_support.CampaignHTTPTests.setup_admin
+
+    def test_admin_reply_requires_session_origin_csrf_and_syncs_public(self):
+        original = self.request('POST', '/api/campaign/comments', data())[1]['item']
+        path = '/api/admin/comments/' + original['id'] + '/reply'
+        body = {'content': '合成主办方回复', 'revision': 0}
+        self.assertEqual(self.request('GET', '/api/admin/comments')[0], 401)
+        self.assertEqual(self.request('POST', path, body)[0], 401)
+        self.setup_admin()
+        self.assertEqual(self.request('POST', path, body)[0], 403)
+        headers = {'X-CSRF-Token': self.csrf}
+        self.assertEqual(self.request('POST', path, body, headers | {'Origin': 'https://foreign.test'})[0], 403)
+        self.assertEqual(self.request('POST', path, body, headers)[0], 200)
+        self.assertEqual(self.request('GET', '/api/admin/comments?reply=replied')[1]['total'], 1)
+        self.assertEqual(self.request('GET', '/api/admin/comments?reply=unreplied')[1]['total'], 0)
+        public = self.request('GET', '/api/campaign/comments')[1]['items'][0]
+        self.assertEqual(public['reply']['content'], body['content'])
+        self.assertEqual(self.request('POST', path, body | {'content': '冲突内容'}, headers)[0], 409)
+        self.assertEqual(self.request('POST', path, {'content': None, 'revision': 1}, headers)[0], 200)
+        self.assertIsNone(self.request('GET', '/api/campaign/comments')[1]['items'][0]['reply'])
+        status_path = path.removesuffix('reply') + 'status'
+        self.assertEqual(self.request('POST', status_path, {'status': 'hidden'})[0], 403)
+        self.assertEqual(self.request('POST', status_path, {'status': 'hidden'}, headers)[0], 200)
+        self.assertEqual(self.request('GET', '/api/campaign/comments')[1]['total'], 0)
+        for query in ('reply=bad', 'reply=all&reply=unreplied', 'page=0', 'page=', 'status=bad', 'extra=1'):
+            self.assertEqual(self.request('GET', '/api/admin/comments?' + query)[0], 400, query)
 
     def visitor_count(self):
         with self.store.connect() as db:
@@ -295,6 +539,50 @@ class CommentsHTTPTests(unittest.TestCase):
         second = self.request('GET', '/api/campaign/comments?limit=2&cursor=' + first['nextCursor'])[1]
         self.assertEqual(len(second['items']), 1)
         self.assertFalse(first['items'][0]['id'] == second['items'][0]['id'])
+
+    def test_public_thread_http_contract_and_admin_continuation(self):
+        root = self.request('POST', '/api/campaign/comments', data())[1]['item']
+        body = data(parentId=root['id'], content='<svg onload=alert(1)> 合成回复')
+        status, receipt, _ = self.request('POST', '/api/campaign/comments', body)
+        self.assertEqual(status, 201)
+        child = receipt['item']
+        self.assertEqual((child['rootId'], child['parentId']), (root['id'], root['id']))
+        self.assertNotIn('parentContent', child)
+        self.assertNotIn('replyRevision', child)
+        self.assertEqual(self.request('POST', '/api/campaign/comments', body)[0], 200)
+        path = '/api/campaign/comments/' + root['id'] + '/replies'
+        status, page, headers = self.request('GET', path)
+        self.assertEqual((status, page['total'], page['items'][0]['content']), (200, 1, body['content']))
+        self.assertEqual(dict(headers)['Cache-Control'], 'no-store')
+        self.assertFalse(any(key.lower() == 'set-cookie' for key, _ in headers))
+        self.setup_admin()
+        admin = {item['id']: item for item in self.request('GET', '/api/admin/comments')[1]['items']}
+        self.assertEqual(admin[child['id']]['parentContent'], root['content'])
+        self.assertEqual(self.request('POST', '/api/admin/comments/' + child['id'] + '/reply',
+                                     {'content': '合成官方楼内回复', 'revision': 0}, {'X-CSRF-Token': self.csrf})[0], 200)
+        self.assertEqual(self.request('GET', path)[1]['items'][0]['reply']['content'], '合成官方楼内回复')
+        self.assertEqual(self.request('GET', '/api/campaign/comments')[1]['total'], 1)
+        for query in ('limit=0', 'limit=51', 'limit=', 'cursor=', 'cursor=bad', 'limit=1&limit=2', 'status=hidden', 'extra=1'):
+            self.assertEqual(self.request('GET', path + '?' + query)[0], 400, query)
+        self.assertEqual(self.request('GET', '/api/campaign/comments/' + child['id'] + '/replies')[0], 404)
+        self.store.comments.set_status(root['id'], 'hidden')
+        self.assertEqual(self.request('GET', path)[0], 404)
+        self.assertEqual(self.request('POST', '/api/campaign/comments', data(parentId=child['id']))[0], 404)
+
+    def test_reply_failures_rollback_new_identity_and_require_same_origin(self):
+        root = self.request('POST', '/api/campaign/comments', data())[1]['item']
+        self.cookies.clear()
+        before = self.visitor_count()
+        self.assertEqual(self.request('POST', '/api/campaign/comments', data(parentId=root['id']),
+                                     {'Origin': 'https://foreign.test'})[0], 403)
+        for body, expected in ((data(parentId='0' * 32), 404),
+                               (data(parentId=root['id'], replyToOfficial=True), 409),
+                               (data(parentId=root['id'], publishConsent=False), 400),
+                               (data(parentId=root['id'], rootId=root['id']), 400)):
+            status, _, headers = self.request('POST', '/api/campaign/comments', body)
+            self.assertEqual(status, expected)
+            self.assertFalse(any(key.lower() == 'set-cookie' for key, _ in headers))
+        self.assertEqual(self.visitor_count(), before)
 
 
 if __name__ == '__main__':

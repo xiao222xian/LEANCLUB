@@ -231,7 +231,8 @@ class CampaignAPI:
             raise Problem(404, '学校接口不存在。')
         if self.events.matches(path):
             return self.events.get(handler, path)
-        if path == '/api/campaign/comments':
+        replies_match = re.fullmatch(r'/api/campaign/comments/([^/]+)/replies', path)
+        if path == '/api/campaign/comments' or replies_match:
             self.store.limit(handler.ip(), 'comments-read', 180, 60)
             try:
                 query = parse_qs(urlsplit(handler.path).query, keep_blank_values=True,
@@ -243,7 +244,10 @@ class CampaignAPI:
                     raise ValueError()
             except ValueError:
                 raise Problem(400, '评论分页参数无效。')
-            return handler.send_json(200, self.store.comments.public_list(int(limit), query.get('cursor', [None])[0]))
+            cursor = query.get('cursor', [None])[0]
+            result = (self.store.comments.public_replies(replies_match[1], int(limit), cursor) if replies_match else
+                      self.store.comments.public_list(int(limit), cursor))
+            return handler.send_json(200, result)
         if path == '/api/campaign':
             self.store.limit(handler.ip(), 'campaign-read', 120, 60)
             visitor = self.visitor(handler)
@@ -256,18 +260,23 @@ class CampaignAPI:
         if path == '/api/admin/stats':
             self.admin(handler)
             return handler.send_json(200, self.store.stats())
-        if path == '/api/admin/feedback':
+        if path in ('/api/admin/feedback', '/api/admin/comments'):
             self.admin(handler)
+            comments = path == '/api/admin/comments'
             try:
                 query = parse_qs(urlsplit(handler.path).query, keep_blank_values=True,
-                                 strict_parsing=True, max_num_fields=2)
-                if set(query) - {'status', 'page'} or any(len(values) != 1 for values in query.values()):
+                                 strict_parsing=True, max_num_fields=3 if comments else 2)
+                allowed = {'status', 'page', 'reply'} if comments else {'status', 'page'}
+                if set(query) - allowed or any(len(values) != 1 for values in query.values()):
                     raise ValueError()
                 page = query.get('page', ['1'])[0]
                 if not re.fullmatch(r'[1-9][0-9]{0,6}', page):
                     raise ValueError()
             except ValueError:
                 raise Problem(400, '筛选或页码参数无效。')
+            if comments:
+                return handler.send_json(200, self.store.comments.list(
+                    query.get('status', ['all'])[0], int(page), query.get('reply', ['all'])[0]))
             return handler.send_json(200, self.store.feedback.list(query.get('status', ['all'])[0], int(page)))
         if path == '/api/admin/feishu':
             self.admin(handler)
@@ -350,6 +359,15 @@ class CampaignAPI:
             if fresh:
                 self.set_cookie(handler, VISITOR_COOKIE, fresh, VISITOR_AGE)
             return handler.send_json(200 if result['duplicate'] else 201, result)
+        comment_match = re.fullmatch(r'/api/admin/comments/([^/]+)/(reply|status)', path)
+        if comment_match:
+            self.admin(handler, writing=True)
+            data = self.json_body(handler, maximum=8192)
+            if comment_match[2] == 'reply':
+                return handler.send_json(200, self.store.comments.set_reply(comment_match[1], data))
+            if set(data) != {'status'}:
+                raise Problem(400, '请指定留言状态。')
+            return handler.send_json(200, self.store.comments.set_status(comment_match[1], data['status']))
         feedback_match = re.fullmatch(r'/api/admin/feedback/([^/]+)/status', path)
         if feedback_match:
             self.admin(handler, writing=True)

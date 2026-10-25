@@ -101,7 +101,7 @@ class OperationsBoundaryTests(unittest.TestCase):
             'requestId': str(uuid.uuid4()), 'content': '合成私密意见', 'category': 'other', 'city': None})
         listing = self.execute('comments-list', {'status': 'all', 'page': 1})
         self.assertEqual((listing['total'], listing['page'], listing['pageSize'], listing['totalPages']), (1, 1, 20, 1))
-        self.assertEqual(listing['items'], [comment])
+        self.assertEqual(listing['items'], [comment | {'replyRevision': 0, 'parentContent': None}])
         self.assertNotIn('unread', listing)
         hidden = self.execute('comments-status', {'id': comment['id'], 'status': 'hidden'})
         self.assertEqual(hidden['item']['status'], 'hidden')

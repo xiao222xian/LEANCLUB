@@ -1,4 +1,45 @@
 /* The vote remains a full-height photograph; conversation has its own space. */
+.comment-reply{margin-top:19px;padding:14px 17px 15px;border-left:2px solid #8bbba4;background:#b1edce08;border-radius:0 5px 5px 0}
+.comment-reply-head{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:11px;color:#99b5a7}
+.comment-reply-author{font-size:12px;font-weight:500;color:#b1edce}
+.comment-reply-head time{margin-left:auto;font-size:10px;color:#799086;font-variant-numeric:tabular-nums}
+.comment-reply-body{margin:9px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.85;color:#d4dfd8}
+@media(max-width:600px){.comment-reply{padding:13px 14px;margin-top:16px}.comment-reply-body{font-size:14px}}
+/* One quiet conversation level, even when people reply to a reply. */
+.comment-post-actions{display:flex;align-items:center;margin-top:2px;min-height:44px}
+.comment-reply-action,.comment-inline-cancel,.comment-thread-more{min-height:44px;border:0;background:none;font:inherit;font-size:12px;cursor:pointer}
+.comment-reply-action{padding:8px 14px 8px 0;color:#91b5a2;min-width:44px;text-align:left}
+.comment-reply-action:focus-visible,.comment-inline-cancel:focus-visible,.comment-thread-more:focus-visible{outline:2px solid #b1edce;outline-offset:2px;border-radius:2px}
+.comment-reply-target{margin:9px 0 -4px;font-size:11px;color:#7f9c8c;overflow-wrap:anywhere;line-height:1.7}
+.comment-thread-list{margin:8px 0 0 12px;padding:0 0 0 20px;border-left:1px solid #b1edce29;list-style:none}
+.comment-thread-item{min-width:0;padding:18px 0 4px;border-top:1px solid #ffffff0d;scroll-margin-block:24px;outline:none}
+.comment-thread-item:first-child{border-top:0;padding-top:5px}
+.comment-thread-item:focus>.comment-body{color:#e0f4e8}
+.comment-thread-item .comment-body{font-size:14px;line-height:1.8}
+.comment-thread-item .comment-card-head{font-size:12px;gap:8px}
+.comment-thread-item .comment-card-head time{font-size:10px}
+.comment-thread-item .comment-city{font-size:10px;gap:6px}
+.comment-thread-more{display:block;padding:7px 0;margin:0 0 0 33px;color:#a7cfba;text-align:left}
+.comment-thread-more:disabled{opacity:.55;cursor:wait}
+.comment-thread-status{margin:5px 0 8px 33px;color:#ffc5ac;font-size:12px;line-height:1.7;overflow-wrap:anywhere}
+.comment-inline-composer{padding:4px 0 18px;margin:0;min-width:0}
+.comment-inline-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;color:#c5e4d3;font-size:12px}
+.comment-inline-heading label{overflow-wrap:anywhere;line-height:1.7}
+.comment-inline-cancel{padding:7px 0 7px 14px;flex:none;color:#90a196}
+.comment-inline-composer .comment-field textarea{min-height:104px;padding:12px 13px 30px;border-color:#b1edce40;background:#b1edce05;font-size:15px}
+.comment-inline-composer .comment-field input{min-height:44px;border:0;border-bottom:1px solid #ffffff1c;background:none;padding:9px 0;font-size:14px}
+.comment-inline-composer .comment-field input:focus,.comment-inline-composer .comment-field textarea:focus{border-color:#b1edce9c}
+.comment-reply-nickname{margin:0 0 14px!important;max-width:240px}
+.comment-inline-composer .comment-actions{gap:8px}
+.comment-inline-composer .comment-consent{min-height:44px;font-size:11px}
+.comment-inline-composer .comment-consent input{accent-color:#b1edce;width:16px;height:16px}
+.comment-inline-composer .comment-submit{min-height:44px;min-width:88px;border-radius:4px;border-color:#b1edce;background:#b1edce;color:#15382a;white-space:nowrap}
+.comment-inline-composer .comment-form-message{color:#b1edce}
+.comment-inline-composer .comment-form-message.is-error{color:#ffc5ac}
+.comment-reply .comment-post-actions{margin-bottom:-8px}
+.comment-reply .comment-inline-composer{padding-bottom:1px}
+@media(hover:hover){.comment-reply-action:hover,.comment-inline-cancel:hover,.comment-thread-more:hover{color:#d1f6e1}.comment-inline-composer .comment-submit:hover:not(:disabled){background:#cff7e2}}
+@media(max-width:600px){.comment-thread-list{margin-left:0;padding-left:15px}.comment-thread-more,.comment-thread-status{margin-left:16px}.comment-thread-item .comment-author{max-width:120px}.comment-inline-composer .comment-field textarea,.comment-inline-composer .comment-field input{font-size:16px}.comment-thread-item .comment-card-head{gap:6px}.comment-thread-item .comment-city{gap:5px}.comment-thread-item .comment-reply{padding-inline:10px}.comment-thread-item .comment-inline-composer .comment-actions{align-items:stretch}.comment-thread-item .comment-inline-composer .comment-consent{flex:1}.comment-thread-item .comment-inline-composer .comment-submit{min-width:76px}}
 html,body{height:auto;min-height:100%;scroll-behavior:smooth}
 body{overflow-x:hidden;overflow-y:auto}
 .vote-hero{position:relative;height:100vh;height:100svh;height:100dvh;min-height:460px;isolation:isolate}

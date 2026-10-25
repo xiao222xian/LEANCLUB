@@ -12,7 +12,9 @@
   <script defer src="/group-invite.js?v=20261025-mobile3"></script>
   <script defer src="/admin/groups.js?v=20261024-group1"></script>
   <link rel="stylesheet" href="/admin/style.css?v=20261023-events">
-  <link rel="stylesheet" href="/admin/schools.css?v=20261024-directory"><script defer src="/admin/schools.js?v=20261024-directory"></script><script src="/admin/app.js?v=20261025-comment-notify" defer></script>
+  <link rel="stylesheet" href="/admin/comments.css?v=20261025-threads1">
+  <script defer src="/admin/comments.js?v=20261025-threads1"></script>
+  <link rel="stylesheet" href="/admin/schools.css?v=20261024-directory"><script defer src="/admin/schools.js?v=20261024-directory"></script><script src="/admin/app.js?v=20261025-threads1" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳至主要内容</a>
@@ -68,7 +70,7 @@
     </header>
     <main id="main" class="main" tabindex="-1">
       <div class="page-heading"><div class="heading-copy"><h1>内容管理</h1></div><a class="button button-secondary" href="/schools" target="_blank" rel="noopener">查看网站 ↗</a></div>
-      <div class="tabs-row"><div class="tabs" role="tablist" aria-label="管理内容"><button type="button" id="tab-overview" role="tab" aria-controls="panel-overview" aria-selected="true" tabindex="0" data-panel="overview">数据概览</button><button type="button" id="tab-feedback" role="tab" aria-controls="panel-feedback" aria-selected="false" tabindex="-1" data-panel="feedback">意见箱<span id="feedback-unread" class="tab-count" aria-hidden="true" hidden></span></button><button type="button" id="tab-events" role="tab" aria-controls="panel-events" aria-selected="false" tabindex="-1" data-panel="events">活动报名</button><button type="button" id="tab-schools" role="tab" aria-controls="panel-schools" aria-selected="false" tabindex="-1" data-panel="schools">资料管理</button><button type="button" id="tab-groups" role="tab" aria-controls="panel-groups" aria-selected="false" tabindex="-1" data-panel="groups">活动群</button><button type="button" id="tab-posters" role="tab" aria-controls="panel-posters" aria-selected="false" tabindex="-1" data-panel="posters">城市海报</button><button type="button" id="tab-feishu" role="tab" aria-controls="panel-feishu" aria-selected="false" tabindex="-1" data-panel="feishu">飞书通知</button></div><span id="last-updated" class="last-updated">等待数据</span></div>
+      <div class="tabs-row"><div class="tabs" role="tablist" aria-label="管理内容"><button type="button" id="tab-overview" role="tab" aria-controls="panel-overview" aria-selected="true" tabindex="0" data-panel="overview">数据概览</button><button type="button" id="tab-comments" role="tab" aria-controls="panel-comments" aria-selected="false" tabindex="-1" data-panel="comments">公开留言</button><button type="button" id="tab-feedback" role="tab" aria-controls="panel-feedback" aria-selected="false" tabindex="-1" data-panel="feedback">意见箱<span id="feedback-unread" class="tab-count" aria-hidden="true" hidden></span></button><button type="button" id="tab-events" role="tab" aria-controls="panel-events" aria-selected="false" tabindex="-1" data-panel="events">活动报名</button><button type="button" id="tab-schools" role="tab" aria-controls="panel-schools" aria-selected="false" tabindex="-1" data-panel="schools">资料管理</button><button type="button" id="tab-groups" role="tab" aria-controls="panel-groups" aria-selected="false" tabindex="-1" data-panel="groups">活动群</button><button type="button" id="tab-posters" role="tab" aria-controls="panel-posters" aria-selected="false" tabindex="-1" data-panel="posters">城市海报</button><button type="button" id="tab-feishu" role="tab" aria-controls="panel-feishu" aria-selected="false" tabindex="-1" data-panel="feishu">飞书通知</button></div><span id="last-updated" class="last-updated">等待数据</span></div>
       <div id="app-message" class="notice" role="status" hidden></div>
 
       <section id="panel-overview" role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
@@ -118,7 +120,20 @@
 <div class="clubs-toolbar"><input id="clubs-query" type="search" placeholder="搜索名称、地区" aria-label="搜索资料"><select id="clubs-kind" aria-label="资料类型"><option value="all">全部类型</option><option value="school">学校</option><option value="group">团体</option><option value="person">个人</option></select><select id="clubs-visibility" aria-label="审核状态"><option value="all">全部状态</option><option value="pending">待审核</option><option value="changes">待补充</option><option value="published">已通过</option><option value="hidden">已隐藏</option></select><button type="button" id="clubs-refresh" class="text-button">刷新</button></div>
 <p id="clubs-error" class="notice notice-error" role="alert" hidden></p><div class="club-list-labels" aria-hidden="true"><span>名称 / 所在地</span><span>类型</span><span>状态</span><span></span></div><div id="clubs-list" class="clubs-list"></div><button id="clubs-more" class="button button-secondary" type="button" hidden>加载更多</button>
 <details id="clubs-history"><summary>历史操作记录</summary><div id="clubs-history-list"></div><button type="button" id="clubs-history-more" class="button button-secondary" hidden>加载更多</button></details></section>
-<section id="panel-feedback" role="tabpanel" aria-labelledby="tab-feedback" tabindex="0" hidden>
+<section id="panel-comments" role="tabpanel" aria-labelledby="tab-comments" tabindex="0" hidden>
+        <div class="admin-comments-toolbar">
+          <div class="admin-comment-filters" role="group" aria-label="筛选回复状态">
+            <button type="button" data-comment-filter="all" aria-pressed="true">全部</button>
+            <button type="button" data-comment-filter="unreplied" aria-pressed="false">待回复</button>
+            <button type="button" data-comment-filter="replied" aria-pressed="false">已回复</button>
+          </div>
+          <div class="admin-comments-tools"><span id="admin-comments-total"></span><select id="admin-comments-visibility" aria-label="留言可见性"><option value="all">全部留言</option><option value="visible">公开中</option><option value="hidden">已隐藏</option></select><button type="button" id="admin-comments-refresh">刷新</button></div>
+        </div>
+        <p id="admin-comments-message" class="admin-comments-message" role="status" hidden></p>
+        <div id="admin-comments-list" class="admin-comments-list"></div>
+        <nav id="admin-comments-pagination" class="admin-comments-pagination" aria-label="留言分页" hidden><button type="button" class="admin-comment-text" id="admin-comments-prev">← 上一页</button><span id="admin-comments-page"></span><button type="button" class="admin-comment-text" id="admin-comments-next">下一页 →</button></nav>
+      </section>
+      <section id="panel-feedback" role="tabpanel" aria-labelledby="tab-feedback" tabindex="0" hidden>
         <div class="section-toolbar"><p>听见每一种想法。</p><button class="button button-quiet refresh-button" id="refresh-feedback" type="button">刷新意见</button></div>
         <div class="inbox-toolbar"><div class="inbox-filters" role="group" aria-label="筛选意见状态"><button type="button" data-feedback-filter="all" aria-pressed="true">全部</button><button type="button" data-feedback-filter="new" aria-pressed="false">待看</button><button type="button" data-feedback-filter="read" aria-pressed="false">已看</button></div><span id="feedback-total" class="inbox-total">等待加载</span></div>
         <div id="feedback-error" class="notice notice-error" role="alert" hidden></div>
