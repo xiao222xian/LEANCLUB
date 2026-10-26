@@ -270,7 +270,6 @@ class CampaignStore:
                            (visitor, city, now, now, hashed))
                 if hashed:
                     db.execute('INSERT INTO campaign_vote_ips(ip_hash,visitor) VALUES(?,?)', (hashed, visitor))
-                self.notifications.enqueue(db, 'new', city, None, now)
         return {'city': city}
 
     def track(self, visitor, page, event_id):

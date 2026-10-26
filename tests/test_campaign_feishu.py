@@ -80,7 +80,7 @@ class FeishuStoreTests(unittest.TestCase):
             with self.subTest(data=data), self.assertRaises(Problem):
                 self.notifications.save(data)
 
-    def test_only_new_votes_notify_and_next_new_snapshot_includes_silent_changes(self):
+    def test_new_votes_revotes_and_duplicate_posts_never_queue_realtime_notifications(self):
         self.enable()
         visitor = self.vote()
         self.vote(visitor=visitor)
@@ -90,38 +90,34 @@ class FeishuStoreTests(unittest.TestCase):
             self.vote('guangzhou', visitor=second)
         self.vote('zhuhai', visitor=visitor)
         self.vote('guangzhou', ip='192.0.2.2')
-        events = self.events()
-        self.assertEqual([event['kind'] for event in events], ['new', 'new'])
-        self.assertEqual([json.loads(event['snapshot']) for event in events], [
-            {'shenzhen': 1, 'zhuhai': 0, 'guangzhou': 0},
-            {'shenzhen': 0, 'zhuhai': 1, 'guangzhou': 1}])
+        self.assertEqual(self.events(), [])
         self.assertEqual(self.store.stats()['totalVotes'], 2)
-        self.assertNotIn(visitor, json.dumps(events))
-        self.assertNotIn('192.0.2.', json.dumps(events))
+        sender = Mock()
+        self.assertFalse(self.notifications.deliver_one(sender))
+        sender.assert_not_called()
 
-    def test_rollback_never_commits_a_vote_without_its_enabled_outbox_event(self):
+    def test_voting_does_not_depend_on_the_notification_queue(self):
         self.enable()
-        enqueue = self.notifications.enqueue
-        def fail_after_enqueue(*args, **kwargs):
-            enqueue(*args, **kwargs)
-            raise RuntimeError('synthetic transaction failure')
-        with patch.object(self.notifications, 'enqueue', side_effect=fail_after_enqueue):
-            with self.assertRaises(RuntimeError):
-                self.vote()
-        self.assertEqual(self.store.stats()['totalVotes'], 0)
+        with patch.object(self.notifications, 'enqueue', side_effect=RuntimeError('synthetic queue failure')) as enqueue:
+            visitor = self.vote()
+            self.vote('zhuhai', visitor=visitor)
+        enqueue.assert_not_called()
+        self.assertEqual(self.store.stats()['totalVotes'], 1)
+        self.assertEqual(self.store.vote(visitor), {'city': 'zhuhai'})
         self.assertEqual(self.events(), [])
 
-    def test_parallel_duplicate_posts_commit_one_vote_and_one_event(self):
+    def test_parallel_duplicate_posts_commit_one_vote_without_an_event(self):
         self.enable()
         visitor = self.store.visitor(None)[0]
         with ThreadPoolExecutor(max_workers=5) as pool:
             list(pool.map(lambda _: self.vote(visitor=visitor), range(10)))
         self.assertEqual(self.store.stats()['totalVotes'], 1)
-        self.assertEqual(len(self.events()), 1)
+        self.assertEqual(self.events(), [])
 
     def test_pending_events_and_credentials_survive_database_reopen(self):
         self.enable(signing=True)
         self.vote()
+        self.notifications.queue_summary()
         reopened = CampaignStore(self.path, clock=lambda: self.now)
         self.assertEqual(reopened.notifications.settings()['pendingCount'], 1)
         sender = Mock()
@@ -131,11 +127,12 @@ class FeishuStoreTests(unittest.TestCase):
         self.assertIn('sign', sender.call_args.args[1])
         self.assertEqual(self.notifications.settings()['lastDelivery']['status'], 'sent')
 
-    def test_interactive_card_includes_new_city_total_three_columns_and_valid_signature(self):
+    def test_interactive_summary_card_includes_total_three_columns_and_valid_signature(self):
         self.enable(signing=True)
         visitor = self.vote()
         self.vote('zhuhai', visitor=visitor)
         self.vote('guangzhou', ip='192.0.2.2')
+        self.notifications.queue_summary()
         event = self.events()[-1]
         payload = build_payload(event, SECRET, self.now)
         self.assertEqual(payload['msg_type'], 'interactive')
@@ -149,8 +146,9 @@ class FeishuStoreTests(unittest.TestCase):
             self.assertEqual(column['weight'], 1)
             self.assertEqual([item['content'] for item in column['elements']], [name, '**%s**' % count, '票'])
         serialized = json.dumps(payload, ensure_ascii=False)
-        for value in ('LEAN SCHOOL', '薄肌学院', '广州 +1', '北京时间', '累计有效票'):
+        for value in ('LEAN SCHOOL', '薄肌学院', '当前票数汇总', '北京时间', '累计有效票'):
             self.assertIn(value, serialized)
+        self.assertNotIn('+1', serialized)
         self.assertLess(len(serialized.encode('utf-8')), 20000)
         expected = base64.b64encode(hmac.new((str(int(self.now)) + '\n' + SECRET).encode(), b'', hashlib.sha256).digest()).decode()
         self.assertEqual(payload['timestamp'], str(int(self.now)))
@@ -162,6 +160,7 @@ class FeishuStoreTests(unittest.TestCase):
     def test_failed_network_preserves_votes_and_retries_with_same_event(self):
         self.enable()
         self.vote()
+        self.notifications.queue_summary()
         sender = Mock(side_effect=[TimeoutError(URL + SECRET), None])
         self.notifications.deliver_one(sender)
         settings = self.notifications.settings()
@@ -179,6 +178,7 @@ class FeishuStoreTests(unittest.TestCase):
     def test_retry_is_bounded_then_admin_can_retry_failed_event(self):
         self.enable()
         self.vote()
+        self.notifications.queue_summary()
         sender = Mock(side_effect=DeliveryFailure('模拟网络故障。'))
         for step in (0, 5, 30, 120, 600):
             self.now += step
@@ -196,6 +196,7 @@ class FeishuStoreTests(unittest.TestCase):
     def test_permanent_error_fails_immediately_without_background_loop(self):
         self.enable()
         self.vote()
+        self.notifications.queue_summary()
         sender = Mock(side_effect=DeliveryFailure('签名校验失败。', retryable=False))
         self.notifications.deliver_one(sender)
         self.now += 1000
@@ -206,7 +207,9 @@ class FeishuStoreTests(unittest.TestCase):
     def test_worker_pacing_and_expired_lease_recovery(self):
         self.enable()
         self.vote()
+        self.notifications.queue_summary()
         self.vote('zhuhai', ip='192.0.2.2')
+        self.notifications.queue_summary()
         first, _ = self.notifications.claim()
         self.assertIsNone(self.notifications.claim())
         self.now += .75
@@ -221,6 +224,7 @@ class FeishuStoreTests(unittest.TestCase):
     def test_network_delivery_does_not_hold_database_or_block_voting(self):
         self.enable()
         visitor = self.vote()
+        self.notifications.queue_summary()
         sending, release = threading.Event(), threading.Event()
         def slow_send(*_):
             sending.set()
@@ -240,13 +244,16 @@ class FeishuStoreTests(unittest.TestCase):
     def test_disabling_and_changing_robot_cancel_unsent_events(self):
         self.enable(signing=True)
         self.vote()
+        self.notifications.queue_summary()
         self.notifications.save({'enabled': False})
         self.assertEqual(self.notifications.settings()['pendingCount'], 0)
         self.assertEqual(self.events()[0]['status'], 'cancelled')
         self.vote('zhuhai', ip='192.0.2.2')
         self.assertEqual(len(self.events()), 1)
+        self.notifications.queue_summary()
         result = self.notifications.save({'enabled': True, 'webhook': URL + '2'})
         self.assertFalse(result['hasSigningSecret'])
+        self.assertEqual([event['status'] for event in self.events()], ['cancelled', 'cancelled'])
         sender = Mock()
         self.assertFalse(self.notifications.deliver_one(sender))
 
@@ -289,37 +296,42 @@ class FeishuStoreTests(unittest.TestCase):
         self.assertEqual(json.loads(self.events()[0]['snapshot']), {'shenzhen': 0, 'zhuhai': 0, 'guangzhou': 0})
         self.assertEqual(self.store.stats()['totalVotes'], 0)
 
-    def test_upgrade_cancels_legacy_change_jobs_in_all_unsent_states(self):
+    def test_upgrade_cancels_legacy_new_and_change_jobs_in_all_unsent_states(self):
         self.enable()
         with self.store.connect() as db:
-            for index, status in enumerate(('pending', 'retrying', 'failed', 'sending')):
-                db.execute('''INSERT INTO campaign_feishu_outbox
-                    (id,kind,city,previous_city,snapshot,created,revision,status,available,lease_until,lease_token)
-                    VALUES(?,?,?,?,?,?,?,?,?,?,?)''',
-                           ('legacy-change-%s' % index, 'change', 'zhuhai', 'shenzhen', '{}', int(self.now), 1,
-                            status, self.now, self.now + 30, 'old-lease'))
+            for kind in ('new', 'change'):
+                for index, status in enumerate(('pending', 'retrying', 'failed', 'sending')):
+                    db.execute('''INSERT INTO campaign_feishu_outbox
+                        (id,kind,city,previous_city,snapshot,created,revision,status,available,lease_until,lease_token)
+                        VALUES(?,?,?,?,?,?,?,?,?,?,?)''',
+                               ('legacy-%s-%s' % (kind, index), kind, 'zhuhai', 'shenzhen', '{}', int(self.now), 1,
+                                status, self.now, self.now + 30, 'old-lease'))
         reopened = CampaignStore(self.path, clock=lambda: self.now)
+        self.assertEqual(len(self.events()), 8)
         self.assertTrue(all(event['status'] == 'cancelled' for event in self.events()))
+        self.assertTrue(all(event['lease_token'] is None and event['lease_until'] is None for event in self.events()))
         sender = Mock()
         self.assertFalse(reopened.notifications.deliver_one(sender))
         self.assertEqual(reopened.notifications.retry_failed()['queuedCount'], 0)
         sender.assert_not_called()
 
-    def test_worker_and_retry_guard_against_newly_injected_legacy_change_jobs(self):
+    def test_worker_and_retry_guard_against_newly_injected_legacy_vote_jobs(self):
         self.enable()
-        self.vote()
+        self.notifications.queue_summary()
         with self.store.connect() as db:
-            db.execute("UPDATE campaign_feishu_outbox SET kind='change',status='failed'")
+            db.execute("UPDATE campaign_feishu_outbox SET kind='new',status='failed'")
         self.assertEqual(self.notifications.retry_failed()['queuedCount'], 0)
         with self.store.connect() as db:
             db.execute("UPDATE campaign_feishu_outbox SET status='pending'")
-            self.assertIsNone(self.notifications.enqueue(db, 'change', 'zhuhai', 'shenzhen', int(self.now)))
+            for kind in ('new', 'change'):
+                self.assertIsNone(self.notifications.enqueue(db, kind, 'zhuhai', 'shenzhen', int(self.now)))
         sender = Mock()
         self.assertFalse(self.notifications.deliver_one(sender))
         self.assertEqual(self.events()[0]['status'], 'cancelled')
         sender.assert_not_called()
-        with self.assertRaises(ValueError):
-            self.notifications.queue_manual('change')
+        for kind in ('new', 'change', 'scheduled_summary'):
+            with self.subTest(kind=kind), self.assertRaises(ValueError):
+                self.notifications.queue_manual(kind)
         with self.assertRaises(ValueError):
             build_payload(self.events()[0])
 

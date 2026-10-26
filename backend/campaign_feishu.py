@@ -1,6 +1,6 @@
 """Private Feishu configuration and a durable, asynchronous campaign outbox.
 
-Aggregate vote counts, public comments and private feedback are sent. Credentials never
+Vote counts are scheduled in Beijing time; public comments and private feedback are sent immediately. Credentials never
 enter public responses, outbox records, or exception messages. Outbox rows share
 the submission transaction, so a network failure cannot undo a submission. Delivery is at least once:
 after an ambiguous network timeout, Feishu may receive the same notification twice.
@@ -23,12 +23,23 @@ WEBHOOK = re.compile(r'https://open\.feishu\.cn(?::443)?/open-apis/bot/v2/hook/[
 MAX_ATTEMPTS = 5
 RETRY_SECONDS = (5, 30, 120, 600)
 SHANGHAI = timezone(timedelta(hours=8))
-NOTIFICATION_KINDS = frozenset(('new', 'test', 'summary', 'feedback', 'comment'))
+VOTE_SUMMARY_HOURS = (8, 13, 18, 22)
+NOTIFICATION_KINDS = frozenset(('test', 'summary', 'scheduled_summary', 'feedback', 'comment'))
 MANUAL_KINDS = frozenset(('test', 'summary'))
 
 
 def timestamp(value):
     return datetime.fromtimestamp(value, timezone.utc).isoformat().replace('+00:00', 'Z') if value is not None else None
+
+
+def latest_summary_slot(now):
+    """Most recent fixed Beijing-time slot, independent of the host timezone."""
+    local = datetime.fromtimestamp(now, SHANGHAI)
+    for hour in reversed(VOTE_SUMMARY_HOURS):
+        slot = local.replace(hour=hour, minute=0, second=0, microsecond=0)
+        if slot <= local:
+            return int(slot.timestamp())
+    return int((local - timedelta(days=1)).replace(hour=22, minute=0, second=0, microsecond=0).timestamp())
 
 
 def validate_webhook(value):
@@ -66,8 +77,8 @@ def build_payload(event, signing_secret='', now=None):
             'body': {'direction': 'vertical', 'padding': '20px 16px 16px 16px',
                      'vertical_spacing': '12px', 'elements': elements}}}
         return sign_payload(payload, signing_secret, now)
-    titles = {'new': '新的一票', 'summary': '当前票数汇总', 'test': '连接测试'}
-    heading = '%s +1' % city_name if event['kind'] == 'new' else titles[event['kind']]
+    titles = {'scheduled_summary': '定时票数汇总', 'summary': '当前票数汇总', 'test': '连接测试'}
+    heading = titles[event['kind']]
     total = sum(snapshot.values())
 
     def text(content, size='normal'):
@@ -83,7 +94,7 @@ def build_payload(event, signing_secret='', now=None):
         'config': {'update_multi': True},
         'header': {'title': {'tag': 'plain_text', 'content': 'LEAN SCHOOL · 薄肌学院'},
                    'subtitle': {'tag': 'plain_text', 'content': titles[event['kind']]},
-                   'template': 'turquoise' if event['kind'] == 'new' else 'grey'},
+                   'template': 'grey'},
         'body': {'direction': 'vertical', 'padding': '20px 16px 16px 16px', 'vertical_spacing': '12px',
                  'elements': [text('**%s**' % heading, 'heading-2'),
                               text('**%s**' % format(total, ','), 'heading-0'),
@@ -161,15 +172,20 @@ class FeishuNotifications:
                     error TEXT, sent INTEGER);
                 CREATE INDEX IF NOT EXISTS campaign_feishu_queue
                     ON campaign_feishu_outbox(status,available,created);
+                CREATE TABLE IF NOT EXISTS campaign_feishu_schedule (
+                    id INTEGER PRIMARY KEY CHECK(id=1), cursor REAL NOT NULL);
             ''')
+            # A fresh installation starts with the next slot, without a backlog.
+            # Preserve the cursor on restart; allow a start exactly on the hour.
+            db.execute('INSERT OR IGNORE INTO campaign_feishu_schedule(id,cursor) VALUES(1,?)', (store.clock() - 1,))
             self.cancel_unsupported(db)
 
     @staticmethod
     def cancel_unsupported(db):
-        # Older releases queued change notifications. Never resume them after
+        # Older releases queued individual vote / change notifications. Never resume them after
         # upgrading, including an interrupted lease or an administrator retry.
         db.execute("""UPDATE campaign_feishu_outbox SET status='cancelled',error=NULL,lease_until=NULL,lease_token=NULL
-            WHERE kind NOT IN ('new','test','summary','feedback','comment') AND status IN ('pending','retrying','failed','sending')""")
+            WHERE kind NOT IN ('test','summary','scheduled_summary','feedback','comment') AND status IN ('pending','retrying','failed','sending')""")
 
     @staticmethod
     def enqueue(db, kind, city, previous_city, now, snapshot=None):
@@ -248,6 +264,9 @@ class FeishuNotifications:
                            (saved_webhook, saved_secret, int(data['enabled']), int(self.store.clock())))
                 # Old events must never cross into a newly configured group or resume after opting out.
                 db.execute("UPDATE campaign_feishu_outbox SET status='cancelled',error=NULL WHERE status IN ('pending','retrying','failed')")
+                # Enabling or changing a robot must not replay slots that passed
+                # while paused, or send a previous group's report to the new one.
+                db.execute('UPDATE campaign_feishu_schedule SET cursor=MAX(cursor,?) WHERE id=1', (self.store.clock(),))
         return self.settings()
 
     def queue_test(self):
@@ -274,11 +293,26 @@ class FeishuNotifications:
             if not config['webhook']:
                 raise Problem(400, '请先保存飞书机器人 Webhook。')
             cursor = db.execute('''UPDATE campaign_feishu_outbox SET status='pending',attempts=0,error=NULL,available=?
-                WHERE status='failed' AND revision=? AND kind IN ('new','test','summary','feedback','comment')
+                WHERE status='failed' AND revision=? AND kind IN ('test','summary','scheduled_summary','feedback','comment')
                 AND (?=1 OR kind IN ('test','summary'))''',
                                 (self.store.clock(), config['revision'], config['enabled']))
             count = cursor.rowcount
         return {'queuedCount': count, 'settings': self.settings()}
+
+    def _queue_due_summary(self, db, config, now):
+        """Queue at most the latest missed slot, atomically with its durable cursor.
+
+        Called under claim's write transaction, so concurrent workers and process
+        restarts cannot create another event for the same slot. Even unchanged or
+        zero counts get a report. Disabled slots are skipped, never backfilled.
+        """
+        slot = latest_summary_slot(now)
+        cursor = db.execute('SELECT cursor FROM campaign_feishu_schedule WHERE id=1').fetchone()[0]
+        if slot <= cursor:
+            return
+        if config['enabled'] and config['webhook']:
+            self.enqueue(db, 'scheduled_summary', None, None, int(now))
+        db.execute('UPDATE campaign_feishu_schedule SET cursor=? WHERE id=1', (slot,))
 
     def claim(self):
         now = self.store.clock()
@@ -286,6 +320,7 @@ class FeishuNotifications:
             db.execute('BEGIN IMMEDIATE')
             self.cancel_unsupported(db)
             config = dict(db.execute('SELECT * FROM campaign_feishu_config WHERE id=1').fetchone())
+            self._queue_due_summary(db, config, now)
             # Recover work after a terminated process. A lease owner alone may complete its delivery.
             db.execute("""UPDATE campaign_feishu_outbox SET status=CASE WHEN attempts>=? THEN 'failed' ELSE 'retrying' END,
                 error='上次发送未完成，正在恢复。',lease_token=NULL WHERE status='sending' AND lease_until<?""", (MAX_ATTEMPTS, now))
@@ -294,7 +329,7 @@ class FeishuNotifications:
             if not config['webhook'] or config['next_send_at'] > now:
                 return None
             event = db.execute("""SELECT * FROM campaign_feishu_outbox WHERE status IN ('pending','retrying')
-                AND available<=? AND revision=? AND kind IN ('new','test','summary','feedback','comment')
+                AND available<=? AND revision=? AND kind IN ('test','summary','scheduled_summary','feedback','comment')
                 AND (?=1 OR kind IN ('test','summary'))
                 ORDER BY created,rowid LIMIT 1""", (now, config['revision'], config['enabled'])).fetchone()
             if event is None:

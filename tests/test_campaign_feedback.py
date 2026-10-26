@@ -267,6 +267,7 @@ class FeedbackStoreTests(unittest.TestCase):
         token, _ = self.store.new_session('tester')
         self.enable()
         self.store.cast_vote(self.visitor, 'shenzhen', '192.0.2.1')
+        self.store.notifications.queue_summary()
         self.store.track(self.visitor, 'home', str(uuid.uuid4()))
         schools = Store(str(self.path), [])
         schools.save({'school': '合成测试学校', 'contact': '合成负责人', 'count': 12, 'qr': '', 'consent': True}, 'synthetic-ip')

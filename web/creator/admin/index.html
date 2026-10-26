@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="/admin/style.css?v=20261023-events">
   <link rel="stylesheet" href="/admin/comments.css?v=20261025-threads1">
   <script defer src="/admin/comments.js?v=20261025-threads1"></script>
-  <link rel="stylesheet" href="/admin/schools.css?v=20261024-directory"><script defer src="/admin/schools.js?v=20261024-directory"></script><script src="/admin/app.js?v=20261025-threads1" defer></script>
+  <link rel="stylesheet" href="/admin/schools.css?v=20261024-directory"><script defer src="/admin/schools.js?v=20261024-directory"></script><script src="/admin/app.js?v=20261026-feishu-schedule1" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳至主要内容</a>
@@ -172,13 +172,14 @@
         <div id="posters-grid" class="posters-grid"></div>
       </section>
       <section id="panel-feishu" role="tabpanel" aria-labelledby="tab-feishu" tabindex="0" hidden>
-        <div class="section-toolbar"><p>新的参与，及时听见。</p><button class="button button-quiet refresh-button" id="refresh-feishu" type="button">刷新状态</button></div>
+        <div class="section-toolbar"><p>票数定时汇总，留言实时送达。</p><button class="button button-quiet refresh-button" id="refresh-feishu" type="button">刷新状态</button></div>
         <div id="feishu-error" class="notice notice-error" role="alert" hidden></div>
         <div id="feishu-loading" class="inline-loading" role="status"><span class="spinner" aria-hidden="true"></span>正在读取通知设置</div>
         <div id="feishu-content" class="notification-grid" hidden>
           <form id="feishu-form" class="panel notification-settings" autocomplete="off">
             <div class="panel-heading"><h2>飞书群机器人</h2><span id="feishu-connection" class="connection-badge">未连接</span></div>
-            <label class="notification-toggle" for="feishu-enabled"><span>投票与留言通知<small>新增投票、公开留言、私密留言</small></span><input id="feishu-enabled" type="checkbox" role="switch"><span class="switch-track" aria-hidden="true"></span></label>
+            <label class="notification-toggle" for="feishu-enabled"><span>投票与留言通知<small>票数定时汇总 · 新评论与私密意见实时通知</small></span><input id="feishu-enabled" type="checkbox" role="switch"><span class="switch-track" aria-hidden="true"></span></label>
+            <p class="field-hint">北京时间每天 08:00、13:00、18:00、22:00 推送深圳、珠海、广州及三城总票数。单次投票、改投和取消不实时推送；新评论与意见箱来信实时推送。</p>
             <div class="field"><label for="feishu-webhook">Webhook 地址</label><input id="feishu-webhook" type="password" autocomplete="new-password" spellcheck="false" autocapitalize="none" maxlength="512" placeholder="粘贴飞书机器人的 Webhook" aria-describedby="feishu-webhook-hint"><span id="feishu-webhook-hint" class="field-hint">飞书群设置 / 群机器人 / 添加自定义机器人</span></div>
             <div class="field"><label for="feishu-secret">签名密钥 <span class="optional-label">可选</span></label><input id="feishu-secret" type="password" autocomplete="new-password" spellcheck="false" maxlength="512" placeholder="机器人开启签名校验时填写" aria-describedby="feishu-secret-hint"><span id="feishu-secret-hint" class="field-hint">未开启签名校验可留空</span><label id="feishu-clear-secret-wrap" class="check-label" for="feishu-clear-secret" hidden><input id="feishu-clear-secret" type="checkbox">移除已保存的签名密钥</label></div>
             <div class="notification-actions"><button id="feishu-save" type="submit" class="button button-primary">保存设置</button><button id="feishu-test" type="button" class="button button-secondary" disabled>发送测试消息</button></div>
@@ -186,7 +187,7 @@
           </form>
           <aside class="notification-preview" aria-label="群消息预览与发送状态">
             <div class="notification-art" aria-hidden="true"><img src="/city-vote/assets/alan-v1/shenzhen.webp" alt=""><div><img class="notification-emblem" src="/city-vote/assets/lean-emblem.svg?v=20261023-leanschool" alt=""><span>EVERY VOTE COUNTS.</span></div></div>
-            <div class="notification-preview-body"><p class="eyebrow">消息内容预览</p><div class="notification-preview-tabs" role="group" aria-label="选择通知预览"><button type="button" data-notification-preview="votes" aria-pressed="true">投票汇总</button><button type="button" data-notification-preview="feedback" aria-pressed="false">新增意见</button></div><div id="notification-preview-votes"><h2>三城投票汇总</h2><p class="notification-description">总票数 · 城市明细 · 统计时间</p><div class="preview-city-totals" aria-label="消息内容示意，不是实时票数"><span>深圳<b>累计票数</b></span><span>珠海<b>累计票数</b></span><span>广州<b>累计票数</b></span></div></div><div id="notification-preview-feedback" hidden><h2>收到一条新意见</h2><p class="notification-description">意见类型 · 城市 · 北京时间</p><p class="feedback-message-preview">用户提交的意见内容</p></div><button id="feishu-summary" type="button" class="button notification-summary-action" disabled>立即推送投票汇总</button><div class="delivery-summary"><div><span>最新通知</span><strong id="feishu-delivery-state">暂无记录</strong></div><p id="feishu-delivery-detail">保存配置后，可发送测试消息确认连接。</p><p id="feishu-queue" hidden></p><button id="feishu-retry" type="button" class="button button-secondary" hidden>重试失败消息</button></div></div>
+            <div class="notification-preview-body"><p class="eyebrow">消息内容预览</p><div class="notification-preview-tabs" role="group" aria-label="选择通知预览"><button type="button" data-notification-preview="votes" aria-pressed="true">票数汇总</button><button type="button" data-notification-preview="feedback" aria-pressed="false">实时留言</button></div><div id="notification-preview-votes"><h2>三城投票汇总</h2><p class="notification-description">北京时间每天 08:00 / 13:00 / 18:00 / 22:00</p><div class="preview-city-totals" aria-label="消息内容示意，不是实时票数"><span>深圳<b>累计票数</b></span><span>珠海<b>累计票数</b></span><span>广州<b>累计票数</b></span></div><p class="notification-description">总票数：三城累计总和 · 统计时间</p></div><div id="notification-preview-feedback" hidden><h2>收到一条新留言</h2><p class="notification-description">公开评论或私密意见 · 城市 · 北京时间</p><p class="feedback-message-preview">用户提交的留言内容</p></div><button id="feishu-summary" type="button" class="button notification-summary-action" disabled>立即推送投票汇总</button><div class="delivery-summary"><div><span>最新通知</span><strong id="feishu-delivery-state">暂无记录</strong></div><p id="feishu-delivery-detail">保存配置后，可发送测试消息确认连接。</p><p id="feishu-queue" hidden></p><button id="feishu-retry" type="button" class="button button-secondary" hidden>重试失败消息</button></div></div>
           </aside>
         </div>
       </section>
